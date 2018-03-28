@@ -12,7 +12,7 @@ internal class TableDef constructor(val tableName: String, val colDefs: List<Col
     init {
         require( this.pkCols.isNotEmpty() ) {
             "DAO error in class ${this::class.qualifiedName}, table ${this.tableName}: "
-            "need at least one PK column. Use column annotation 'pkPos' with values 1.. to denote PK columns"
+            "need at least one PK column. Use Column annotation 'pkPos' with values 1.. to denote PK columns"
         }
     }
 }
