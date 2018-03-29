@@ -18,14 +18,14 @@ internal class ColDef constructor(val fieldName: String, val fieldType: KClass<*
 
         require( !this.isOptLock
                 || this.fieldType == Timestamp::class
-                || Number::class.javaObjectType.isAssignableFrom(this.fieldType.java)
+                || Number::class.javaObjectType.isAssignableFrom(this.fieldType.javaObjectType)
         ) {
-            "DAO error in class ${this::class.qualifiedName}, field ${this.fieldName}: "
-            "supported Optimistic Lock types are Timestamp and Number, got ${this.fieldType.qualifiedName}"
+            "DAO error in class ${this::class.java.name}, field ${this.fieldName}: "
+            "supported Optimistic Lock types are Timestamp and Number, got ${this.fieldType.java.name}"
         }
 
         require( this.pkPos == 0 || !this.isOptLock ) {
-            "DAO error in class ${this::class.qualifiedName}, field ${this.fieldName}: "
+            "DAO error in class ${this::class.java.name}, field ${this.fieldName}: "
             "optimistic lock can't be part of the PK"
         }
 

@@ -8,11 +8,4 @@ internal class TableDef constructor(val tableName: String, val colDefs: List<Col
     val pkAndOptLockCols       = this.colDefs.filter { it.pkPos > 0 || it.isOptLock }
     val allColsButPk           = this.colDefs.filter { it.pkPos == 0 }
     val allColsButPkAndOptLock = this.colDefs.filter { it.pkPos == 0 && !it.isOptLock }
-
-    init {
-        require( this.pkCols.isNotEmpty() ) {
-            "DAO error in class ${this::class.qualifiedName}, table ${this.tableName}: "
-            "need at least one PK column. Use Column annotation 'pkPos' with values 1.. to denote PK columns"
-        }
-    }
 }
