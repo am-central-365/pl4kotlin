@@ -6,57 +6,26 @@
     <version>0.0.1-SNAPSHOT</version>
 
     <properties>
-        <kotlin.version>1.2.21</kotlin.version>
-        <junit.version>4.12</junit.version>
+        <kotlin.version>1.2.31</kotlin.version>
+        <junit.version>5.1.0</junit.version>
 
-        <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
+        <kotlin.compiler.incremental>false</kotlin.compiler.incremental>
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
     </properties>
 
     <dependencies>
 
+      <!-- Kotlin features -->
       <dependency>
         <groupId>org.jetbrains.kotlin</groupId>
         <artifactId>kotlin-stdlib-jdk8</artifactId>
         <version>${kotlin.version}</version>
       </dependency>
 
-      <!-- Google Guava -->
       <dependency>
-        <groupId>com.google.guava</groupId>
-        <artifactId>guava</artifactId>
-        <version>24.0-jre</version>
-      </dependency>
-
-      <!-- Spark framework: the Web server http://sparkjava.com/ -->
-      <dependency>
-        <groupId>com.sparkjava</groupId>
-        <artifactId>spark-core</artifactId>
-        <version>2.7.1</version>
-      </dependency>
-
-      <!-- Logging. https://github.com/MicroUtils/kotlin-logging -->
-      <dependency>
-        <groupId>io.github.microutils</groupId>
-        <artifactId>kotlin-logging</artifactId>
-        <version>1.4.9</version>
-      </dependency>
-
-      <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-jdk14 -->
-      <dependency>
-        <groupId>org.slf4j</groupId>
-        <artifactId>slf4j-log4j12</artifactId>
-        <version>1.7.25</version>
-      </dependency>
-
-      <!-- ======================= Test dependencies ======================= -->
-
-      <!-- https://mvnrepository.com/artifact/junit/junit -->
-      <dependency>
-        <groupId>junit</groupId>
-        <artifactId>junit</artifactId>
-        <version>${junit.version}</version>
-        <scope>test</scope>
+        <groupId>org.jetbrains.kotlin</groupId>
+        <artifactId>kotlin-reflect</artifactId>
+        <version>${kotlin.version}</version>
       </dependency>
 
       <dependency>
@@ -66,17 +35,53 @@
         <scope>test</scope>
       </dependency>
 
-      <!-- http://mockk.io/ Simplifies mocking objects for Kotlin unit tests -->
+
+      <!-- Google Guava -->
       <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>24.0-jre</version>
+      </dependency>
+
+      <dependency>  <!-- Spark framework: the Web server http://sparkjava.com/ -->
+        <groupId>com.sparkjava</groupId>
+        <artifactId>spark-core</artifactId>
+        <version>2.7.1</version>
+      </dependency>
+
+      <dependency>  <!-- Logging. https://github.com/MicroUtils/kotlin-logging -->
+        <groupId>io.github.microutils</groupId>
+        <artifactId>kotlin-logging</artifactId>
+        <version>1.4.9</version>
+      </dependency>
+
+      <dependency>  <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-jdk14 -->
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-log4j12</artifactId>
+        <version>1.7.25</version>
+      </dependency>
+
+      <!-- ======================= Test dependencies ======================= -->
+
+      <dependency>  <!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-engine -->
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-engine</artifactId>
+        <version>${junit.version}</version>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>  <!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api -->
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-api</artifactId>
+        <version>${junit.version}</version>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>  <!-- http://mockk.io/ Simplifies mocking objects for Kotlin unit tests -->
         <groupId>io.mockk</groupId>
         <artifactId>mockk</artifactId>
         <version>1.7.8</version>
         <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.junit.jupiter</groupId>
-        <artifactId>junit-jupiter-api</artifactId>
-        <version>RELEASE</version>
       </dependency>
 
     </dependencies>
@@ -126,6 +131,7 @@
               <id>default-compile</id>
               <phase>none</phase>
             </execution>
+
             <!-- Replacing default-testCompile as it is treated specially by maven -->
             <execution>
               <id>default-testCompile</id>
@@ -147,44 +153,16 @@
           </executions>
         </plugin>
 
-        <!-- Don't know why we need this. It has no effect. -->
-        <!--plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-jar-plugin</artifactId>
-          <version>2.6</version>
-          <configuration>
-            <archive>
-              <manifest>
-                <addClasspath>true</addClasspath>
-                <mainClass>${main.class}</mainClass>
-              </manifest>
-            </archive>
-          </configuration>
-        </plugin-->
-
         <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-assembly-plugin</artifactId>
-          <version>2.6</version>
-          <executions>
-            <execution>
-              <id>make-assembly</id>
-              <phase>package</phase>
-              <goals> <goal>single</goal> </goals>
-              <configuration>
-                <archive>
-                  <manifest>
-                    <mainClass>${main.class}</mainClass>
-                  </manifest>
-                </archive>
-                <descriptorRefs>
-                  <descriptorRef>jar-with-dependencies</descriptorRef>
-                </descriptorRefs>
-                <finalName>am-central-tbd</finalName>
-                <appendAssemblyId>false</appendAssemblyId>
-              </configuration>
-            </execution>
-          </executions>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>2.19.1</version>
+          <dependencies>
+            <dependency>
+              <groupId>org.junit.platform</groupId>
+              <artifactId>junit-platform-surefire-provider</artifactId>
+              <version>1.1.0</version>
+            </dependency>
+          </dependencies>
         </plugin>
 
       </plugins>

@@ -16,7 +16,7 @@ enum class Generated {
 }
 
 
-@Target(AnnotationTarget.FIELD)
+@Target(AnnotationTarget.PROPERTY)
 @Retention()
 annotation class Column(
       val columnName: String
