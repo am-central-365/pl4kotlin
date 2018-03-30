@@ -3,7 +3,7 @@ package com.amcentral365.pl4kotlin
 import java.sql.Timestamp
 import kotlin.reflect.KClass
 
-internal class ColDef constructor(val fieldName: String, val fieldType: KClass<*>, colDef: Column) {
+internal class ColDef constructor(val fieldName: String, val fieldType: JdbcTypeCode, colDef: Column) {
     val columnName:    String = colDef.columnName
     val restParamName: String
     val pkPos:         Int
@@ -17,11 +17,11 @@ internal class ColDef constructor(val fieldName: String, val fieldType: KClass<*
         this.isOptLock = colDef.isOptimisticLock
 
         require( !this.isOptLock
-                || this.fieldType == Timestamp::class
-                || Number::class.javaObjectType.isAssignableFrom(this.fieldType.javaObjectType)
+                || this.fieldType == JdbcTypeCode.Timestamp
+                || Number::class.java.isAssignableFrom(JdbcTypeCode.clazz(this.fieldType))
         ) {
             "DAO error in class ${this::class.java.name}, field ${this.fieldName}: "
-            "supported Optimistic Lock types are Timestamp and Number, got ${this.fieldType.java.name}"
+            "supported Optimistic Lock types are Timestamp and Number, got ${this.fieldType.name}"
         }
 
         require( this.pkPos == 0 || !this.isOptLock ) {

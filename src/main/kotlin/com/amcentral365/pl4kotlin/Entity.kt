@@ -4,6 +4,7 @@ import java.sql.Timestamp
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.findAnnotation
+import kotlin.reflect.jvm.javaField
 
 abstract class Entity protected constructor() {
 
@@ -55,7 +56,7 @@ abstract class Entity protected constructor() {
         this::class.declaredMemberProperties.forEach {
             val column = it.findAnnotation<Column>()
             if( column != null ) {
-                val cdef: ColDef = ColDef(it.name, it::class, column)
+                val cdef: ColDef = ColDef(it.name, JTC(it), column)
                 if( cdef.isOptLock ) {
                     require( colWithOptLock == null ) {
                         "DAO error: class ${this::class.java.name} defines more than one " +
