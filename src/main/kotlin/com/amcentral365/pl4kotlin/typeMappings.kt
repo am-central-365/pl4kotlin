@@ -3,9 +3,10 @@ package com.amcentral365.pl4kotlin
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 import kotlin.reflect.KType
+import kotlin.reflect.jvm.javaType
 
 
-private fun _k2j(kc: KType): JdbcTypeCode {
+private fun k2j(kc: KType): JdbcTypeCode {
     // FIXME: This is ugly, but I couldn't figure a better way to check if type is kotlin.Int
     return when(kc.toString()) {
         "kotlin.Int"    -> JdbcTypeCode.Integer
@@ -14,13 +15,15 @@ private fun _k2j(kc: KType): JdbcTypeCode {
 
         "kotlin.Char"   -> JdbcTypeCode.String
         "kotlin.Short"  -> JdbcTypeCode.Short
+        "kotlin.Byte"   -> JdbcTypeCode.Byte
+        "kotlin.ByteArray" -> JdbcTypeCode.ByteArray
 
-        else -> JdbcTypeCode.from(kc.javaClass)
+        else -> JdbcTypeCode.from(kc.javaType)
     }
 }
 
 
-fun JTC(kp: KProperty<*>?): JdbcTypeCode = if( kp == null ) JdbcTypeCode.Null else _k2j(kp.returnType)
+fun JTC(kp: KProperty<*>?): JdbcTypeCode = if( kp == null ) JdbcTypeCode.Null else k2j(kp.returnType)
 //fun JTC(kc: KClass<*>?):    JdbcTypeCode = if( kc == null ) JdbcTypeCode.Null else JdbcTypeCode.from(kc::class.java)
 
 /**

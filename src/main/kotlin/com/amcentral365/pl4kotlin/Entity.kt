@@ -65,6 +65,12 @@ abstract class Entity protected constructor() {
                     colWithOptLock = cdef
                 }
 
+                val sameColCdef = cdefs.firstOrNull { it.columnName == cdef.columnName }
+                require(sameColCdef == null ) {
+                    "DAO error: class ${this::class.java.name} declares same column name " +
+                    "${cdef.columnName} in fields ${sameColCdef!!.fieldName} and ${cdef.fieldName}"
+                }
+
                 cdefs.add(cdef)
             }
         }

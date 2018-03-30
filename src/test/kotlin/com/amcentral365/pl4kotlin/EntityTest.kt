@@ -57,6 +57,20 @@ internal class EntityTest {
 
 
     @Test
+    fun `dup column name`() {
+        @Table("tx")
+        class Tx: Entity() {
+            @Column("pk", pkPos = 1) var field0: Int = 0
+            @Column("col") var bob:   Int = 0
+            @Column("col") var alice: Int = 0
+        }
+
+        val x = assertThrows<IllegalArgumentException>("should have failed on duplicate column name") { Tx() }
+        assertTrue(x.message!!.contains("declares same column name col in fields"), "wrong error message: ${x.message}")
+    }
+
+
+    @Test
     fun `multiple OptLock`() {
         @Table("tx")
         class Tx: Entity() {
