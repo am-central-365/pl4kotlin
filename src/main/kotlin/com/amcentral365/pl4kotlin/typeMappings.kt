@@ -4,19 +4,19 @@ import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
 import kotlin.reflect.KType
 import kotlin.reflect.jvm.javaType
-
+import kotlin.reflect.jvm.jvmErasure
 
 private fun k2j(kc: KType): JdbcTypeCode {
-    // FIXME: This is ugly, but I couldn't figure a better way to check if type is kotlin.Int
-    return when(kc.toString()) {
-        "kotlin.Int"    -> JdbcTypeCode.Integer
-        "kotlin.Long"   -> JdbcTypeCode.Long
-        "kotlin.String" -> JdbcTypeCode.String
-
-        "kotlin.Char"   -> JdbcTypeCode.String
-        "kotlin.Short"  -> JdbcTypeCode.Short
-        "kotlin.Byte"   -> JdbcTypeCode.Byte
-        "kotlin.ByteArray" -> JdbcTypeCode.ByteArray
+    return when(kc.jvmErasure) {
+        kotlin.Short::class     -> JdbcTypeCode.Short
+        kotlin.Int::class       -> JdbcTypeCode.Integer
+        kotlin.Long::class      -> JdbcTypeCode.Long
+        kotlin.Float::class     -> JdbcTypeCode.Float
+        kotlin.Double::class    -> JdbcTypeCode.Double
+        kotlin.String::class    -> JdbcTypeCode.String
+        kotlin.Char::class      -> JdbcTypeCode.String
+        kotlin.Byte::class      -> JdbcTypeCode.Byte
+        kotlin.ByteArray::class -> JdbcTypeCode.ByteArray
 
         else -> JdbcTypeCode.from(kc.javaType)
     }
