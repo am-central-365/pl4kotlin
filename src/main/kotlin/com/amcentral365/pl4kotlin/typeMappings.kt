@@ -28,6 +28,7 @@ private fun k2j(kc: KType): JdbcTypeCode {
 }
 
 
+@Contract("null -> null")
 fun JTC(kp: KProperty<*>?): JdbcTypeCode = if( kp == null ) JdbcTypeCode.Null else k2j(kp.returnType)
 //fun JTC(kc: KClass<*>?):    JdbcTypeCode = if( kc == null ) JdbcTypeCode.Null else JdbcTypeCode.from(kc::class.java)
 

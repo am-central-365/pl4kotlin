@@ -1,15 +1,12 @@
 package com.amcentral365.pl4kotlin
 
 import java.sql.PreparedStatement
-import java.sql.Timestamp
+import java.sql.ResultSet
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KMutableProperty1
-import kotlin.reflect.KMutableProperty2
 import kotlin.reflect.KProperty
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.jvm.javaField
 import kotlin.reflect.jvm.javaType
 
 abstract class Entity protected constructor() {
@@ -86,10 +83,23 @@ abstract class Entity protected constructor() {
          * Assign value to the appropriate Entity member.
          * Nothing is changed on the database, just the property value is set.
          */
-        fun setVal(value: Any) = this.prop.setter.call(value)
+        fun setVal(value: Any?) = this.prop.setter.call(value)
 
         /**
-         * Set bind variable at index idx of the prepared statement from the value of the property
+         * Read value at specific index from the ResultSet. The indexes are 1-based.
+         */
+        fun readVal(idx: Int, rs: ResultSet): Any? =
+            if( this.fieldType == JdbcTypeCode.Enum ) JdbcTypeCode.enumValFromStr(this.javaType, rs.getString(idx))
+            else                                      JdbcTypeCode.getReader(this.fieldType).read(idx, rs)
+
+
+        /**
+         * Read value at specific index from the ResultSet and assign it to the property. The indexes are 1-based.
+         */
+        fun readAndSet(idx: Int, rs: ResultSet) = this.setVal(this.readVal(idx, rs))
+
+        /**
+         * Set bind variable at index idx (1-based) of the prepared statement from the value of the property
          */
         fun bind(ps: PreparedStatement, idx: Int) = JdbcTypeCode.getBinder(this.fieldType).bind(ps, idx, this.prop.getter.call())
 
@@ -97,14 +107,14 @@ abstract class Entity protected constructor() {
 
 
     // ------------------------------------------------------------- Exposed variables
-    internal val tableName = Entity.tblDefsMap.get(this.tblDefKey)!!.tableName
-    internal val colDefs   = Entity.tblDefsMap.get(this.tblDefKey)!!.colDefs
+    internal val tableName = Entity.tblDefsMap[this.tblDefKey]!!.tableName
+    internal val colDefs   = Entity.tblDefsMap[this.tblDefKey]!!.colDefs
 
-    internal val pkCols                 = Entity.tblDefsMap.get(this.tblDefKey)!!.pkCols
-    internal val optLockCol             = Entity.tblDefsMap.get(this.tblDefKey)?.optLockCol
-    internal val pkAndOptLockCols       = Entity.tblDefsMap.get(this.tblDefKey)!!.pkAndOptLockCols
-    internal val allColsButPk           = Entity.tblDefsMap.get(this.tblDefKey)?.allColsButPk
-    internal val allColsButPkAndOptLock = Entity.tblDefsMap.get(this.tblDefKey)?.allColsButPkAndOptLock
+    internal val pkCols                 = Entity.tblDefsMap[this.tblDefKey]!!.pkCols
+    internal val optLockCol             = Entity.tblDefsMap[this.tblDefKey]?.optLockCol
+    internal val pkAndOptLockCols       = Entity.tblDefsMap[this.tblDefKey]!!.pkAndOptLockCols
+    internal val allColsButPk           = Entity.tblDefsMap[this.tblDefKey]?.allColsButPk
+    internal val allColsButPkAndOptLock = Entity.tblDefsMap[this.tblDefKey]?.allColsButPkAndOptLock
 
     // ------------------------------------------------------------- Methods
     private fun constructFromAnnotations() {
@@ -123,7 +133,7 @@ abstract class Entity protected constructor() {
         this::class.declaredMemberProperties.forEach {
             val colAnnotation = it.findAnnotation<Column>()
             if( colAnnotation != null ) {
-                val cdef: ColDef = ColDef(it, colAnnotation)
+                val cdef = ColDef(it, colAnnotation)
                 if( cdef.isOptLock ) {
                     require( colWithOptLock == null ) {
                         "DAO error: class ${this::class.java.name} defines more than one " +
@@ -158,9 +168,7 @@ abstract class Entity protected constructor() {
     private fun validatePkPositions(cdefs: List<ColDef>): String? {
         val cdefsByPkPos = cdefs.filter { it.pkPos != 0 }.groupBy { it.pkPos }
 
-        val maxPkPos = cdefsByPkPos.keys.max()
-        if( maxPkPos == null )
-            return "PK is missing. At least one field must have Column annotation with pkPos 1"
+        val maxPkPos = cdefsByPkPos.keys.max() ?: return "PK is missing. At least one field must have Column annotation with pkPos 1"
         //if( maxPkPos > cdefsByPkPos.size )
         //    return "field ${cdefsByPkPos[maxPkPos]!![0].fieldName}: PK position $maxPkPos is greater than the number of PK fields ${cdefsByPkPos.size}"
 
