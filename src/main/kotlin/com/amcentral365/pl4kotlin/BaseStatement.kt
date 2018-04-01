@@ -1,13 +1,13 @@
 package com.amcentral365.pl4kotlin
 
-import mu.KotlinLogging
+import mu.KLogging
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.SQLException
 
-private val logger = KotlinLogging.logger {}
 
 abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () -> Connection?) {
+    companion object: KLogging()
 
     abstract fun build(): String
     abstract fun run(conn: Connection): Int
@@ -24,8 +24,8 @@ abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () ->
     }
 
 
-    val sql: String by lazy { this.build() }
-    var manageTx = false
+    private val sql: String by lazy { this.build() }
+    private var manageTx = false
 
     /**
      * Establish a database connection and invoke run(conn). Close the connection after running.
@@ -36,10 +36,8 @@ abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () ->
     /**
      * Establish a database connection and ivoke the provided action. Close the connectino on exit.
      */
-    fun <R> connectAndRun(action: (conn:Connection) -> R): R {
-        val conn: Connection? = this.getGoodConnection()
-        if( conn == null )
-            throw SQLException("${this::class.qualifiedName} ${this.entityDef.tableName}: to connect to the database")
+    private fun <R> connectAndRun(action: (conn:Connection) -> R): R {
+        val conn: Connection = this.getGoodConnection() ?: throw SQLException("${this::class.qualifiedName} ${this.entityDef.tableName}: to connect to the database")
 
         this.manageTx = true
         try {
@@ -82,9 +80,7 @@ abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () ->
     }
 
 
-    fun bind(stmt: PreparedStatement, vals: List<Any>) = vals.forEachIndexed { k, v ->
-        this.entityDef.colDefs[k].setVal(v)
-        this.entityDef.colDefs[k].bind(stmt, k+1)
-    }
+    fun bind(stmt: PreparedStatement, vals: List<Any>) =
+        vals.forEachIndexed { k, v -> this.entityDef.colDefs[k].bind(stmt, k+1, v) }
 
 }

@@ -1,5 +1,6 @@
 package com.amcentral365.pl4kotlin
 
+import mu.KotlinLogging
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.util.concurrent.ConcurrentHashMap
@@ -8,6 +9,8 @@ import kotlin.reflect.KProperty
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.jvm.javaType
+
+private val logger = KotlinLogging.logger {}
 
 abstract class Entity protected constructor() {
 
@@ -71,38 +74,62 @@ abstract class Entity protected constructor() {
             }
 
             // Check the column property is writeable, and cache the property for reads and assignments
-            val _prop = this@Entity::class.declaredMemberProperties.first { it.name == this.fieldName }
-            require(_prop is KMutableProperty1<out Entity, Any?> ) {
+            val p = this@Entity::class.declaredMemberProperties.first { it.name == this.fieldName }
+            require(p is KMutableProperty1<out Entity, Any?> ) {
                 "DAO error in class ${this::class.java.name}, field ${this.fieldName}: " +
                 "the field must be writeable, e.g. there is no Kotlin setter associated with it"
             }
-            this.prop = _prop as KMutableProperty1<out Entity, Any?>
+            this.prop = p as KMutableProperty1<out Entity, Any?>
         }
 
         /**
          * Assign value to the appropriate Entity member.
          * Nothing is changed on the database, just the property value is set.
          */
-        fun setVal(value: Any?) = this.prop.setter.call(value)
+        fun set(value: Any?) = this.prop.setter.call(value)
 
         /**
-         * Read value at specific index from the ResultSet. The indexes are 1-based.
+         * Read value at specific index of ResultSet into the property.
+         * The indexes are 1-based. The method converts Enum strings to values.
          */
-        fun readVal(idx: Int, rs: ResultSet): Any? =
-            if( this.fieldType == JdbcTypeCode.Enum ) JdbcTypeCode.enumValFromStr(this.javaType, rs.getString(idx))
-            else                                      JdbcTypeCode.getReader(this.fieldType).read(idx, rs)
+        fun read(rs: ResultSet, idx: Int): Any? =
+            this.set(
+                if( this.fieldType == JdbcTypeCode.Enum ) JdbcTypeCode.enumValFromStr(this.javaType, rs.getString(idx))
+                else                                      JdbcTypeCode.getReader(this.fieldType).read(rs, idx)
+            )
+
+        /**
+         * Assign value to the appropriate Entity member and bind it to the specified variable of the statement.
+         */
+        fun bind(ps: PreparedStatement, idx: Int, value: Any?) {
+            this.set(value)
+            this.bind(ps, idx)
+        }
+
+        /**
+         * Bind property value to the specified variable of the statement.
+         */
+        fun bind(ps: PreparedStatement, idx: Int) =
+            JdbcTypeCode.getBinder(this.fieldType).bind(ps, idx, this.prop.getter.call())
 
 
         /**
-         * Read value at specific index from the ResultSet and assign it to the property. The indexes are 1-based.
+         * Parse value from String and assign it o the property
+         * Assign value to the appropriate Entity member and bind it to the specified variable of the statement.
          */
-        fun readAndSet(idx: Int, rs: ResultSet) = this.setVal(this.readVal(idx, rs))
+        fun parse(str: String) {
+            val value: Any?
+            if( this.fieldType == JdbcTypeCode.Enum )
+                value = JdbcTypeCode.enumValFromStr(this.javaType, str)
+            else {
+                val parser = JdbcTypeCode.getParser(this.fieldType) ?:
+                    throw UnsupportedOperationException("Parsing of type ${this.fieldType} is not supported")
+                value = parser.parse(str)
+            }
 
-        /**
-         * Set bind variable at index idx (1-based) of the prepared statement from the value of the property
-         */
-        fun bind(ps: PreparedStatement, idx: Int) = JdbcTypeCode.getBinder(this.fieldType).bind(ps, idx, this.prop.getter.call())
-
+            logger.debug { "setting ${this@Entity.tableName}.${this.fieldName} to $value" }
+            this.set(value)
+        }
     }
 
 
@@ -164,7 +191,6 @@ abstract class Entity protected constructor() {
         Entity.tblDefsMap.putIfAbsent(this.tblDefKey, TableDef(tableName, cdefs))
     }
 
-
     private fun validatePkPositions(cdefs: List<ColDef>): String? {
         val cdefsByPkPos = cdefs.filter { it.pkPos != 0 }.groupBy { it.pkPos }
 
@@ -182,7 +208,7 @@ abstract class Entity protected constructor() {
 
         val dupPk = cdefsByPkPos.keys.firstOrNull { cdefsByPkPos[it]!!.size > 1 }
         if( dupPk != null )
-            return "duplicate fields with pkPos ${dupPk}: ${cdefsByPkPos[dupPk]!!.map { it.fieldName }.joinToString(", ")}"
+            return "duplicate fields with pkPos $dupPk: ${cdefsByPkPos[dupPk]!!.map { it.fieldName }.joinToString(", ")}"
 
         return null
     }
