@@ -21,20 +21,20 @@ internal class EntityTest {
         assertNotNull(tx.colDefs)
         assertNotNull(tx.pkCols)
 
-        assertEquals(2, tx.colDefs?.size)
-        assertEquals("pkCol",    tx.colDefs?.get(0)?.columnName)
-        assertEquals("pkField",  tx.colDefs?.get(0)?.fieldName)
-        assertEquals("valCol",   tx.colDefs?.get(1)?.columnName)
-        assertEquals("valField", tx.colDefs?.get(1)?.fieldName)
+        assertEquals(2, tx.colDefs.size)
+        assertEquals("pkCol",    tx.colDefs[0].columnName)
+        assertEquals("pkField",  tx.colDefs[0].fieldName)
+        assertEquals("valCol",   tx.colDefs[1].columnName)
+        assertEquals("valField", tx.colDefs[1].fieldName)
 
-        assertEquals(1, tx.pkCols?.size)
-        assertEquals(tx.colDefs?.get(0), tx.pkCols?.get(0))
+        assertEquals(1, tx.pkCols.size)
+        assertEquals(tx.colDefs[0], tx.pkCols[0])
     }
 
 
     @Test
     fun `no @Table annotation`() {
-        class Tx: Entity() {}
+        class Tx: Entity()
         val x = assertThrows<IllegalArgumentException>("should have failed on missing @Table") { Tx() }
         assertTrue(x.message!!.contains("must be annotated with @Table"), "wrong error message: ${x.message}")
     }
@@ -42,7 +42,7 @@ internal class EntityTest {
 
     @Test
     fun `empty table name`() {
-        @Table(" ") class Tx: Entity() {}
+        @Table(" ") class Tx: Entity()
         val x = assertThrows<IllegalArgumentException>("should have failed on empty table name") { Tx() }
         assertTrue(x.message!!.contains("annotation attribute tableName can't be empty"), "wrong error message: ${x.message}")
     }
@@ -50,7 +50,7 @@ internal class EntityTest {
 
     @Test
     fun `no columns defined`() {
-        @Table("tx") class Tx: Entity() { var v1 = 0 }
+        @Table("tx") class Tx: Entity()
         val x = assertThrows<IllegalArgumentException>("should have failed on missing @Column") { Tx() }
         assertTrue(x.message!!.contains("does not declare any fields wih Column annotation"), "wrong error message: ${x.message}")
     }

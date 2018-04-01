@@ -1,6 +1,9 @@
 package com.amcentral365.pl4kotlin
 
 import org.jetbrains.annotations.Contract
+import java.lang.reflect.Type
+import java.sql.Blob
+import java.sql.PreparedStatement
 import java.util.UUID
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty
@@ -28,9 +31,6 @@ private fun k2j(kc: KType): JdbcTypeCode {
 fun JTC(kp: KProperty<*>?): JdbcTypeCode = if( kp == null ) JdbcTypeCode.Null else k2j(kp.returnType)
 //fun JTC(kc: KClass<*>?):    JdbcTypeCode = if( kc == null ) JdbcTypeCode.Null else JdbcTypeCode.from(kc::class.java)
 
-/*
-fun uuidToBytes(bytes: ByteArray): UUID {
-    UUID.
 
-}
-*/
+//fun uuidToBytes(uuid: UUID): ByteArray {}
+//fun uuidFromBytes(bytes: ByteArray): UUID {}

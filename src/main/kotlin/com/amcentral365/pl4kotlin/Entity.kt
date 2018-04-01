@@ -1,10 +1,16 @@
 package com.amcentral365.pl4kotlin
 
+import java.sql.PreparedStatement
 import java.sql.Timestamp
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.reflect.KMutableProperty
+import kotlin.reflect.KMutableProperty1
+import kotlin.reflect.KMutableProperty2
+import kotlin.reflect.KProperty
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.jvm.javaField
+import kotlin.reflect.jvm.javaType
 
 abstract class Entity protected constructor() {
 
@@ -28,14 +34,75 @@ abstract class Entity protected constructor() {
         }
     }
 
+    /**
+     * Defines an Entity field (or variable, or property, in Kotlin terms) associated with a database column.
+     *
+     * The class is declared inner to associate a ColDef it with its corresponding Entity.
+     */
+    inner class ColDef constructor(kProp: KProperty<Any?>, colAnnotation: Column) {
+        val fieldName:     String
+        val fieldType:     JdbcTypeCode
+        val columnName:    String = colAnnotation.columnName
+        val restParamName: String
+        val pkPos:         Int
+        val onInsert:      Generated
+        val isOptLock:     Boolean
+        val javaType:      java.lang.reflect.Type
+
+        private val prop:     KMutableProperty1<out Entity, Any?>
+
+        init {
+            this.fieldName = kProp.name
+            this.fieldType = JTC(kProp)
+            this.restParamName = if( colAnnotation.restParamName.isNotEmpty() ) colAnnotation.restParamName else fieldName
+            this.pkPos = colAnnotation.pkPos
+            this.onInsert = colAnnotation.onInsert
+            this.isOptLock = colAnnotation.isOptimisticLock
+            this.javaType = kProp.returnType.javaType
+
+            require( !this.isOptLock
+                    || this.fieldType == JdbcTypeCode.Timestamp
+                    || Number::class.java.isAssignableFrom(JdbcTypeCode.clazz(this.fieldType))
+            ) {
+                "DAO error in class ${this::class.java.name}, field ${this.fieldName}: " +
+                "supported Optimistic Lock types are Timestamp and Number, got ${this.fieldType.name}"
+            }
+
+            require( this.pkPos == 0 || !this.isOptLock ) {
+                "DAO error in class ${this::class.java.name}, field ${this.fieldName}: " +
+                "optimistic lock can't be part of the PK"
+            }
+
+            // Check the column property is writeable, and cache the property for reads and assignments
+            val _prop = this@Entity::class.declaredMemberProperties.first { it.name == this.fieldName }
+            require(_prop is KMutableProperty1<out Entity, Any?> ) {
+                "DAO error in class ${this::class.java.name}, field ${this.fieldName}: " +
+                "the field must be writeable, e.g. there is no Kotlin setter associated with it"
+            }
+            this.prop = _prop as KMutableProperty1<out Entity, Any?>
+        }
+
+        /**
+         * Assign value to the appropriate Entity member.
+         * Nothing is changed on the database, just the property value is set.
+         */
+        fun setVal(value: Any) = this.prop.setter.call(value)
+
+        /**
+         * Set bind variable at index idx of the prepared statement from the value of the property
+         */
+        fun bind(ps: PreparedStatement, idx: Int) = JdbcTypeCode.getBinder(this.fieldType).bind(ps, idx, this.prop.getter.call())
+
+    }
+
 
     // ------------------------------------------------------------- Exposed variables
-    internal val tableName = Entity.tblDefsMap.get(this.tblDefKey)?.tableName
-    internal val colDefs   = Entity.tblDefsMap.get(this.tblDefKey)?.colDefs
+    internal val tableName = Entity.tblDefsMap.get(this.tblDefKey)!!.tableName
+    internal val colDefs   = Entity.tblDefsMap.get(this.tblDefKey)!!.colDefs
 
-    internal val pkCols                 = Entity.tblDefsMap.get(this.tblDefKey)?.pkCols
+    internal val pkCols                 = Entity.tblDefsMap.get(this.tblDefKey)!!.pkCols
     internal val optLockCol             = Entity.tblDefsMap.get(this.tblDefKey)?.optLockCol
-    internal val pkAndOptLockCols       = Entity.tblDefsMap.get(this.tblDefKey)?.pkAndOptLockCols
+    internal val pkAndOptLockCols       = Entity.tblDefsMap.get(this.tblDefKey)!!.pkAndOptLockCols
     internal val allColsButPk           = Entity.tblDefsMap.get(this.tblDefKey)?.allColsButPk
     internal val allColsButPkAndOptLock = Entity.tblDefsMap.get(this.tblDefKey)?.allColsButPkAndOptLock
 
@@ -54,9 +121,9 @@ abstract class Entity protected constructor() {
         val cdefs = mutableListOf<ColDef>()
 
         this::class.declaredMemberProperties.forEach {
-            val column = it.findAnnotation<Column>()
-            if( column != null ) {
-                val cdef: ColDef = ColDef(it.name, JTC(it), column)
+            val colAnnotation = it.findAnnotation<Column>()
+            if( colAnnotation != null ) {
+                val cdef: ColDef = ColDef(it, colAnnotation)
                 if( cdef.isOptLock ) {
                     require( colWithOptLock == null ) {
                         "DAO error: class ${this::class.java.name} defines more than one " +

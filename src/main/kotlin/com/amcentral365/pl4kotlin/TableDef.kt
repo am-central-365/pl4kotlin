@@ -1,6 +1,6 @@
 package com.amcentral365.pl4kotlin
 
-internal class TableDef constructor(val tableName: String, val colDefs: List<ColDef>) {
+internal class TableDef constructor(val tableName: String, val colDefs: List<Entity.ColDef>) {
 
     val allCols    = this.colDefs // an alias
     val pkCols     = this.colDefs.filter { it.pkPos > 0 }.sortedBy { it.pkPos }
