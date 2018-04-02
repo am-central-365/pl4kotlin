@@ -86,14 +86,16 @@ abstract class Entity protected constructor() {
          * Assign value to the appropriate Entity member.
          * Nothing is changed on the database, just the property value is set.
          */
-        fun set(value: Any?) = this.prop.setter.call(value)
+        fun setValue(value: Any?) = this.prop.setter.call(value)
+
+        fun getValue(): Any? = this.prop.getter.call()
 
         /**
          * Read value at specific index of ResultSet into the property.
          * The indexes are 1-based. The method converts Enum strings to values.
          */
         fun read(rs: ResultSet, idx: Int): Any? =
-            this.set(
+            this.setValue(
                 if( this.fieldType == JdbcTypeCode.Enum ) JdbcTypeCode.enumValFromStr(this.javaType, rs.getString(idx))
                 else                                      JdbcTypeCode.getReader(this.fieldType).read(rs, idx)
             )
@@ -102,7 +104,7 @@ abstract class Entity protected constructor() {
          * Assign value to the appropriate Entity member and bind it to the specified variable of the statement.
          */
         fun bind(ps: PreparedStatement, idx: Int, value: Any?) {
-            this.set(value)
+            this.setValue(value)
             this.bind(ps, idx)
         }
 
@@ -128,7 +130,7 @@ abstract class Entity protected constructor() {
             }
 
             logger.debug { "setting ${this@Entity.tableName}.${this.fieldName} to $value" }
-            this.set(value)
+            this.setValue(value)
         }
     }
 
