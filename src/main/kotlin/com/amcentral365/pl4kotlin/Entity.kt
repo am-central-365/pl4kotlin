@@ -49,7 +49,7 @@ abstract class Entity protected constructor() {
         val isOptLock:     Boolean
         val javaType:      java.lang.reflect.Type
 
-        private val prop:     KMutableProperty1<out Entity, Any?>
+        internal val prop:     KMutableProperty1<out Entity, Any?>
 
         init {
             this.fieldName = kProp.name

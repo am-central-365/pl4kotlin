@@ -4,6 +4,9 @@ import mu.KLogging
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.SQLException
+import com.amcentral365.pl4kotlin.Entity.ColDef
+
+
 
 
 abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () -> Connection?) {
@@ -24,8 +27,8 @@ abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () ->
     }
 
 
-    private val sql: String by lazy { this.build() }
-    private var manageTx = false
+    protected val sql: String by lazy { this.build() }
+    private   var manageTx = false
 
     /**
      * Establish a database connection and invoke run(conn). Close the connection after running.
@@ -66,6 +69,7 @@ abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () ->
                 this.bind(stmt, bindVals)
                 cnt = stmt.executeUpdate()
 
+                // if any values need to be fetched back (because SQL engine computed them), do that.
                 if( cnt > 0 && fetchBacks != null && fetchBacks.isNotEmpty()  )
                     cnt = SelectStatement(this.entityDef).selectDescr(fetchBacks).byPk().run(conn)
 
@@ -84,7 +88,7 @@ abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () ->
         JdbcTypeCode.getBinder(jtc).bind(stmt, idx, value)
     }
 
-    fun bind(stmt: PreparedStatement, vals: List<Any>) = vals.forEachIndexed { k, v -> this.bind(stmt, k+1, v) }
+    fun bind(stmt: PreparedStatement, vals: List<Any?>) = vals.forEachIndexed { k, v -> this.bind(stmt, k+1, v) }
 
     /**
      * Add comma-separated list of unfolded descriptors to sb and bindVals.
@@ -136,6 +140,25 @@ abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () ->
                     bindVals.addAll(binds)
             }
         }
+    }
+
+    /**
+     * Formats SQL for printing in log messages. Values longer than DISP_MAX characters are truncated
+     * @param bindVals placeholder values
+     * @return The effective SQL statement with placeholders replaced with the actual (possibly truncated) values
+     */
+    fun formatSqlWithParams(bindVals: List<Any?>): String {
+        val DISP_MAX = 64 // should be enough for UUIDs (32), timestamps (19), ROWIDs (varies), etc
+        var dbgSql = this.sql
+        for(value in bindVals) {
+            var dispVal = "null"
+            if( value != null ) {
+                val ps = if (value is ColDef) (value as ColDef).getValue().toString() else value.toString()
+                dispVal = if (ps.length <= DISP_MAX) ps else ps.substring(0, DISP_MAX - 3) + "..."
+            }
+            dbgSql = dbgSql.replaceFirst("\\?", "'" + dispVal + "'")
+        }
+        return dbgSql
     }
 
 }

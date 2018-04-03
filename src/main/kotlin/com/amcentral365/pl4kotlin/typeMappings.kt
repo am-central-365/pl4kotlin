@@ -1,5 +1,6 @@
 package com.amcentral365.pl4kotlin
 
+import mu.KotlinLogging
 import org.jetbrains.annotations.Contract
 import java.lang.reflect.Type
 import java.sql.Blob
@@ -10,6 +11,9 @@ import kotlin.reflect.KProperty
 import kotlin.reflect.KType
 import kotlin.reflect.jvm.javaType
 import kotlin.reflect.jvm.jvmErasure
+import sun.java2d.cmm.ColorTransform.Out
+
+private val logger = KotlinLogging.logger {}
 
 private fun k2j(kc: KType): JdbcTypeCode {
     return when(kc.jvmErasure) {
@@ -33,5 +37,17 @@ fun JTC(kp: KProperty<*>?): JdbcTypeCode = if( kp == null ) JdbcTypeCode.Null el
 //fun JTC(kc: KClass<*>?):    JdbcTypeCode = if( kc == null ) JdbcTypeCode.Null else JdbcTypeCode.from(kc::class.java)
 
 
+
+
 //fun uuidToBytes(uuid: UUID): ByteArray {}
 //fun uuidFromBytes(bytes: ByteArray): UUID {}
+
+
+fun closeIfCan(c: AutoCloseable?) {
+    if (c != null)
+        try {
+            c.close()
+        } catch (e: Exception) {
+            logger.warn("closeIfCan of ${c::class.qualifiedName}: ${e::class.qualifiedName} ${e.message}")
+        }
+}
