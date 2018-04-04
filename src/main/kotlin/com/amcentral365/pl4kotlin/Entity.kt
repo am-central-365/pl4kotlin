@@ -86,9 +86,9 @@ abstract class Entity protected constructor() {
          * Assign value to the appropriate Entity member.
          * Nothing is changed on the database, just the property value is set.
          */
-        fun setValue(value: Any?) = this.prop.setter.call(value)
+        fun setValue(value: Any?) = this.prop.setter.call(this@Entity, value)
 
-        fun getValue(): Any? = this.prop.getter.call()
+        fun getValue(): Any? = this.prop.getter.call(this@Entity)
 
         /**
          * Read value at specific index of ResultSet into the property.

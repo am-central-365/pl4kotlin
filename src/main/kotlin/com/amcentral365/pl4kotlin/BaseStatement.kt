@@ -5,8 +5,8 @@ import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.SQLException
 import com.amcentral365.pl4kotlin.Entity.ColDef
-
-
+import java.util.Arrays
+import kotlin.reflect.KProperty
 
 
 abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () -> Connection?) {
@@ -20,7 +20,7 @@ abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () ->
     data class Descr(val colDef: Entity.ColDef?, val expr: String?, val binds: List<Any>?) {
         init {
             require( this.colDef != null || this.expr != null )
-            require( expr != null || binds == null )  // when expr is null, binds must also be null
+            require( expr != null || (binds == null || binds.isEmpty()) )  // when expr is null, binds must also be null
         }
 
         constructor(colDef: Entity.ColDef): this(colDef, null, null)
@@ -71,7 +71,7 @@ abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () ->
 
                 // if any values need to be fetched back (because SQL engine computed them), do that.
                 if( cnt > 0 && fetchBacks != null && fetchBacks.isNotEmpty()  )
-                    cnt = SelectStatement(this.entityDef).selectDescr(fetchBacks).byPk().run(conn)
+                    cnt = SelectStatement(this.entityDef).select(fetchBacks).byPk().run(conn)
 
                 if( this.manageTx )
                     conn.commit()
@@ -147,7 +147,7 @@ abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () ->
      * @param bindVals placeholder values
      * @return The effective SQL statement with placeholders replaced with the actual (possibly truncated) values
      */
-    fun formatSqlWithParams(bindVals: List<Any?>): String {
+    protected fun formatSqlWithParams(bindVals: List<Any?>): String {
         val DISP_MAX = 64 // should be enough for UUIDs (32), timestamps (19), ROWIDs (varies), etc
         var dbgSql = this.sql
         for(value in bindVals) {
@@ -160,5 +160,23 @@ abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () ->
         }
         return dbgSql
     }
+
+
+    protected fun getColDefOrDie(predicate: (knownColDef: ColDef) -> Boolean, errmsg: String): ColDef =
+        this.entityDef.colDefs.firstOrNull(predicate)
+                ?: throw IllegalArgumentException("${this.entityDef::class.qualifiedName}(${this.entityDef.tableName}): $errmsg")
+
+
+    protected fun addColName(list: MutableList<Descr>, colName: String?, expr: String? = null, vararg binds: Any) {
+        val colDef = if (colName == null) null else this.getColDefOrDie({ c -> c.columnName == colName }, "unknown @Column with colName '$colName'")
+        list.add(Descr(colDef, expr,  Arrays.asList(*binds)))
+    }
+
+    protected fun addProperty(list: MutableList<Descr>, prop: KProperty<Any>, expr: String? = null, vararg binds: Any) {
+        val colDef = this.getColDefOrDie({ it.prop == prop }, "property ${prop.name} isn't a @Column")
+        list.add(Descr(colDef, expr, Arrays.asList(*binds)))
+    }
+
+
 
 }

@@ -9,7 +9,7 @@ import java.sql.ResultSet
 import kotlin.reflect.KProperty
 
 
-class SelectStatement(entityDef: Entity): BaseStatement(entityDef, { null }) {
+open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connection? = { null }): BaseStatement(entityDef, getGoodConnection) {
     companion object: KLogging()
 
     private val selectDescrs: MutableList<BaseStatement.Descr> = mutableListOf()
@@ -17,24 +17,22 @@ class SelectStatement(entityDef: Entity): BaseStatement(entityDef, { null }) {
     private val orderDescrs:  MutableList<BaseStatement.Descr> = mutableListOf()
     private val bindVals:     MutableList<Any?> = mutableListOf()
 
-    // use entityObj::propName to pass a reference, i.e. tx::bob
-    fun select(prop: KProperty<Any>): SelectStatement {
-        val colDef = this.entityDef.colDefs.firstOrNull { it.prop == prop } ?:
-            throw IllegalArgumentException("SelectStatment ${this::class.qualifiedName}: property ${prop.name} isn't a @Column")
-        this.selectDescrs.add(BaseStatement.Descr(colDef))
-        return this
-    }
+    // ----- Selected columns or expressions
+    fun select(prop: KProperty<Any>):              SelectStatement { this.addProperty(this.selectDescrs, prop);              return this }
+    fun select(descrs: List<BaseStatement.Descr>): SelectStatement { this.selectDescrs.addAll(descrs);                       return this }
+    fun select(expr: String, vararg binds: Any):   SelectStatement { this.addColName(this.selectDescrs, null, expr, binds);  return this }
+    fun selectCol(colName: String):                SelectStatement { this.addColName(this.selectDescrs, colName);            return this }
 
+    // ----- WHERE columns or expressions
+    fun byPk():            SelectStatement { this.whereDescrs.addAll(this.entityDef.pkCols.          map { Descr(it) });  return this }
+    fun byPkAndOptLock():  SelectStatement { this.whereDescrs.addAll(this.entityDef.pkAndOptLockCols.map { Descr(it) });  return this }
+    fun byPresentValues(): SelectStatement { this.whereDescrs.addAll(this.entityDef.pkAndOptLockCols.map { Descr(it) });  return this }
+    fun by(prop: KProperty<Any>): SelectStatement { this.addProperty(this.whereDescrs, prop);  return this }
 
-    fun selectDescr(descrs: List<BaseStatement.Descr>): SelectStatement {
-        this.selectDescrs.addAll(descrs)
-        return this
-    }
-
-    fun byPk(): SelectStatement {
-        this.entityDef.pkCols.forEach { c -> this.whereDescrs.add(BaseStatement.Descr(c)) }
-        return this
-    }
+    // ----- ORDER BY columns or expressions
+    fun orderBy(prop: KProperty<Any>):                SelectStatement { this.addProperty(this.orderDescrs, prop);               return this }
+    fun orderByExpr(expr: String, vararg binds: Any): SelectStatement { this.addColName (this.orderDescrs, null, expr, binds);  return this }
+    fun orderByCol(colName: String):                  SelectStatement { this.addColName (this.orderDescrs, colName);            return this }
 
     override fun run(conn: Connection): Int {
         var rowCount = 0
