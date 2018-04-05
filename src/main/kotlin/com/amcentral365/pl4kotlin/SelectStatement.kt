@@ -2,11 +2,12 @@ package com.amcentral365.pl4kotlin
 
 import mu.KLogging
 import java.sql.Connection
-import java.util.ArrayList
 import java.sql.SQLException
 import java.sql.PreparedStatement
 import java.sql.ResultSet
+import java.util.*
 import kotlin.reflect.KProperty
+import kotlin.reflect.jvm.jvmName
 
 
 open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connection? = { null }): BaseStatement(entityDef, getGoodConnection) {
@@ -18,21 +19,21 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
     private val bindVals:     MutableList<Any?> = mutableListOf()
 
     // ----- Selected columns or expressions
-    fun select(prop: KProperty<Any>):              SelectStatement { this.addProperty(this.selectDescrs, prop);              return this }
-    fun select(descrs: List<BaseStatement.Descr>): SelectStatement { this.selectDescrs.addAll(descrs);                       return this }
-    fun select(expr: String, vararg binds: Any):   SelectStatement { this.addColName(this.selectDescrs, null, expr, binds);  return this }
-    fun selectCol(colName: String):                SelectStatement { this.addColName(this.selectDescrs, colName);            return this }
+    fun select(vararg props: KProperty<Any>):      SelectStatement { this.addProperties(this.selectDescrs, Arrays.asList(*props));  return this }
+    fun select(descrs: List<BaseStatement.Descr>): SelectStatement { this.selectDescrs.addAll(descrs);                              return this }
+    fun select(expr: String, vararg binds: Any):   SelectStatement { this.addColName(this.selectDescrs, null, expr, binds);         return this }
+    fun selectCol(colName: String):                SelectStatement { this.addColName(this.selectDescrs, colName);                   return this }
 
     // ----- WHERE columns or expressions
-    fun byPk():            SelectStatement { this.whereDescrs.addAll(this.entityDef.pkCols.          map { Descr(it) });  return this }
-    fun byPkAndOptLock():  SelectStatement { this.whereDescrs.addAll(this.entityDef.pkAndOptLockCols.map { Descr(it) });  return this }
-    fun byPresentValues(): SelectStatement { this.whereDescrs.addAll(this.entityDef.pkAndOptLockCols.map { Descr(it) });  return this }
-    fun by(prop: KProperty<Any>): SelectStatement { this.addProperty(this.whereDescrs, prop);  return this }
+    fun byPk():            SelectStatement { this.whereDescrs.addAll(this.entityDef.pkCols.          map { Descr(it) });     return this }
+    fun byPkAndOptLock():  SelectStatement { this.whereDescrs.addAll(this.entityDef.pkAndOptLockCols.map { Descr(it) });     return this }
+    fun by(expr: String, vararg binds: Any): SelectStatement { this.addColName(this.whereDescrs, null, expr, binds);         return this }
+    fun by(vararg props: KProperty<Any>):    SelectStatement { this.addProperties(this.whereDescrs, Arrays.asList(*props));  return this }
 
     // ----- ORDER BY columns or expressions
-    fun orderBy(prop: KProperty<Any>):                SelectStatement { this.addProperty(this.orderDescrs, prop);               return this }
-    fun orderByExpr(expr: String, vararg binds: Any): SelectStatement { this.addColName (this.orderDescrs, null, expr, binds);  return this }
-    fun orderByCol(colName: String):                  SelectStatement { this.addColName (this.orderDescrs, colName);            return this }
+    fun orderBy(vararg props: KProperty<Any>):        SelectStatement { this.addProperties(this.orderDescrs, Arrays.asList(*props));   return this }
+    fun orderBy(vararg colNames: String):             SelectStatement { this.addColNames(this.orderDescrs, Arrays.asList(*colNames));  return this }
+    fun orderByExpr(expr: String, vararg binds: Any): SelectStatement { this.addColName (this.orderDescrs, null, expr, binds);         return this }
 
     override fun run(conn: Connection): Int {
         var rowCount = 0
@@ -43,13 +44,13 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
                     this.bind(stmt, this.bindVals)
                     rs = stmt.executeQuery()
                     if( rs!!.first() ) {
-                        this.selectDescrs.forEachIndexed() { k, v -> v.colDef!!.read(rs!!, k+1)}
+                        this.selectDescrs.forEachIndexed { k, v -> v.colDef!!.read(rs!!, k+1)}
                         rowCount++
                     }
             }
         } catch (e: SQLException) {
             logger.error {
-                "SelectStatement on ${this.entityDef::class.qualifiedName}: ${e::class.qualifiedName} ${e.message}; " +
+                "SelectStatement on ${this.entityDef::class.jvmName}: ${e::class.jvmName} ${e.message}; " +
                 "SQL: ${this.formatSqlWithParams(bindVals)}"
             }
             throw e

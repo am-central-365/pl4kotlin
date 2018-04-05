@@ -7,6 +7,7 @@ import java.sql.SQLException
 import com.amcentral365.pl4kotlin.Entity.ColDef
 import java.util.Arrays
 import kotlin.reflect.KProperty
+import kotlin.reflect.jvm.jvmName
 
 
 abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () -> Connection?) {
@@ -40,7 +41,7 @@ abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () ->
      * Establish a database connection and ivoke the provided action. Close the connectino on exit.
      */
     private fun <R> connectAndRun(action: (conn:Connection) -> R): R {
-        val conn: Connection = this.getGoodConnection() ?: throw SQLException("${this::class.qualifiedName} ${this.entityDef.tableName}: to connect to the database")
+        val conn: Connection = this.getGoodConnection() ?: throw SQLException("${this::class.jvmName} ${this.entityDef.tableName}: to connect to the database")
 
         this.manageTx = true
         try {
@@ -49,7 +50,7 @@ abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () ->
             try {
                 conn.rollback()
             } catch (e: SQLException) {
-                logger.warn("${this::class.qualifiedName} ${this.entityDef.tableName}: could not rollback failed operation: ${e.message}")
+                logger.warn("${this::class.jvmName} ${this.entityDef.tableName}: could not rollback failed operation: ${e.message}")
             }
             throw x
         } finally {
@@ -57,12 +58,12 @@ abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () ->
             try {
                 conn.close()
             } catch (e: SQLException) {
-                logger.warn("${this::class.qualifiedName} ${this.entityDef.tableName}: could not close connection: ${e.message}")
+                logger.warn("${this::class.jvmName} ${this.entityDef.tableName}: could not close connection: ${e.message}")
             }
         }
     }
 
-    fun runDML(conn: Connection, bindVals: List<Any>, fetchBacks: List<Descr>?): Int {
+    protected fun runDML(conn: Connection, bindVals: List<Any?>, fetchBacks: List<Descr>?): Int {
         var cnt: Int = 0
         try {
             conn.prepareStatement(this.sql).use { stmt ->
@@ -153,7 +154,7 @@ abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () ->
         for(value in bindVals) {
             var dispVal = "null"
             if( value != null ) {
-                val ps = if (value is ColDef) (value as ColDef).getValue().toString() else value.toString()
+                val ps = if (value is ColDef) value.getValue().toString() else value.toString()
                 dispVal = if (ps.length <= DISP_MAX) ps else ps.substring(0, DISP_MAX - 3) + "..."
             }
             dbgSql = dbgSql.replaceFirst("\\?", "'" + dispVal + "'")
@@ -164,7 +165,7 @@ abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () ->
 
     protected fun getColDefOrDie(predicate: (knownColDef: ColDef) -> Boolean, errmsg: String): ColDef =
         this.entityDef.colDefs.firstOrNull(predicate)
-                ?: throw IllegalArgumentException("${this.entityDef::class.qualifiedName}(${this.entityDef.tableName}): $errmsg")
+                ?: throw IllegalArgumentException("${this.entityDef::class.jvmName}(${this.entityDef.tableName}): $errmsg")
 
 
     protected fun addColName(list: MutableList<Descr>, colName: String?, expr: String? = null, vararg binds: Any) {
@@ -172,10 +173,13 @@ abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () ->
         list.add(Descr(colDef, expr,  Arrays.asList(*binds)))
     }
 
-    protected fun addProperty(list: MutableList<Descr>, prop: KProperty<Any>, expr: String? = null, vararg binds: Any) {
+    protected fun addProperty(list: MutableList<Descr>, prop: KProperty<Any>) {
         val colDef = this.getColDefOrDie({ it.prop == prop }, "property ${prop.name} isn't a @Column")
-        list.add(Descr(colDef, expr, Arrays.asList(*binds)))
+        list.add(Descr(colDef))
     }
+
+    protected fun addColNames(list: MutableList<Descr>, colNames: List<String>) = colNames.forEach { this.addColName(list, it) }
+    protected fun addProperties(list: MutableList<Descr>, props: List<KProperty<Any>>) = props.forEach { this.addProperty(list, it) }
 
 
 

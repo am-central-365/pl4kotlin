@@ -53,10 +53,10 @@ class JdbcTypeCodeTest {
         }
 
         val tx = Tx()
-        assertNotNull(tx.colDefs?.size)
+        assertNotNull(tx.colDefs.size)
 
         fun ensure(fieldName: String, jtc: JdbcTypeCode) =
-                assertEquals(jtc, tx.colDefs!!.first { it.fieldName == fieldName }.fieldType)
+                assertEquals(jtc, tx.colDefs.first { it.fieldName == fieldName }.fieldType)
 
         ensure("kshort",  JdbcTypeCode.Short)
         ensure("jshort",  JdbcTypeCode.Short)
