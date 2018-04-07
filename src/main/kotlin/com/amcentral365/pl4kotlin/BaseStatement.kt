@@ -10,7 +10,7 @@ import kotlin.reflect.KProperty
 import kotlin.reflect.jvm.jvmName
 
 
-abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () -> Connection?) {
+abstract class BaseStatement(val entityDef: Entity, private val getGoodConnection: () -> Connection?) {
     companion object: KLogging()
 
     abstract fun build(): String
@@ -18,13 +18,13 @@ abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () ->
 
     // ----------------------------------------------------------------------------------------------
 
-    data class Descr(val colDef: Entity.ColDef?, val expr: String?, val binds: List<Any>?) {
+    data class Descr(val colDef: Entity.ColDef?, val expr: String?, val asc: Boolean?, val binds: List<Any?>?) {
         init {
             require( this.colDef != null || this.expr != null )
             require( expr != null || (binds == null || binds.isEmpty()) )  // when expr is null, binds must also be null
         }
 
-        constructor(colDef: Entity.ColDef): this(colDef, null, null)
+        constructor(colDef: Entity.ColDef): this(colDef, null, true, null)
     }
 
 
@@ -64,7 +64,7 @@ abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () ->
     }
 
     protected fun runDML(conn: Connection, bindVals: List<Any?>, fetchBacks: List<Descr>?): Int {
-        var cnt: Int = 0
+        var cnt = 0
         try {
             conn.prepareStatement(this.sql).use { stmt ->
                 this.bind(stmt, bindVals)
@@ -84,12 +84,17 @@ abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () ->
         return cnt
     }
 
+    private val isInserting: Boolean by lazy { this is InsertStatement }
+
     fun bind(stmt: PreparedStatement, idx: Int, value: Any?) {
-        val jtc = JdbcTypeCode.from(value?.javaClass)
-        JdbcTypeCode.getBinder(jtc).bind(stmt, idx, value)
+        var bindVal = value
+        if( value is ColDef )
+            bindVal = value.getBindValue(isInserting)
+        val jtc = JdbcTypeCode.from(bindVal?.javaClass)
+        JdbcTypeCode.getBinder(jtc).bind(stmt, idx, bindVal)
     }
 
-    fun bind(stmt: PreparedStatement, vals: List<Any?>) = vals.forEachIndexed { k, v -> this.bind(stmt, k+1, v) }
+    protected open fun bind(stmt: PreparedStatement, vals: List<Any?>) = vals.forEachIndexed { k, v -> this.bind(stmt, k+1, v) }
 
     /**
      * Add comma-separated list of unfolded descriptors to sb and bindVals.
@@ -102,7 +107,7 @@ abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () ->
      */
     protected fun emitSimlpeList(descrs: List<Descr>, sb: StringBuilder, bindVals: MutableList<Any?>) {
         var sep = ""
-        for( (colDef, expr, binds) in descrs ) {
+        for( (colDef, expr, _, binds) in descrs ) {
             sb.append(sep)
             sep = ", "
             if( expr == null )
@@ -127,7 +132,7 @@ abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () ->
      */
     protected fun emitEqList(descrs: List<Descr>, sb: StringBuilder, bindVals: MutableList<Any?>, separator: String) {
         var sep = ""
-        for( (colDef, expr, binds) in descrs ) {
+        for( (colDef, expr, _, binds) in descrs ) {
             sb.append(sep)
             sep = separator
             if( expr == null ) {
@@ -154,10 +159,10 @@ abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () ->
         for(value in bindVals) {
             var dispVal = "null"
             if( value != null ) {
-                val ps = if (value is ColDef) value.getValue().toString() else value.toString()
+                val ps = (value as? ColDef)?.getValue()?.toString() ?: value.toString()
                 dispVal = if (ps.length <= DISP_MAX) ps else ps.substring(0, DISP_MAX - 3) + "..."
             }
-            dbgSql = dbgSql.replaceFirst("\\?", "'" + dispVal + "'")
+            dbgSql = dbgSql.replaceFirst("\\?", "'$dispVal'")
         }
         return dbgSql
     }
@@ -170,17 +175,12 @@ abstract class BaseStatement(val entityDef: Entity, val getGoodConnection: () ->
 
     protected fun addColName(list: MutableList<Descr>, colName: String?, expr: String? = null, vararg binds: Any) {
         val colDef = if (colName == null) null else this.getColDefOrDie({ c -> c.columnName == colName }, "unknown @Column with colName '$colName'")
-        list.add(Descr(colDef, expr,  Arrays.asList(*binds)))
+        list.add(Descr(colDef, expr, true, Arrays.asList(*binds)))
     }
 
-    protected fun addProperty(list: MutableList<Descr>, prop: KProperty<Any>) {
+    protected fun addProperty(list: MutableList<Descr>, prop: KProperty<Any>, expr: String? = null, vararg binds: Any?) {
         val colDef = this.getColDefOrDie({ it.prop == prop }, "property ${prop.name} isn't a @Column")
-        list.add(Descr(colDef))
+        list.add(Descr(colDef, expr, true, Arrays.asList(*binds)))
     }
-
-    protected fun addColNames(list: MutableList<Descr>, colNames: List<String>) = colNames.forEach { this.addColName(list, it) }
-    protected fun addProperties(list: MutableList<Descr>, props: List<KProperty<Any>>) = props.forEach { this.addProperty(list, it) }
-
-
 
 }

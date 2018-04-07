@@ -1,5 +1,6 @@
 package com.amcentral365.pl4kotlin
 
+import com.google.common.annotations.VisibleForTesting
 import mu.KLogging
 import java.sql.Connection
 import java.sql.SQLException
@@ -13,27 +14,59 @@ import kotlin.reflect.jvm.jvmName
 open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connection? = { null }): BaseStatement(entityDef, getGoodConnection) {
     companion object: KLogging()
 
-    private val selectDescrs: MutableList<BaseStatement.Descr> = mutableListOf()
-    private val whereDescrs:  MutableList<BaseStatement.Descr> = mutableListOf()
-    private val orderDescrs:  MutableList<BaseStatement.Descr> = mutableListOf()
-    private val bindVals:     MutableList<Any?> = mutableListOf()
+    @VisibleForTesting internal val selectDescrs: MutableList<BaseStatement.Descr> = mutableListOf()
+    @VisibleForTesting internal val whereDescrs:  MutableList<BaseStatement.Descr> = mutableListOf()
+    @VisibleForTesting internal val orderDescrs:  MutableList<BaseStatement.Descr> = mutableListOf()
+    @VisibleForTesting internal val bindVals:     MutableList<Any?> = mutableListOf()
 
-    // ----- Selected columns or expressions
-    fun select(vararg props: KProperty<Any>):      SelectStatement { this.addProperties(this.selectDescrs, Arrays.asList(*props));  return this }
-    fun select(descrs: List<BaseStatement.Descr>): SelectStatement { this.selectDescrs.addAll(descrs);                              return this }
-    fun select(expr: String, vararg binds: Any):   SelectStatement { this.addColName(this.selectDescrs, null, expr, binds);         return this }
-    fun selectCol(colName: String):                SelectStatement { this.addColName(this.selectDescrs, colName);                   return this }
+
+    // ----- Select columns and expressions
+
+    // We can select by the property (recommended, as it checked at compile time and makes refactoring easier)
+    // or by database column name. In both cases the appropriate ColDef is searched for and used.
+    //
+    // The property form may be extended with expression and optional bind list. It translates to 'select expr'
+    // and the result of the exression evaluation is stored in the property.
+    // Note that technically we could have the same method for column name, but it doesn't make sense logically
+    // (select expr into column?), and therefore this form was dliberately omitted.
+    fun select(prop: KProperty<Any>): SelectStatement
+        { this.addProperty(this.selectDescrs, prop);  return this }
+    fun select(targetProp: KProperty<Any>, expr: String, vararg binds: Any?): SelectStatement
+        { this.addProperty(this.selectDescrs, targetProp, expr, *binds);  return this }
+
+    fun select(colName: String): SelectStatement
+        { this.addColName(this.selectDescrs, colName);  return this }
+
+    // this form is used internally
+    fun select(descrs: List<BaseStatement.Descr>): SelectStatement { this.selectDescrs.addAll(descrs);  return this }
+
 
     // ----- WHERE columns or expressions
-    fun byPk():            SelectStatement { this.whereDescrs.addAll(this.entityDef.pkCols.          map { Descr(it) });     return this }
-    fun byPkAndOptLock():  SelectStatement { this.whereDescrs.addAll(this.entityDef.pkAndOptLockCols.map { Descr(it) });     return this }
-    fun by(expr: String, vararg binds: Any): SelectStatement { this.addColName(this.whereDescrs, null, expr, binds);         return this }
-    fun by(vararg props: KProperty<Any>):    SelectStatement { this.addProperties(this.whereDescrs, Arrays.asList(*props));  return this }
+    // Beside frequently used PK/OptLock expressions, there are two other forms:
+    // 1) property or column: translates to "WHERE column = ?", and the bind value comes from the property
+    // 2) a free-form expressions with bind values. Bind values provided are computed and saved.
+
+    // auxiliary, frequently used forms
+    fun byPk():            SelectStatement { this.whereDescrs.addAll(this.entityDef.pkCols.          map { Descr(it) });  return this }
+    fun byPkAndOptLock():  SelectStatement { this.whereDescrs.addAll(this.entityDef.pkAndOptLockCols.map { Descr(it) });  return this }
+
+    // when prop or column name is used, its ColDef is detected, and the resulting statement translates to
+    // "WHERE colName = ?". The property value is bound when the statement is ran.
+    fun by(prop: KProperty<Any>): SelectStatement { this.addProperty(this.whereDescrs, prop);     return this }
+    fun by(colName: String):      SelectStatement { this.addColName (this.whereDescrs, colName);  return this } // how is it not expr?
+
+    // free form clause, allowing to specify expressions and use any column
+    fun by(expr: String, vararg binds: Any): SelectStatement { this.addColName(this.whereDescrs, null, expr, *binds);  return this }
+
 
     // ----- ORDER BY columns or expressions
-    fun orderBy(vararg props: KProperty<Any>):        SelectStatement { this.addProperties(this.orderDescrs, Arrays.asList(*props));   return this }
-    fun orderBy(vararg colNames: String):             SelectStatement { this.addColNames(this.orderDescrs, Arrays.asList(*colNames));  return this }
-    fun orderByExpr(expr: String, vararg binds: Any): SelectStatement { this.addColName (this.orderDescrs, null, expr, binds);         return this }
+    //
+
+    fun orderBy(prop: KProperty<Any>, asc: Boolean=true):  SelectStatement { this.addProperty(this.orderDescrs, prop);     return this }
+    fun orderBy(colName: String, asc: Boolean=true):       SelectStatement { this.addColName(this.orderDescrs, colName);   return this }
+
+    fun orderBy(expr: String, vararg binds: Any): SelectStatement { this.addColName(this.orderDescrs, null, expr, *binds);  return this }
+
 
     override fun run(conn: Connection): Int {
         var rowCount = 0

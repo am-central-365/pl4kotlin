@@ -3,12 +3,16 @@ package com.amcentral365.pl4kotlin
 import mu.KotlinLogging
 import java.sql.PreparedStatement
 import java.sql.ResultSet
+import java.sql.Timestamp
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.jvm.javaType
+import java.util.UUID
+import kotlin.reflect.jvm.jvmName
+
 
 private val logger = KotlinLogging.logger {}
 
@@ -88,7 +92,36 @@ abstract class Entity protected constructor() {
          */
         fun setValue(value: Any?) = this.prop.setter.call(this@Entity, value)
 
+        /**
+         * Get current property value of the Entity member.
+         * Nothing is read from the database, just the current value is returned.
+         */
         fun getValue(): Any? = this.prop.getter.call(this@Entity)
+
+        /**
+         *
+         */
+        fun getBindValue(inserting: Boolean = false): Any? {
+            var value = this.getValue()
+            if( inserting )
+                if(this.onInsert == Generated.OnTheClientAlways ||
+                  (this.onInsert == Generated.OneTheClientWhenNull && value == null))
+                {
+                    value = this.generateValue(this.fieldType)
+                    this.setValue(value)
+                }
+            return value
+        }
+
+        private fun generateValue(fieldType: JdbcTypeCode): Any {
+            if( fieldType == JdbcTypeCode.UUID ) return UUID.randomUUID()
+            else if( fieldType == JdbcTypeCode.Timestamp ) return Timestamp(System.currentTimeMillis())
+
+            throw UnsupportedOperationException(
+                "${this@Entity::class.jvmName}(${this@Entity.tableName}) field ${this.prop.name}: "+
+                " client-side generation is only supported for UUID and Timestamp. Got $fieldType"
+            )
+        }
 
         /**
          * Read value at specific index of ResultSet into the property.
