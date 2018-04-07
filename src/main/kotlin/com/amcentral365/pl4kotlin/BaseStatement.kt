@@ -18,13 +18,13 @@ abstract class BaseStatement(val entityDef: Entity, private val getGoodConnectio
 
     // ----------------------------------------------------------------------------------------------
 
-    data class Descr(val colDef: Entity.ColDef?, val expr: String?, val asc: Boolean?, val binds: List<Any?>?) {
+    data class Descr(val colDef: Entity.ColDef?, val expr: String?, val asc: Boolean?, val binds: List<Any?>) {
         init {
             require( this.colDef != null || this.expr != null )
-            require( expr != null || (binds == null || binds.isEmpty()) )  // when expr is null, binds must also be null
+            require( expr != null || binds.isEmpty() )  // when expr is null, binds must also be null
         }
 
-        constructor(colDef: Entity.ColDef): this(colDef, null, true, null)
+        constructor(colDef: Entity.ColDef): this(colDef, null, true, emptyList())
     }
 
 
@@ -105,13 +105,16 @@ abstract class BaseStatement(val entityDef: Entity, private val getGoodConnectio
      * @param sb: the generated text is appended to the db
      * @param bindVals: global list of statement's bind variables, where descriptor's binds are appended if emitted
      */
+    @Deprecated("use emitList variations instead")
     protected fun emitSimlpeList(descrs: List<Descr>, sb: StringBuilder, bindVals: MutableList<Any?>) {
         var sep = ""
-        for( (colDef, expr, _, binds) in descrs ) {
+        for( (colDef, expr, asc, binds) in descrs ) {
             sb.append(sep)
             sep = ", "
-            if( expr == null )
+            if( expr == null ) {
                 sb.append(colDef!!.columnName)
+                  .append(if(asc == null || asc) "" else " DESC")
+            }
             else {
                 sb.append(expr)
                 if( binds != null )
@@ -130,6 +133,7 @@ abstract class BaseStatement(val entityDef: Entity, private val getGoodConnectio
      * @param sb: the generated text is appended to the db
      * @param bindVals: global list of statement's bind variables, where descriptor's binds are appended if emitted
      */
+    @Deprecated("use emitList variations instead")
     protected fun emitEqList(descrs: List<Descr>, sb: StringBuilder, bindVals: MutableList<Any?>, separator: String) {
         var sep = ""
         for( (colDef, expr, _, binds) in descrs ) {
@@ -137,7 +141,7 @@ abstract class BaseStatement(val entityDef: Entity, private val getGoodConnectio
             sep = separator
             if( expr == null ) {
                 sb.append(colDef!!.columnName).append(" = ?")
-                bindVals.add(colDef.getValue())
+                bindVals.add(colDef)
             } else {
                 if( colDef != null )
                     sb.append(colDef.columnName).append(" = ")
@@ -147,6 +151,32 @@ abstract class BaseStatement(val entityDef: Entity, private val getGoodConnectio
             }
         }
     }
+
+    protected fun emitList(descrs: List<Descr>, bindVals: MutableList<Any?>, sep: String, colDefEmitter: (descr: Descr) -> String): String =
+        descrs
+        .map {
+            if( it.expr == null ) {
+                colDefEmitter(it)
+            } else {
+                bindVals.addAll(it.binds)
+                it.expr
+            }
+        }
+        .joinToString(sep)
+
+
+    protected fun emitWhereList(whereDescrs: List<Descr>, bindVals: MutableList<Any?>): String =
+        this.emitList(whereDescrs, bindVals, " AND ") {
+            descr ->
+                bindVals.add(descr.colDef!!)
+                "${descr.colDef.columnName} = ?"
+        }
+
+    protected fun emitOrderByList(whereDescrs: List<Descr>, bindVals: MutableList<Any?>): String =
+        this.emitList(whereDescrs, bindVals, ", ") {
+            descr -> descr.colDef!!.columnName + if( descr.asc == null || descr.asc ) "" else " DESC"
+        }
+
 
     /**
      * Formats SQL for printing in log messages. Values longer than DISP_MAX characters are truncated
@@ -173,14 +203,20 @@ abstract class BaseStatement(val entityDef: Entity, private val getGoodConnectio
                 ?: throw IllegalArgumentException("${this.entityDef::class.jvmName}(${this.entityDef.tableName}): $errmsg")
 
 
-    protected fun addColName(list: MutableList<Descr>, colName: String?, expr: String? = null, vararg binds: Any) {
+    protected fun addColName(list: MutableList<Descr>, colName: String?, expr: String? = null, asc: Boolean, vararg binds: Any) {
         val colDef = if (colName == null) null else this.getColDefOrDie({ c -> c.columnName == colName }, "unknown @Column with colName '$colName'")
         list.add(Descr(colDef, expr, true, Arrays.asList(*binds)))
     }
 
-    protected fun addProperty(list: MutableList<Descr>, prop: KProperty<Any>, expr: String? = null, vararg binds: Any?) {
+    protected fun addProperty(list: MutableList<Descr>, prop: KProperty<Any>, expr: String? = null, asc: Boolean, vararg binds: Any?) {
         val colDef = this.getColDefOrDie({ it.prop == prop }, "property ${prop.name} isn't a @Column")
         list.add(Descr(colDef, expr, true, Arrays.asList(*binds)))
     }
+
+    // asc - less versions, defaulting asc to true
+    protected fun addColName(list: MutableList<Descr>, colName: String?, expr: String? = null, vararg binds: Any) =
+            this.addColName(list, colName, expr, true, *binds)
+    protected fun addProperty(list: MutableList<Descr>, prop: KProperty<Any>, expr: String? = null, vararg binds: Any?) =
+            this.addProperty(list, prop, expr, true, *binds)
 
 }

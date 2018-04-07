@@ -52,7 +52,7 @@ internal class SelectStatementTest {
     }
 
     @Test
-    fun `select descriptors and binds`() {
+    fun `descriptors and binds`() {
         val stmt = SelectStatement(txInst)
                 .select(Tx::pkField2)
                 .select(Tx::val1Field, "sysdate - trunc(sysdate) + ? + ?", 7, 'x')
@@ -76,5 +76,6 @@ internal class SelectStatementTest {
         assertEquals( 2,  stmt.selectDescrs[1].binds?.size)
             assertEquals( 7,  stmt.selectDescrs[1].binds!![0])
             assertEquals('x', stmt.selectDescrs[1].binds!![1])
+
     }
 }

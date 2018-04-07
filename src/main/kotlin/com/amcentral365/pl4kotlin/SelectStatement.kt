@@ -4,9 +4,7 @@ import com.google.common.annotations.VisibleForTesting
 import mu.KLogging
 import java.sql.Connection
 import java.sql.SQLException
-import java.sql.PreparedStatement
 import java.sql.ResultSet
-import java.util.*
 import kotlin.reflect.KProperty
 import kotlin.reflect.jvm.jvmName
 
@@ -23,12 +21,12 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
     // ----- Select columns and expressions
 
     // We can select by the property (recommended, as it checked at compile time and makes refactoring easier)
-    // or by database column name. In both cases the appropriate ColDef is searched for and used.
+    // or by database column name. In both cases the appropriate ColDef is looked for and used.
     //
     // The property form may be extended with expression and optional bind list. It translates to 'select expr'
-    // and the result of the exression evaluation is stored in the property.
-    // Note that technically we could have the same method for column name, but it doesn't make sense logically
-    // (select expr into column?), and therefore this form was dliberately omitted.
+    // and the result of the exression is fetched into the property.
+    // Technically we could have the same method for column name, but it doesn't make sense logically
+    // (select expr into a column?), and therefore this form was deliberately omitted.
     fun select(prop: KProperty<Any>): SelectStatement
         { this.addProperty(this.selectDescrs, prop);  return this }
     fun select(targetProp: KProperty<Any>, expr: String, vararg binds: Any?): SelectStatement
@@ -60,10 +58,11 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
 
 
     // ----- ORDER BY columns or expressions
-    //
+    // ORDER BY property/column ASC/DESC
+    // The expression version is free form, with optional binds.
 
-    fun orderBy(prop: KProperty<Any>, asc: Boolean=true):  SelectStatement { this.addProperty(this.orderDescrs, prop);     return this }
-    fun orderBy(colName: String, asc: Boolean=true):       SelectStatement { this.addColName(this.orderDescrs, colName);   return this }
+    fun orderBy(prop: KProperty<Any>, asc: Boolean=true):  SelectStatement { this.addProperty(this.orderDescrs, prop, null, asc);     return this }
+    fun orderBy(colName: String, asc: Boolean=true):       SelectStatement { this.addColName(this.orderDescrs, colName, null, asc);   return this }
 
     fun orderBy(expr: String, vararg binds: Any): SelectStatement { this.addColName(this.orderDescrs, null, expr, *binds);  return this }
 
@@ -94,23 +93,24 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
         return rowCount
     }
 
+
     override fun build(): String {
         require( this.selectDescrs.isNotEmpty() )
         this.bindVals.clear()
 
         val sb = StringBuilder("SELECT ")
-        this.emitSimlpeList(this.selectDescrs, sb, this.bindVals)
+        sb.append(this.emitList(this.selectDescrs, this.bindVals, ", ") { descr -> descr.colDef!!.columnName })
 
         sb.append(" FROM ").append(this.entityDef.tableName)
 
         if( this.whereDescrs.isNotEmpty() ) {
             sb.append(" WHERE ")
-            this.emitEqList(this.whereDescrs, sb, this.bindVals, " AND ")
+            sb.append(this.emitWhereList(this.whereDescrs, this.bindVals))
         }
 
         if( orderDescrs.isNotEmpty() ) {
             sb.append(" ORDER BY ")
-            emitSimlpeList(this.orderDescrs, sb, this.bindVals)
+            sb.append(emitOrderByList(this.orderDescrs, this.bindVals))
         }
 
         return sb.toString()
