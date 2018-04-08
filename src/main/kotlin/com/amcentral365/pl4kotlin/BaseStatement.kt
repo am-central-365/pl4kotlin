@@ -172,8 +172,8 @@ abstract class BaseStatement(val entityDef: Entity, private val getGoodConnectio
                 "${descr.colDef.columnName} = ?"
         }
 
-    protected fun emitOrderByList(whereDescrs: List<Descr>, bindVals: MutableList<Any?>): String =
-        this.emitList(whereDescrs, bindVals, ", ") {
+    protected fun emitOrderByList(orderbyDescrs: List<Descr>, bindVals: MutableList<Any?>): String =
+        this.emitList(orderbyDescrs, bindVals, ", ") {
             descr -> descr.colDef!!.columnName + if( descr.asc == null || descr.asc ) "" else " DESC"
         }
 
@@ -184,13 +184,13 @@ abstract class BaseStatement(val entityDef: Entity, private val getGoodConnectio
      * @return The effective SQL statement with placeholders replaced with the actual (possibly truncated) values
      */
     protected fun formatSqlWithParams(bindVals: List<Any?>): String {
-        val DISP_MAX = 64 // should be enough for UUIDs (32), timestamps (19), ROWIDs (varies), etc
+        val dispMax = 64 // should be enough for UUIDs (32), timestamps (19), ROWIDs (varies), etc
         var dbgSql = this.sql
         for(value in bindVals) {
             var dispVal = "null"
             if( value != null ) {
                 val ps = (value as? ColDef)?.getValue()?.toString() ?: value.toString()
-                dispVal = if (ps.length <= DISP_MAX) ps else ps.substring(0, DISP_MAX - 3) + "..."
+                dispVal = if (ps.length <= dispMax) ps else ps.substring(0, dispMax - 3) + "..."
             }
             dbgSql = dbgSql.replaceFirst("\\?", "'$dispVal'")
         }
@@ -198,19 +198,19 @@ abstract class BaseStatement(val entityDef: Entity, private val getGoodConnectio
     }
 
 
-    protected fun getColDefOrDie(predicate: (knownColDef: ColDef) -> Boolean, errmsg: String): ColDef =
+    private fun getColDefOrDie(predicate: (knownColDef: ColDef) -> Boolean, errmsg: String): ColDef =
         this.entityDef.colDefs.firstOrNull(predicate)
                 ?: throw IllegalArgumentException("${this.entityDef::class.jvmName}(${this.entityDef.tableName}): $errmsg")
 
 
     protected fun addColName(list: MutableList<Descr>, colName: String?, expr: String? = null, asc: Boolean, vararg binds: Any) {
         val colDef = if (colName == null) null else this.getColDefOrDie({ c -> c.columnName == colName }, "unknown @Column with colName '$colName'")
-        list.add(Descr(colDef, expr, true, Arrays.asList(*binds)))
+        list.add(Descr(colDef, expr, asc, Arrays.asList(*binds)))
     }
 
     protected fun addProperty(list: MutableList<Descr>, prop: KProperty<Any>, expr: String? = null, asc: Boolean, vararg binds: Any?) {
         val colDef = this.getColDefOrDie({ it.prop == prop }, "property ${prop.name} isn't a @Column")
-        list.add(Descr(colDef, expr, true, Arrays.asList(*binds)))
+        list.add(Descr(colDef, expr, asc, Arrays.asList(*binds)))
     }
 
     // asc - less versions, defaulting asc to true

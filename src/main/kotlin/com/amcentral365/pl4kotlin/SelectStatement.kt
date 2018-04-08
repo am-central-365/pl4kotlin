@@ -15,7 +15,7 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
     @VisibleForTesting internal val selectDescrs: MutableList<BaseStatement.Descr> = mutableListOf()
     @VisibleForTesting internal val whereDescrs:  MutableList<BaseStatement.Descr> = mutableListOf()
     @VisibleForTesting internal val orderDescrs:  MutableList<BaseStatement.Descr> = mutableListOf()
-    @VisibleForTesting internal val bindVals:     MutableList<Any?> = mutableListOf()
+    private                     val bindVals:     MutableList<Any?> = mutableListOf()
 
 
     // ----- Select columns and expressions

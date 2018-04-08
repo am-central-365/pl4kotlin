@@ -1,12 +1,12 @@
 package com.amcentral365.pl4kotlin
 
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.assertThrows
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeAll
 import java.sql.Timestamp
+import java.util.Arrays
+
 
 
 internal class SelectStatementTest {
@@ -21,6 +21,19 @@ internal class SelectStatementTest {
     }
 
     val txInst = Tx()
+    val pk1ColDef  = txInst.colDefs.first { it.fieldName == Tx::pkField1.name }
+    val pk2ColDef  = txInst.colDefs.first { it.fieldName == Tx::pkField2.name }
+    val val1ColDef = txInst.colDefs.first { it.fieldName == Tx::val1Field.name }
+    val val2ColDef = txInst.colDefs.first { it.fieldName == Tx::val2Field.name }
+    val optLockColDef = txInst.colDefs.first { it.fieldName == Tx::optLockField.name }
+
+    fun checkDescr(descr: BaseStatement.Descr, colDef: Entity.ColDef?, expr: String?=null, asc: Boolean=true, vararg  binds: Any?) {
+        assertEquals(colDef, descr.colDef)
+        assertEquals(expr,   descr.expr)
+        assertEquals(asc,    descr.asc)
+        assertIterableEquals(Arrays.asList(*binds), descr.binds)
+    }
+
 
     @Test
     fun build() {
@@ -41,24 +54,21 @@ internal class SelectStatementTest {
         // where expression
         sql = SelectStatement(txInst).select(Tx::val1Field, expr="abs(pkCol1)+19").by(expr="rownum <= 1").build()
         assertEquals("SELECT abs(pkCol1)+19 FROM tx WHERE rownum <= 1", sql)
-
-        // where expressions may not have target column/property:
-        //    when column is present, translates to "col = expr"
-        //    when column is empty,   translates to "expr"
-        // TODO: add test
-
-        // order by has either column with asc/desc flag and no expression, or expresion and no column
-        // TODO: add test
     }
 
     @Test
     fun `descriptors and binds`() {
         val stmt = SelectStatement(txInst)
-                .select(Tx::pkField2)
-                .select(Tx::val1Field, "sysdate - trunc(sysdate) + ? + ?", 7, 'x')
-                .select("val2Col")
-                .byPkAndOptLock()
-                .orderBy(Tx::val1Field)
+                .select(Tx::pkField2)      // property
+                .select(Tx::val1Field, "sysdate - trunc(sysdate) + ? + ?", 7, 'x')  // expression into property
+                .select("val2Col")         // column name
+                .byPkAndOptLock()          // by canned expression
+                .by(Tx::val1Field)         // by property
+                .by("val2Col")             // by column name
+                .by("?+? = ?", 2, 29, 31)  // by expression
+                .orderBy(Tx::val1Field, false)  // order by property
+                .orderBy("pkCol1")              // order by column name
+                .orderBy("random(?)", -18)      // order by expression
 
         val sql = stmt.build()
 
@@ -68,14 +78,30 @@ internal class SelectStatementTest {
         assertEquals("SELECT pkCol2, sysdate - trunc(sysdate) + ? + ?, val2Col "+
                 "FROM tx "+
                 "WHERE optLockCol = ? AND pkCol1 = ? AND pkCol2 = ? "+
-                "ORDER BY val1Col",
+                  "AND val1Col = ? " +
+                  "AND val2Col = ? " +
+                  "AND ?+? = ? " +
+                "ORDER BY val1Col DESC, pkCol1, random(?)",
                 sql
         )
 
         assertEquals( 3,  stmt.selectDescrs.size)
-        assertEquals( 2,  stmt.selectDescrs[1].binds?.size)
-            assertEquals( 7,  stmt.selectDescrs[1].binds!![0])
-            assertEquals('x', stmt.selectDescrs[1].binds!![1])
+        checkDescr(stmt.selectDescrs[0], this.pk2ColDef)
+        checkDescr(stmt.selectDescrs[1], this.val1ColDef, "sysdate - trunc(sysdate) + ? + ?", true, 7, 'x')
+        checkDescr(stmt.selectDescrs[2], this.val2ColDef)
+
+        assertEquals( 6,  stmt.whereDescrs.size)
+        checkDescr(stmt.whereDescrs[0], this.optLockColDef)
+        checkDescr(stmt.whereDescrs[1], this.pk1ColDef)
+        checkDescr(stmt.whereDescrs[2], this.pk2ColDef)
+        checkDescr(stmt.whereDescrs[3], this.val1ColDef)
+        checkDescr(stmt.whereDescrs[4], this.val2ColDef)
+        checkDescr(stmt.whereDescrs[5], null, "?+? = ?", true, 2, 29, 31)
+
+        assertEquals( 3,  stmt.orderDescrs.size)
+        checkDescr(stmt.orderDescrs[0], this.val1ColDef, asc=false)
+        checkDescr(stmt.orderDescrs[1], this.pk1ColDef)
+        checkDescr(stmt.orderDescrs[2], null, "random(?)", true, -18)
 
     }
 }
