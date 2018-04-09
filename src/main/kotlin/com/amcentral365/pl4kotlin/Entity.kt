@@ -81,7 +81,7 @@ abstract class Entity protected constructor() {
             val p = this@Entity::class.declaredMemberProperties.first { it.name == this.fieldName }
             require(p is KMutableProperty1<out Entity, Any?> ) {
                 "DAO error in class ${this::class.java.name}, field ${this.fieldName}: " +
-                "the field must be writeable, e.g. there is no Kotlin setter associated with it"
+                "the field must be writeable, e.g. have a Kotlin setter associated with it"
             }
             this.prop = p as KMutableProperty1<out Entity, Any?>
         }

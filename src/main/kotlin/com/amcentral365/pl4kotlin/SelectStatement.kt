@@ -71,9 +71,7 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
         var rs: ResultSet? = null
 
         val bindVals: MutableList<Any?> = mutableListOf()
-        bindVals.addAll(this.selectDescrs.map{ it.binds } )
-        bindVals.addAll(this.whereDescrs .map{ it.binds } )
-        bindVals.addAll(this.orderDescrs .map{ it.binds } )
+        listOf(this.selectDescrs, this.whereDescrs, this.orderDescrs).forEach { it.forEach { bindVals.addAll(it.binds) } }
 
         try {
             conn.prepareStatement(this.sql).use {

@@ -42,6 +42,10 @@ internal class SelectStatementTest {
         var sql: String
 
         // a simple statement
+        sql = SelectStatement(txInst).select(Tx::val1Field).build()
+        assertEquals("SELECT val1Col FROM tx", sql)
+
+        // a simple statement
         sql = SelectStatement(txInst).select(Tx::val1Field).byPk().orderBy("val2Col").build()
         assertEquals("SELECT val1Col FROM tx WHERE pkCol1 = ? AND pkCol2 = ? ORDER BY val2Col", sql)
 
@@ -71,6 +75,7 @@ internal class SelectStatementTest {
                 .orderBy(Tx::val1Field, false)  // order by property
                 .orderBy("pkCol1")              // order by column name
                 .orderBy("random(?)", -18)      // order by expression
+                .orderBy("concat(?,?) desc", 'a', "strB")   // order by another expression, binds should be flattened
 
         val sql = stmt.build()
 
@@ -83,7 +88,7 @@ internal class SelectStatementTest {
                   "AND val1Col = ? " +
                   "AND val2Col = ? " +
                   "AND ?+? = ? " +
-                "ORDER BY val1Col DESC, pkCol1, random(?)",
+                "ORDER BY val1Col DESC, pkCol1, random(?), concat(?,?) desc",
                 sql
         )
 
@@ -100,10 +105,11 @@ internal class SelectStatementTest {
         checkDescr(stmt.whereDescrs[4], this.val2ColDef)
         checkDescr(stmt.whereDescrs[5], null, "?+? = ?", true, 2, 29, 31)
 
-        assertEquals( 3,  stmt.orderDescrs.size)
+        assertEquals( 4,  stmt.orderDescrs.size)
         checkDescr(stmt.orderDescrs[0], this.val1ColDef, asc=false)
         checkDescr(stmt.orderDescrs[1], this.pk1ColDef)
         checkDescr(stmt.orderDescrs[2], null, "random(?)", true, -18)
+        checkDescr(stmt.orderDescrs[3], null, "concat(?,?) desc", true, 'a', "strB")
 
     }
 }

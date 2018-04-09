@@ -13,7 +13,14 @@ import kotlin.reflect.jvm.jvmName
 abstract class BaseStatement(val entityDef: Entity, private val getGoodConnection: () -> Connection?) {
     companion object: KLogging()
 
+    /**
+     * Creates SQL statement text. The method is specific to the statement and must be overridden.
+     * The method is protected because some statements only build SQL text when they run:
+     *   INSERT statement with Generated.OnXXXWhenNull check property value while building the statement.
+     *   separating build() and run() could lead to incosistency as propert values may change in between.
+     */
     protected abstract fun build(): String
+
     abstract fun run(conn: Connection): Int
 
     // ----------------------------------------------------------------------------------------------
