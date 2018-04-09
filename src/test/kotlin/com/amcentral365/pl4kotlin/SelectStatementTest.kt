@@ -27,11 +27,13 @@ internal class SelectStatementTest {
     val val2ColDef = txInst.colDefs.first { it.fieldName == Tx::val2Field.name }
     val optLockColDef = txInst.colDefs.first { it.fieldName == Tx::optLockField.name }
 
-    fun checkDescr(descr: BaseStatement.Descr, colDef: Entity.ColDef?, expr: String?=null, asc: Boolean=true, vararg  binds: Any?) {
-        assertEquals(colDef, descr.colDef)
-        assertEquals(expr,   descr.expr)
-        assertEquals(asc,    descr.asc)
-        assertIterableEquals(Arrays.asList(*binds), descr.binds)
+    companion object {
+        fun checkDescr(descr: BaseStatement.Descr, colDef: Entity.ColDef?, expr: String?=null, asc: Boolean=true, vararg  binds: Any?) {
+            assertEquals(colDef, descr.colDef)
+            assertEquals(expr,   descr.expr)
+            assertEquals(asc,    descr.asc)
+            assertIterableEquals(Arrays.asList(*binds), descr.binds)
+        }
     }
 
 

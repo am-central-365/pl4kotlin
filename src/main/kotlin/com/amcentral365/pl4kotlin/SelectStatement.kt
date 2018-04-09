@@ -15,7 +15,6 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
     @VisibleForTesting internal val selectDescrs: MutableList<BaseStatement.Descr> = mutableListOf()
     @VisibleForTesting internal val whereDescrs:  MutableList<BaseStatement.Descr> = mutableListOf()
     @VisibleForTesting internal val orderDescrs:  MutableList<BaseStatement.Descr> = mutableListOf()
-    private                     val bindVals:     MutableList<Any?> = mutableListOf()
 
 
     // ----- Select columns and expressions
@@ -70,10 +69,16 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
     override fun run(conn: Connection): Int {
         var rowCount = 0
         var rs: ResultSet? = null
+
+        val bindVals: MutableList<Any?> = mutableListOf()
+        bindVals.addAll(this.selectDescrs.map{ it.binds } )
+        bindVals.addAll(this.whereDescrs .map{ it.binds } )
+        bindVals.addAll(this.orderDescrs .map{ it.binds } )
+
         try {
             conn.prepareStatement(this.sql).use {
                 stmt ->
-                    this.bind(stmt, this.bindVals)
+                    this.bind(stmt, bindVals)
                     rs = stmt.executeQuery()
                     if( rs!!.first() ) {
                         this.selectDescrs.forEachIndexed { k, v -> v.colDef!!.read(rs!!, k+1)}
@@ -94,23 +99,22 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
     }
 
 
-    override fun build(): String {
+    public override fun build(): String {
         require( this.selectDescrs.isNotEmpty() )
-        this.bindVals.clear()
 
         val sb = StringBuilder("SELECT ")
-        sb.append(this.emitList(this.selectDescrs, this.bindVals, ", ") { descr -> descr.colDef!!.columnName })
+        sb.append(this.emitList(this.selectDescrs, ", ") { descr -> descr.colDef!!.columnName })
 
         sb.append(" FROM ").append(this.entityDef.tableName)
 
         if( this.whereDescrs.isNotEmpty() ) {
             sb.append(" WHERE ")
-            sb.append(this.emitWhereList(this.whereDescrs, this.bindVals))
+            sb.append(this.emitWhereList(this.whereDescrs))
         }
 
         if( orderDescrs.isNotEmpty() ) {
             sb.append(" ORDER BY ")
-            sb.append(emitOrderByList(this.orderDescrs, this.bindVals))
+            sb.append(emitOrderByList(this.orderDescrs))
         }
 
         return sb.toString()
