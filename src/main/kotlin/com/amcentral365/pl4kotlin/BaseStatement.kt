@@ -144,7 +144,7 @@ abstract class BaseStatement(val entityDef: Entity, private val getGoodConnectio
                 ?: throw IllegalArgumentException("${this.entityDef::class.jvmName}(${this.entityDef.tableName}): $errmsg")
 
 
-    protected fun addColName(list: MutableList<Descr>, colName: String?, expr: String? = null, asc: Boolean, vararg binds: Any) {
+    protected fun addColName(list: MutableList<Descr>, colName: String?, expr: String? = null, asc: Boolean, vararg binds: Any?) {
         val colDef = if (colName == null) null else this.getColDefOrDie({ c -> c.columnName == colName }, "unknown @Column with colName '$colName'")
         list.add(Descr(colDef, expr, asc, Arrays.asList(*binds)))
     }
@@ -155,7 +155,7 @@ abstract class BaseStatement(val entityDef: Entity, private val getGoodConnectio
     }
 
     // asc - less versions, defaulting asc to true
-    protected fun addColName(list: MutableList<Descr>, colName: String?, expr: String? = null, vararg binds: Any) =
+    protected fun addColName(list: MutableList<Descr>, colName: String?, expr: String? = null, vararg binds: Any?) =
             this.addColName(list, colName, expr, true, *binds)
     protected fun addProperty(list: MutableList<Descr>, prop: KProperty<Any>, expr: String? = null, vararg binds: Any?) =
             this.addProperty(list, prop, expr, true, *binds)

@@ -3,7 +3,6 @@ package com.amcentral365.pl4kotlin
 import com.google.common.annotations.VisibleForTesting
 import mu.KLogging
 import java.sql.Connection
-import java.sql.PreparedStatement
 import kotlin.reflect.KProperty
 
 
@@ -31,7 +30,7 @@ open class DeleteStatement(entityDef: Entity, getGoodConnection: () -> Connectio
     fun by(colName: String):      DeleteStatement { this.addColName (this.whereDescrs, colName);  return this } // how is it not expr?
 
     // free form clause, allowing to specify expressions and use any column
-    fun by(expr: String, vararg binds: Any): DeleteStatement { this.addColName(this.whereDescrs, null, expr, *binds);  return this }
+    fun by(expr: String, vararg binds: Any?): DeleteStatement { this.addColName(this.whereDescrs, null, expr, *binds);  return this }
 
 
     public override fun build(): String {

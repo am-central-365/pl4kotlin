@@ -53,7 +53,7 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
     fun by(colName: String):      SelectStatement { this.addColName (this.whereDescrs, colName);  return this } // how is it not expr?
 
     // free form clause, allowing to specify expressions and use any column
-    fun by(expr: String, vararg binds: Any): SelectStatement { this.addColName(this.whereDescrs, null, expr, *binds);  return this }
+    fun by(expr: String, vararg binds: Any?): SelectStatement { this.addColName(this.whereDescrs, null, expr, *binds);  return this }
 
 
     // ----- ORDER BY columns or expressions
@@ -63,7 +63,7 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
     fun orderBy(prop: KProperty<Any>, asc: Boolean=true):  SelectStatement { this.addProperty(this.orderDescrs, prop, null, asc);     return this }
     fun orderBy(colName: String, asc: Boolean=true):       SelectStatement { this.addColName(this.orderDescrs, colName, null, asc);   return this }
 
-    fun orderBy(expr: String, vararg binds: Any): SelectStatement { this.addColName(this.orderDescrs, null, expr, *binds);  return this }
+    fun orderBy(expr: String, vararg binds: Any?): SelectStatement { this.addColName(this.orderDescrs, null, expr, *binds);  return this }
 
 
     override fun run(conn: Connection): Int {

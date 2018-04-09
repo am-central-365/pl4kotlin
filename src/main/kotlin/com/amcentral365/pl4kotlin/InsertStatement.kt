@@ -3,7 +3,6 @@ package com.amcentral365.pl4kotlin
 import com.google.common.annotations.VisibleForTesting
 import mu.KLogging
 import java.sql.Connection
-import java.sql.PreparedStatement
 
 
 open class InsertStatement(entityDef: Entity, getGoodConnection: () -> Connection? = { null }): BaseStatement(entityDef, getGoodConnection) {
