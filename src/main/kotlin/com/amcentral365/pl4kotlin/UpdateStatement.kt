@@ -61,19 +61,20 @@ open class UpdateStatement(entityDef: Entity, getGoodConnection: () -> Connectio
 
 
     public override fun build(): String {
-        require(this.updateDescrs.isNotEmpty())
+        require(this.updateDescrs.isNotEmpty()) { "${this::class.java.name}(${this.entityDef.tableName}): no columns to update" }
         this.bindVals.clear()
         val sb = StringBuilder("UPDATE ").append(this.entityDef.tableName).append(" SET ")
 
         sb.append(
             this.updateDescrs.joinToString(", ") {
-                if( it.expr == null ) {
-                    this.bindVals.add(it.colDef)
-                    it.colDef!!.columnName + " = ?"
-                } else {
-                    this.bindVals.addAll(it.binds)
-                    it.colDef!!.columnName + " = " + it.expr
-                }
+                it.colDef!!.columnName + " = " +
+                    if( it.expr == null ) {
+                        this.bindVals.add(it.colDef)
+                        "?"
+                    } else {
+                        this.bindVals.addAll(it.binds)
+                        it.expr
+                    }
             }
         )
 
