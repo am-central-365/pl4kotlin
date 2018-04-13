@@ -34,8 +34,11 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
     fun select(colName: String): SelectStatement
         { this.addColName(this.selectDescrs, colName);  return this }
 
+    fun select(colDefs: List<Entity.ColDef>): SelectStatement
+        { this.selectDescrs.addAll(colDefs.map { Descr(it) });  return this }
+
     // this form is used internally
-    fun select(descrs: List<BaseStatement.Descr>): SelectStatement { this.selectDescrs.addAll(descrs);  return this }
+    internal fun selectByDescrs(descrs: List<BaseStatement.Descr>): SelectStatement { this.selectDescrs.addAll(descrs);  return this }
 
 
     // ----- WHERE columns or expressions

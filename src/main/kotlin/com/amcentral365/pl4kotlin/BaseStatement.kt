@@ -79,7 +79,7 @@ abstract class BaseStatement(val entityDef: Entity, private val getGoodConnectio
 
                 // if any values need to be fetched back (because SQL engine computed them), do that.
                 if( cnt > 0 && fetchBacks != null && fetchBacks.isNotEmpty()  )
-                    cnt = SelectStatement(this.entityDef).select(fetchBacks).byPk().run(conn)
+                    cnt = SelectStatement(this.entityDef).selectByDescrs(fetchBacks).byPk().run(conn)
 
                 if( this.manageTx )
                     conn.commit()
