@@ -1,0 +1,13 @@
+p {
+    margin-top: 1em;
+}
+
+.title {
+    text-align: center
+}
+
+.name {
+    font-family: monospace;
+    font-size: large;
+}
+

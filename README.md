@@ -10,7 +10,8 @@ supported.
 
 The goal is to simplify basic database operations without getting in
 the way. You can always tell what SQL statement is going to be executed
-as a result of your request.
+as a result of your request. All statements utilize bind variable to
+improve efficiency and avoid SQL injection.
 
 SQL beginners will appreciate simplicity of routine operations
 automation. Experienced users may like flexibility of mixing the
