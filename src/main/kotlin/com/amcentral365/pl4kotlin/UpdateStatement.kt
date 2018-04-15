@@ -32,7 +32,7 @@ open class UpdateStatement(entityDef: Entity, getGoodConnection: () -> Connectio
     fun update(colName: String, expr: String, vararg binds: Any?): UpdateStatement   // set col = expr(binds)
         { this.addColName(this.updateDescrs, colName, expr, *binds);  return this }
 
-    // to use with auxilarly column filters: allColsButPk, allColsButPkAndOptLock, etc
+    // to use with auxiliary column filters: allColsButPk, allColsButPkAndOptLock, etc
     fun update(colDefs: List<Entity.ColDef>): UpdateStatement { this.updateDescrs.addAll(colDefs.map { Descr(it) });  return this }
 
 

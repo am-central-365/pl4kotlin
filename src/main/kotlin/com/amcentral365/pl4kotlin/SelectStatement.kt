@@ -23,7 +23,7 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
     // or by database column name. In both cases the appropriate ColDef is looked for and used.
     //
     // The property form may be extended with expression and optional bind list. It translates to 'select expr'
-    // and the result of the exression is fetched into the property.
+    // and the result of the expression is fetched into the property.
     // Technically we could have the same method for column name, but it doesn't make sense logically
     // (select expr into a column?), and therefore this form was deliberately omitted.
     fun select(prop: KProperty<Any>): SelectStatement

@@ -19,7 +19,7 @@ private val logger = KotlinLogging.logger {}
 abstract class Entity protected constructor() {
 
     /**
-     * Called prior to inserting object into the table to ensurethe data is consistent.
+     * Called prior to inserting object into the table to ensure the data is consistent.
      * Needs to be implemented by the DAO.
      * @return the error message explaining what's wrong with the data, or null if the data is valid.
      */
@@ -77,11 +77,11 @@ abstract class Entity protected constructor() {
                 "optimistic lock can't be part of the PK"
             }
 
-            // Check the column property is writeable, and cache the property for reads and assignments
+            // Check the column property is writable, and cache the property for reads and assignments
             val p = this@Entity::class.declaredMemberProperties.first { it.name == this.fieldName }
             require(p is KMutableProperty1<out Entity, Any?> ) {
                 "DAO error in class ${this::class.java.name}, field ${this.fieldName}: " +
-                "the field must be writeable, e.g. have a Kotlin setter associated with it"
+                "the field must be writable, e.g. have a Kotlin setter associated with it"
             }
             this.prop = p as KMutableProperty1<out Entity, Any?>
         }

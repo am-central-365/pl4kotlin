@@ -17,7 +17,7 @@ abstract class BaseStatement(val entityDef: Entity, private val getGoodConnectio
      * Creates SQL statement text. The method is specific to the statement and must be overridden.
      * The method is protected because some statements only build SQL text when they run:
      *   INSERT statement with Generated.OnXXXWhenNull check property value while building the statement.
-     *   separating build() and run() could lead to incosistency as propert values may change in between.
+     *   separating build() and run() could lead to inconsistency as property values may change in between.
      */
     protected abstract fun build(): String
 
@@ -45,7 +45,7 @@ abstract class BaseStatement(val entityDef: Entity, private val getGoodConnectio
     fun run(): Any = this.connectAndRun<Any>(this::run)
 
     /**
-     * Establish a database connection and ivoke the provided action. Close the connectino on exit.
+     * Establish a database connection and invoke the provided action. Close the connection on exit.
      */
     private fun <R> connectAndRun(action: (conn:Connection) -> R): R {
         val conn: Connection = this.getGoodConnection() ?: throw SQLException("${this::class.jvmName} ${this.entityDef.tableName}: couldn't connect to the database")
