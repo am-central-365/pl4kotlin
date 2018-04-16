@@ -156,7 +156,7 @@
           </configuration>
         </plugin>
 
-        <plugin>
+        <plugin>  <!-- Runs Unit tests -->
           <artifactId>maven-surefire-plugin</artifactId>
           <version>2.19.1</version>
           <dependencies>
@@ -166,6 +166,20 @@
               <version>1.1.0</version>
             </dependency>
           </dependencies>
+        </plugin>
+
+        <plugin>  <!-- Runs Integration tests, call with 'mvn verify', install, deploy, or integration-test -->
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-failsafe-plugin</artifactId>
+          <version>2.21.0</version>
+          <executions>
+            <execution>
+              <goals>
+                <goal>integration-test</goal>
+                <goal>verify</goal>
+              </goals>
+            </execution>
+          </executions>
         </plugin>
 
       </plugins>

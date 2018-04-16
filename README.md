@@ -17,6 +17,15 @@ SQL beginners will appreciate simplicity of routine operations
 automation. Experienced users may like flexibility of mixing the
 library and JDBC code.
 
+## Building
+To build the library JAR, use Maven:
+```
+mvn package
+```
+The resulting jar is located in ```target``` subdirectory.
+
+Other standard Maven variations are ```mvn clean install```,  ```mvn test```, and so on.
+Check out [Apache Maven](https://maven.apache.org/) docs for details.
 
 ## Quick Start
 
