@@ -14,7 +14,7 @@ private val dbVendorExtractor = Regex("^jdbc:([^:/@]+)")
 
 internal data class ConnectionInfo(val jdbcUrl: String, private val username: String, private val password: String) {
     val connProps: Properties = Properties()
-    val dbVendor: String = dbVendorExtractor.find(jdbcUrl)?.value ?:
+    val dbVendor: String = dbVendorExtractor.find(jdbcUrl)?.groups?.get(1)?.value ?:
                                 throw IllegalArgumentException("couldn't extract vendor from jdbc url '$jdbcUrl'")
 
     init {
@@ -25,10 +25,12 @@ internal data class ConnectionInfo(val jdbcUrl: String, private val username: St
 }
 
 
-@BeforeAll
-internal fun init() {
-    val dbConfigFileName = System.getProperty("dbConfig", "mysql-config.properties")
+internal fun initSql() {
+    println("++ initSql")
+
+    val dbConfigFileName = System.getProperty("dbConfig", "mysql.properties")
     logger.info { "using config file $dbConfigFileName" }
+
     val cfg = Properties().apply { FileInputStream(dbConfigFileName).use { strm -> load(strm) } }
     logger.debug { "read config: $cfg" }
 

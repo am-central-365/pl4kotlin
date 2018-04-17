@@ -4,13 +4,14 @@ import com.google.common.io.Resources
 import mu.KotlinLogging
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.InputStream
 import java.sql.SQLException
 
-@BeforeEach internal fun runSetup()    = runStatements(composeScriptFileName(SETUP_SUFFIX),    setupScripts)
-@AfterEach  internal fun runTeardown() = runStatements(composeScriptFileName(TEARDOWN_SUFFIX), teardownScripts)
+internal fun runSqlSetup()    = runStatements(composeScriptFileName(SETUP_SUFFIX),    setupScripts)
+internal fun runSqlTeardown() = runStatements(composeScriptFileName(TEARDOWN_SUFFIX), teardownScripts)
 
 
 private val logger = KotlinLogging.logger {}
@@ -22,8 +23,6 @@ private val setupScripts:    List<ScriptStatement> by lazy { parseStatements(get
 private val teardownScripts: List<ScriptStatement> by lazy { parseStatements(getVendorScriptStream(TEARDOWN_SUFFIX)) }
 
 private fun composeScriptFileName(suffix: String) = connInfo!!.dbVendor + suffix + ".sql"
-
-
 
 
 private fun getVendorScriptStream(suffix: String): InputStream {
@@ -42,7 +41,8 @@ private fun getVendorScriptStream(suffix: String): InputStream {
             logger.info { "using script file $scriptFileName from the jar" }
             return inputStream
         } catch (x: IllegalArgumentException) {
-            throw FileNotFoundException("scrpt file $scriptFileName isn't present in the local directory nor known to the test suite")
+            logger.warn { "script file $scriptFileName isn't present in the local directory nor known to the test suite, skipping" }
+            return "".byteInputStream()
         }
     }
 }
@@ -67,7 +67,7 @@ private fun parseStatements(inputStream: InputStream): List<ScriptStatement> {
 
         if( !inScript() && (line.isBlank() || line.startsWith('#')) )  // skip blank and comment lines
             continue
-        
+
         val trimmed = line.trimEnd()
         if( trimmed == ";" || trimmed == "/" || trimmed.isBlank() ) {
             if( inScript() ) {
@@ -84,12 +84,16 @@ private fun parseStatements(inputStream: InputStream): List<ScriptStatement> {
         }
     }
 
+    if( inScript() )
+        scriptStatements.add(ScriptStatement(scriptLine, sb.toString()))
+
     return scriptStatements
 }
 
 
 private fun runStatements(scriptFileName: String, statements: List<ScriptStatement>, ignoreErrors: Boolean=true) {
     require( connInfo != null )
+    println("++ runStatements($scriptFileName), ignoreErrors: $ignoreErrors")
 
     getConnection().use { conn ->
         statements.forEach {

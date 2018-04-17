@@ -1,5 +1,8 @@
-# comment 1
 #
+# create database it;
+# create user ituser@localhost identified by 'itpass';
+# grant all privileges on it.* to ituser@localhost;
+# flush privileges;
 
 create table Tx1(
   pk   int primary key,
@@ -8,5 +11,5 @@ create table Tx1(
 
 create table Tx2(
   pk   int primary key,
-  val1 varchar(200)
+  val2 varchar(200)
 )
