@@ -23,5 +23,5 @@ annotation class Column(
     , val restParamName: String = ""
     , val pkPos: Int = 0
     , val isOptimisticLock: Boolean = false
-    , val onInsert: Generated = Generated.OnTheDbWhenNull
+    , val onInsert: Generated = Generated.Never
 )

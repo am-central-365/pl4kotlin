@@ -68,20 +68,22 @@ abstract class Entity protected constructor() {
                     || this.fieldType == JdbcTypeCode.Timestamp
                     || Number::class.java.isAssignableFrom(JdbcTypeCode.clazz(this.fieldType))
             ) {
-                "DAO error in class ${this::class.java.name}, field ${this.fieldName}: " +
-                "supported Optimistic Lock types are Timestamp and Number, got ${this.fieldType.name}"
+                "DAO error in class ${this@Entity::class.java.name}(${this@Entity.tableName}), "+
+                "field ${this.fieldName}: supported Optimistic Lock types are Timestamp and Number, "+
+                "got ${this.fieldType.name}"
             }
 
             require( this.pkPos == 0 || !this.isOptLock ) {
-                "DAO error in class ${this::class.java.name}, field ${this.fieldName}: " +
-                "optimistic lock can't be part of the PK"
+                "DAO error in class ${this@Entity::class.java.name}(${this@Entity.tableName}), "+
+                "field ${this.fieldName}: optimistic lock can't be part of the PK"
             }
 
             // Check the column property is writable, and cache the property for reads and assignments
             val p = this@Entity::class.declaredMemberProperties.first { it.name == this.fieldName }
             require(p is KMutableProperty1<out Entity, Any?> ) {
-                "DAO error in class ${this::class.java.name}, field ${this.fieldName}: " +
-                "the field must be writable, e.g. have a Kotlin setter associated with it"
+                "DAO error in class ${this@Entity::class.java.name}(${this@Entity.tableName}), " +
+                "field ${this.fieldName}: the field must be writable, " +
+                "e.g. have a Kotlin setter associated with it"
             }
             this.prop = p as KMutableProperty1<out Entity, Any?>
         }
