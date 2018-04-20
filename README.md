@@ -1,7 +1,9 @@
 # pl4kotlin
 Persistence Layer for Kotlin
 
-**The project desperately needs a better name**
+**WORK IN PROGRESS, THE LIBRARY ISN'T YET USABLE**
+
+**The project needs a better name**
 
 The project is a library for mapping between JDBC RDBMS tables and Java
 objects. Currently only 1:1 mapping is supported. e.g. a POJO instance

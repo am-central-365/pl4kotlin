@@ -76,8 +76,11 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
         val bindVals: MutableList<Any?> = mutableListOf()
         listOf(this.selectDescrs, this.whereDescrs, this.orderDescrs).forEach { it.forEach { bindVals.addAll(it.binds) } }
 
+        val sql = this.build()
+        //logger.debug { "running ${this.formatSqlWithParams(bindVals)}" }
+
         try {
-            conn.prepareStatement(this.sql).use {
+            conn.prepareStatement(sql).use {
                 stmt ->
                     this.bind(stmt, bindVals)
                     rs = stmt.executeQuery()

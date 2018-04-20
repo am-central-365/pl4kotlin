@@ -32,10 +32,11 @@ class TestTbl: Entity() {
         val KNOWN_UUID2 = UUID.randomUUID()
     }
 
-    @Column("pk1", pkPos = 1, onInsert = Generated.OnTheDbAlways)        var pk1:   Int    = TestTbl.KNOWN_PK1
-    @Column("pk2", pkPos = 2, onInsert = Generated.OnTheDbWhenNull)      var pk2:   Short? = TestTbl.KNOWN_PK2
-    @Column("uuid1",          onInsert = Generated.OnTheClientAlways)    var uuid1: UUID?  = TestTbl.KNOWN_UUID1
-    @Column("uuid2",          onInsert = Generated.OneTheClientWhenNull) var uuid2: UUID?  = TestTbl.KNOWN_UUID2
+    @Column("pk1",   pkPos = 1) var pk1: Int    = TestTbl.KNOWN_PK1
+    @Column("pk2",   pkPos = 2) var pk2: Short? = TestTbl.KNOWN_PK2
+
+    @Column("uuid1", onInsert = Generated.OnTheClientAlways)    var uuid1: UUID?  = TestTbl.KNOWN_UUID1
+    @Column("uuid2", onInsert = Generated.OneTheClientWhenNull) var uuid2: UUID?  = TestTbl.KNOWN_UUID2
 
     @Column("created_ts",  onInsert = Generated.OnTheDbAlways)                          var created:  Timestamp? = null
     @Column("modified_ts", onInsert = Generated.OnTheDbAlways, isOptimisticLock = true) var modified: Timestamp? = null

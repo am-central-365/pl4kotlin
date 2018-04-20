@@ -34,13 +34,16 @@ class statementsIT {
 
         var count = InsertStatement(tto1, getGoodConnection = ::getConnection).run()
         assertEquals(1, count)
-        assertNotEquals(TestTbl.KNOWN_PK1, tto1.pk1)
-        assertEquals   (TestTbl.KNOWN_PK2, tto1.pk2)
+
+        assertEquals(TestTbl.KNOWN_PK1, tto1.pk1)
+        assertEquals(TestTbl.KNOWN_PK2, tto1.pk2)
+
         assertNotEquals(TestTbl.KNOWN_UUID1, tto1.uuid1)
         assertEquals   (TestTbl.KNOWN_UUID2, tto1.uuid2)
+
         assertNotNull(tto1.created)
         assertNotNull(tto1.modified)
-        assertEquals   (tto1.created, tto1.modified)
+        assertEquals(tto1.created, tto1.modified)
 
         /*getConnection().use {
             count = InsertStatement(tto1).run(it)

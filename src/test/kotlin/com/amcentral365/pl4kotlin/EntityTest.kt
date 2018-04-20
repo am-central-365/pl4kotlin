@@ -110,6 +110,26 @@ internal class EntityTest {
 
 
     @Test
+    fun `database-generated PK`() {
+        @Table("tx1")
+        class Tx1: Entity() {
+            @Column("pkA", pkPos = 1, onInsert = Generated.OnTheDbAlways) var pkFieldA: Int = 0
+        }
+
+        @Table("tx2")
+        class Tx2: Entity() {
+            @Column("pkA", pkPos = 1, onInsert = Generated.OnTheDbWhenNull) var pkFieldA: Int = 0
+        }
+
+        val x1 = assertThrows<IllegalArgumentException>("should have failed on db-generated PK") { Tx1() }
+        val x2 = assertThrows<IllegalArgumentException>("should have failed on db-generated PK") { Tx2() }
+        val expectedMsg = "PK columns can't be generated on the database side"
+        assertTrue(x1.message!!.contains(expectedMsg), "wrong error message: ${x1.message}")
+        assertTrue(x2.message!!.contains(expectedMsg), "wrong error message: ${x2.message}")
+    }
+
+
+    @Test
     fun `missing PK`() {
         @Table("tx") class Tx: Entity() { @Column("c") var c = 0 }
         val x = assertThrows<IllegalArgumentException>("should have failed on missing PK") { Tx() }
@@ -131,7 +151,7 @@ internal class EntityTest {
 
 
     @Test
-    fun `too high pkPos`() {
+    fun `too big pkPos`() {
         @Table("tx")
         class Tx: Entity() {
             @Column("pkA", pkPos = 1) var pkFieldA: Int = 0
