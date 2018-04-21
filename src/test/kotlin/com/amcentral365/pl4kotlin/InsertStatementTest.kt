@@ -43,7 +43,7 @@ internal class InsertStatementTest {
 
         class InsertStatementUnderTest(entityDef: Entity, getGoodConnection: () -> Connection? = { null }): InsertStatement(entityDef, getGoodConnection) {
             override fun run(conn: Connection): Int {
-                assertEquals("INSERT INTO tx(clAlwA, clAlwB, clNullA, clNullB, dbNullA, pkCol) VALUES(?, ?, ?, ?, ?, ?)", this.sql)
+                assertEquals("INSERT INTO tx(clAlwA, clAlwB, clNullA, clNullB, dbNullA, pkCol) VALUES(?, ?, ?, ?, ?, ?)", this.build())
                 assertEquals(6, this.bindColDefs.size)
 
                 Assertions.assertIterableEquals(

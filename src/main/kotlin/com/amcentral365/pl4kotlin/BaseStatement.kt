@@ -35,7 +35,6 @@ abstract class BaseStatement(val entityDef: Entity, private val getGoodConnectio
     }
 
 
-    protected val sql: String by lazy { this.build() }
     private   var manageTx = false
 
     /**
@@ -72,20 +71,29 @@ abstract class BaseStatement(val entityDef: Entity, private val getGoodConnectio
 
     protected fun runDML(conn: Connection, bindVals: List<Any?>, fetchBacks: List<Descr>?): Int {
         var cnt = 0
+        var reportSqlOnError = true
         try {
-            conn.prepareStatement(this.sql).use { stmt ->
+            conn.prepareStatement(this.build()).use { stmt ->
                 this.bind(stmt, bindVals)
                 cnt = stmt.executeUpdate()
 
                 // if any values need to be fetched back (because SQL engine computed them), do that.
-                if( cnt > 0 && fetchBacks != null && fetchBacks.isNotEmpty()  )
+                if( cnt > 0 && fetchBacks != null && fetchBacks.isNotEmpty()  ) {
+                    reportSqlOnError = false
                     cnt = SelectStatement(this.entityDef).selectByDescrs(fetchBacks).byPk().run(conn)
+                }
 
                 if( this.manageTx )
                     conn.commit()
             }
         } catch(x: SQLException) {
-            TODO("replace code '23000' (duplicate entry) of x.getSQLState(), and throw proper exception")
+            //TODO("replace code '23000' (duplicate entry) of x.getSQLState(), and throw proper exception")
+            if( reportSqlOnError )
+                logger.error {
+                    "SelectStatement on ${this.entityDef::class.jvmName}: ${x::class.jvmName} ${x.message}; " +
+                    "SQL: ${this.formatSqlWithParams(bindVals)}"
+                }
+            throw x
         }
 
         return cnt
@@ -126,7 +134,7 @@ abstract class BaseStatement(val entityDef: Entity, private val getGoodConnectio
      */
     protected fun formatSqlWithParams(bindVals: List<Any?>): String {
         val dispMax = 64 // should be enough for UUIDs (32), timestamps (19), ROWIDs (varies), etc
-        var dbgSql = this.sql
+        var dbgSql = this.build()
         for(value in bindVals) {
             var dispVal = "null"
             if( value != null ) {

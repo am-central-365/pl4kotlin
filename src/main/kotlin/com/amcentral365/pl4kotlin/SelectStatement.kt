@@ -74,7 +74,13 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
         var rs: ResultSet? = null
 
         val bindVals: MutableList<Any?> = mutableListOf()
-        listOf(this.selectDescrs, this.whereDescrs, this.orderDescrs).forEach { it.forEach { bindVals.addAll(it.binds) } }
+        this.selectDescrs.forEach { bindVals.addAll(it.binds) }
+        listOf(this.whereDescrs, this.orderDescrs).forEach {
+            it.forEach {
+                if( it.expr == null ) bindVals.add(it.colDef)
+                else                  bindVals.addAll(it.binds)
+            }
+        }
 
         val sql = this.build()
         //logger.debug { "running ${this.formatSqlWithParams(bindVals)}" }
@@ -89,7 +95,7 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
                         rowCount++
                     }
             }
-        } catch (e: SQLException) {
+        } catch(e: SQLException) {
             logger.error {
                 "SelectStatement on ${this.entityDef::class.jvmName}: ${e::class.jvmName} ${e.message}; " +
                 "SQL: ${this.formatSqlWithParams(bindVals)}"
