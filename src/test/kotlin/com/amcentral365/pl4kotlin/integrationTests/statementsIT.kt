@@ -6,6 +6,7 @@ import org.junit.Test
 import org.junit.jupiter.api.Assertions.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 private val logger = KotlinLogging.logger {}
 
@@ -44,6 +45,17 @@ class statementsIT {
         assertNotNull(tto1.created)
         assertNotNull(tto1.modified)
         assertEquals(tto1.created, tto1.modified)
+
+        assertEquals(TestTbl.KNOWN_VC, tto1.vcVal)
+        assertEquals(TestTbl.KNOWN_CHAR, tto1.charVal)
+        assertEquals(TestTbl.KNOWN_DATE, tto1.dateVal)
+        assertEquals(TestTbl.KNOWN_TIME, tto1.timweVal)
+        assertEquals(TestTbl.KNOWN_NUM, tto1.numVal)
+        assertEquals(TestTbl.KNOWN_FLOAT, tto1.floatVal)
+        assertEquals(TestTbl.KNOWN_DOUBLE, tto1.doubleVal)
+        assertEquals(TestTbl.KNOWN_BITS, tto1.bit17Val)
+        assertNull(tto1.boolVal)
+        assertNull(tto1.enumVal)
 
         /*getConnection().use {
             count = InsertStatement(tto1).run(it)
