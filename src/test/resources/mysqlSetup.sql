@@ -20,11 +20,12 @@ create table test_tbl(
   char_col    char(7),
   date_col    date,
   time_col    time,
-  num_col     numeric,
-  float_col   float,
+  num_col     decimal(65, 30),
+  float_col   float(15,8),
   double_col  double,
   bit17_val   bit(17),
   enum_col    enum('alpha', 'beta', 'gamma', 'delta', 'epsilon'),
-  bool_col    boolean
+  bool_col    boolean,
+  null_col    text
 );
 

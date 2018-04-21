@@ -21,7 +21,7 @@ class TestTbl: Entity() {
         const val KNOWN_PK2: Short =  10221
         const val KNOWN_VC     = "Yea, from the table of my memory\nI’ll wipe away all trivial, fond records,"
         const val KNOWN_CHAR   = " a .b "
-        const val KNOWN_FLOAT  = -342.74236e14f
+        const val KNOWN_FLOAT  = -342.7423614f
         const val KNOWN_DOUBLE = Math.PI
         const val KNOWN_BITS   = (1L shl 15) or (1L shl 9) or (1L shl 8) or (1L shl 2)
 
@@ -44,13 +44,14 @@ class TestTbl: Entity() {
     @Column("vc_col")               var vcVal:     String?       = TestTbl.KNOWN_VC
     @Column("char_col")             var charVal:   String?       = TestTbl.KNOWN_CHAR
     @Column("date_col")             var dateVal:   Date?         = TestTbl.KNOWN_DATE
-    @Column("time_col")             var timweVal:  Time?         = TestTbl.KNOWN_TIME
+    @Column("time_col")             var timeVal:  Time?         = TestTbl.KNOWN_TIME
     @Column("num_col")              var numVal:    BigDecimal?   = TestTbl.KNOWN_NUM
     @Column("float_col")            var floatVal:  Float?        = TestTbl.KNOWN_FLOAT
     @Column("double_col")           var doubleVal: Double?       = TestTbl.KNOWN_DOUBLE
     @Column("bit17_val")            var bit17Val:  Long?         = TestTbl.KNOWN_BITS
-    @Column("bool_col")             var boolVal:   Boolean?      = null
-    @Column("enum_col")             var enumVal:   GreekLetters? = null
+    @Column("bool_col")             var boolVal:   Boolean?      = true
+    @Column("enum_col")             var enumVal:   GreekLetters? = GreekLetters.epsilon
+    @Column("null_col")             var nullVal:   String?       = null
 
     var transVal1 = 25
     var transVal2 = "twenty five"

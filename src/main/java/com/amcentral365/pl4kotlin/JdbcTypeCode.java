@@ -159,7 +159,7 @@ public enum JdbcTypeCode {
     }
 
 
-    private static UUID uuidFromBytes(byte[] bytes) {
+    public static UUID uuidFromBytes(byte[] bytes) {
         if( bytes == null )
             return null;
         ByteBuffer bb = ByteBuffer.wrap(bytes);
@@ -168,7 +168,7 @@ public enum JdbcTypeCode {
         return new UUID(high, low);
     }
 
-    private static byte[] uuidToBytes(UUID uuid) {
+    public static byte[] uuidToBytes(UUID uuid) {
         if( uuid == null )
             return null;
         ByteBuffer bb = ByteBuffer.wrap(new byte[16]);
