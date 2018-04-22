@@ -40,7 +40,10 @@ open class DeleteStatement(entityDef: Entity, getGoodConnection: () -> Connectio
         if( this.whereDescrs.isNotEmpty() ) {
             sb.append(" WHERE ")
             sb.append(this.emitWhereList(this.whereDescrs))
-            this.whereDescrs.forEach { this.bindVals.addAll(it.binds) }
+            this.whereDescrs.forEach {
+                if( it.expr == null ) bindVals.add(it.colDef)
+                else                  bindVals.addAll(it.binds)
+            }
         }
 
         return sb.toString()

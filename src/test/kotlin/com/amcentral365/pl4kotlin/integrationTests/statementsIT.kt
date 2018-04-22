@@ -1,12 +1,16 @@
 package com.amcentral365.pl4kotlin.integrationTests
 
+import com.amcentral365.pl4kotlin.DeleteStatement
 import com.amcentral365.pl4kotlin.InsertStatement
 import com.amcentral365.pl4kotlin.JdbcTypeCode
 import com.amcentral365.pl4kotlin.SelectStatement
 import mu.KotlinLogging
+import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.runners.MethodSorters
 import java.math.BigDecimal
+import java.sql.Connection
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -14,36 +18,32 @@ import kotlin.test.assertTrue
 
 private val logger = KotlinLogging.logger {}
 
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class statementsIT {
 
-    @Test
-    fun allStatements() {
+    val numOfRecordsToTest = 11
+    var runTearDown = false
 
-        logger.info { "Starting statement tests" }
-        var teardown = false
-        try {
-            initSql()
-            runSqlSetup()
-            teardown = true
-
-            val numOfRecordsToTest = 11
-
-            testInsertStatement()
-            insertRecords(numOfRecordsToTest)
-
-            testSelectStatement(numOfRecordsToTest)
-
-
-        } finally {
-            if( teardown )
-                runSqlTeardown()
-        }
+    @Test fun m00Setup() {
+        logger.info { "IT init" }
+        initSql()
+        runSqlSetup()
+        this.runTearDown = true
     }
 
-    private fun testInsertStatement() {
+    @Test fun m99TearDown() {
+        logger.info { "IT cleanup" }
+        if( this.runTearDown ) {
+            runSqlTeardown()
+        }
+
+    }
+
+    @Test fun m10InsertStatement() {
+        logger.info { "running InsertStatement test" }
         val tto1 = TestTbl()
 
-        var count = InsertStatement(tto1, getGoodConnection = ::getConnection).run()
+        val count = InsertStatement(tto1, getGoodConnection = ::getConnection).run()
         assertEquals(1, count)
 
         assertEquals(TestTbl.KNOWN_PK1, tto1.pk1)
@@ -73,6 +73,46 @@ class statementsIT {
         ensureEq(tto1, tto2!!)
     }
 
+    @Test fun m20testSelectStatement() {
+        insertRecords(this.numOfRecordsToTest)
+
+        logger.info { "running testSelectStatement(${this.numOfRecordsToTest})" }
+        for(k in (1..this.numOfRecordsToTest).shuffled()) {
+            val tto1 = TestTbl(k)
+            logger.debug { "  $k: running SelectStatement for pk(${tto1.pk1}, ${tto1.pk2})" }
+            val selCnt = SelectStatement(tto1, getGoodConnection = ::getConnection).select(tto1.allColsButPk!!).byPk().run()
+            assertEquals(1, selCnt)
+
+            val tto2 = this.jdbcreadTestTblRec(tto1.pk1, k.toShort())
+            assertNotNull(tto2)
+
+            ensureEq(tto1, tto2!!)
+        }
+    }
+
+    /*@Test fun m30testUpdateStatement() {
+        logger.info { "running testUpdateStatement" }
+
+    }*/
+
+    @Test fun m40testDeleteStatement() {
+        logger.info { "running testDeleteStatement($numOfRecordsToTest)" }
+
+        for(k in (1..this.numOfRecordsToTest).shuffled()) {
+            val tto = TestTbl(k)
+            logger.debug { "  $k: running DeleteStatement for pk(${tto.pk1}, ${tto.pk2})" }
+            val delCnt = DeleteStatement(tto, getGoodConnection = ::getConnection).byPk().run()
+            assertEquals(1, delCnt)
+            assertEquals(k.toShort(), tto.pk2)
+
+            val selRec = jdbcreadTestTblRec(tto.pk1, k.toShort())
+            assertNull(selRec)
+        }
+    }
+
+
+    // ------------------------------------------------------- helper functions
+
     private fun ensureEq(tto1: TestTbl, tto2: TestTbl) {
         assertEquals(tto1.pk1,       tto2.pk1)
         assertEquals(tto1.pk2,       tto2.pk2)
@@ -92,7 +132,7 @@ class statementsIT {
         // MySQL right-trims CHAR unless PAD_CHAR_TO_FULL_LENGTH is enabled
         assertEquals(tto1.charVal!!.trimEnd(), tto2.charVal)
 
-        // BigDecimal should use their own cmoparator
+        // BigDecimal should use their own Compare
         assertTrue(tto1.numVal!!.compareTo(tto2.numVal) == 0)
     }
 
@@ -112,29 +152,13 @@ class statementsIT {
 
 
     private fun insertRecords(count: Int) {
+        logger.info { "inserting $numOfRecordsToTest records" }
         for(k in 1..count) {
             val r = this.tweakForK(TestTbl(), k)
             val insertCount = InsertStatement(r, getGoodConnection = ::getConnection).run()
             assertEquals(1, insertCount)
         }
     }
-
-
-    private fun testSelectStatement(numOfRecordsToTest: Int) {
-        logger.info { "running testSelectStatement($numOfRecordsToTest)" }
-        for(k in numOfRecordsToTest downTo 1) {
-            val tto1 = TestTbl(k)
-            logger.debug { "  $k: running testSelectStatement for pk ${tto1.pk1}, ${tto1.pk2}" }
-            val selCnt = SelectStatement(tto1, getGoodConnection = ::getConnection).select(tto1.allColsButPk!!).byPk().run()
-            assertEquals(1, selCnt)
-
-            val tto2 = this.jdbcreadTestTblRec(tto1.pk1, k.toShort())
-            assertNotNull(tto2)
-
-            ensureEq(tto1, tto2!!)
-        }
-    }
-
 
 
     private fun jdbcreadTestTblRec(ppk1: Int, ppk2: Short): TestTbl? {
