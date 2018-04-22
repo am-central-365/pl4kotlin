@@ -2,9 +2,11 @@ package com.amcentral365.pl4kotlin.integrationTests
 
 import com.amcentral365.pl4kotlin.InsertStatement
 import com.amcentral365.pl4kotlin.JdbcTypeCode
+import com.amcentral365.pl4kotlin.SelectStatement
 import mu.KotlinLogging
 import org.junit.Test
 import org.junit.jupiter.api.Assertions.assertEquals
+import java.math.BigDecimal
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -24,7 +26,13 @@ class statementsIT {
             runSqlSetup()
             teardown = true
 
+            val numOfRecordsToTest = 11
+
             testInsertStatement()
+            insertRecords(numOfRecordsToTest)
+
+            testSelectStatement(numOfRecordsToTest)
+
 
         } finally {
             if( teardown )
@@ -32,7 +40,7 @@ class statementsIT {
         }
     }
 
-    fun testInsertStatement() {
+    private fun testInsertStatement() {
         val tto1 = TestTbl()
 
         var count = InsertStatement(tto1, getGoodConnection = ::getConnection).run()
@@ -60,10 +68,14 @@ class statementsIT {
         assertEquals(TestTbl.GreekLetters.epsilon, tto1.enumVal)
         assertNull(tto1.nullVal)
 
-        val tto2x = this.jdbcreadTestTblRec(tto1.pk1, tto1.pk2!!)
-        assertNotNull(tto2x)
-        val tto2 = tto2x!!  // to let compile know it is not null
+        val tto2 = this.jdbcreadTestTblRec(tto1.pk1, tto1.pk2!!)
+        assertNotNull(tto2)
+        ensureEq(tto1, tto2!!)
+    }
 
+    private fun ensureEq(tto1: TestTbl, tto2: TestTbl) {
+        assertEquals(tto1.pk1,       tto2.pk1)
+        assertEquals(tto1.pk2,       tto2.pk2)
         assertEquals(tto1.uuid1,     tto2.uuid1)
         assertEquals(tto1.uuid2,     tto2.uuid2)
         assertEquals(tto1.vcVal,     tto2.vcVal)
@@ -80,10 +92,47 @@ class statementsIT {
         // MySQL right-trims CHAR unless PAD_CHAR_TO_FULL_LENGTH is enabled
         assertEquals(tto1.charVal!!.trimEnd(), tto2.charVal)
 
-
+        // BigDecimal should use their own cmoparator
         assertTrue(tto1.numVal!!.compareTo(tto2.numVal) == 0)
-
     }
+
+    private fun tweakForK(r: TestTbl, k: Int): TestTbl = r.apply {
+        pk2 = k.toShort()
+        vcVal = "record $k"
+        uuid2 = null  // will be generated
+        dateVal!!.time = dateVal!!.time + k * 1000 * 60 * 60 * 24  // add k days
+        timeVal!!.time = timeVal!!.time + k * 1000 * 60            // add k minutes
+        numVal = numVal!!.add(BigDecimal(k))
+        floatVal = floatVal!! - k
+        doubleVal = doubleVal!! - k
+        bit17Val = bit17Val!! or (1L shl (k % 17))
+        boolVal = k % 2 == 0
+        enumVal = TestTbl.GreekLetters.values()[k % 5]  // round robin alpha to epsilon
+    }
+
+
+    private fun insertRecords(count: Int) {
+        for(k in 1..count) {
+            val r = this.tweakForK(TestTbl(), k)
+            val insertCount = InsertStatement(r, getGoodConnection = ::getConnection).run()
+            assertEquals(1, insertCount)
+        }
+    }
+
+
+    private fun testSelectStatement(recsToTest: Int) {
+        for(k in recsToTest downTo 1) {
+            val tto1 = TestTbl(k)
+            val selCnt = SelectStatement(tto1).select(tto1.allColsButPk!!).byPk().run()
+            assertEquals(1, selCnt)
+
+            val tto2 = this.jdbcreadTestTblRec(tto1.pk1, k.toShort())
+            assertNotNull(tto2)
+
+            ensureEq(tto1, tto2!!)
+        }
+    }
+
 
 
     private fun jdbcreadTestTblRec(pk1: Int, pk2: Short): TestTbl? {

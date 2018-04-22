@@ -13,7 +13,7 @@ import java.time.LocalTime
 import java.util.UUID
 
 @Table("test_tbl")
-class TestTbl: Entity() {
+class TestTbl(pk2: Int? = null): Entity() {
     enum class GreekLetters { alpha, beta, gamma, delta, epsilon }
 
     companion object {
@@ -56,4 +56,8 @@ class TestTbl: Entity() {
     var transVal1 = 25
     var transVal2 = "twenty five"
 
+    init {
+        if( pk2 != null )
+            this.pk2 = pk2.toShort()
+    }
 }
