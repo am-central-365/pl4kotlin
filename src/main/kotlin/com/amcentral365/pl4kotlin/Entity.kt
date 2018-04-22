@@ -26,7 +26,7 @@ abstract class Entity protected constructor() {
     fun preInsertDataValidator(): String? = null
 
     // ------------------------------------------------------------- Housekeeping
-    val tblDefKey = this.javaClass.name
+    private val tblDefKey: String = this.javaClass.name
     companion object {
         private val tblDefsMap = ConcurrentHashMap<String, TableDef>()
     }
@@ -43,27 +43,36 @@ abstract class Entity protected constructor() {
      *
      * The class is declared inner to associate a ColDef it with its corresponding Entity.
      */
-    inner class ColDef constructor(kProp: KProperty<Any?>, colAnnotation: Column) {
-        val fieldName:     String
-        val fieldType:     JdbcTypeCode
-        val columnName:    String = colAnnotation.columnName
-        val restParamName: String
-        val pkPos:         Int
-        val onInsert:      Generated
-        val isOptLock:     Boolean
-        val javaType:      java.lang.reflect.Type
+    inner class ColDef private constructor(
+            val fieldName:     String,
+            val fieldType:     JdbcTypeCode,
+            val columnName:    String,
+            val restParamName: String,
+            val pkPos:         Int,
+            val onInsert:      Generated,
+            val isOptLock:     Boolean,
+            val javaType:      java.lang.reflect.Type
+    ): Comparable<ColDef> {
 
-        internal val prop:     KMutableProperty1<out Entity, Any?>
+        internal lateinit var prop: KMutableProperty1<out Entity, Any?>
 
-        init {
-            this.fieldName = kProp.name
-            this.fieldType = JTC(kProp)
-            this.restParamName = if( colAnnotation.restParamName.isNotEmpty() ) colAnnotation.restParamName else fieldName
-            this.pkPos = colAnnotation.pkPos
-            this.onInsert = colAnnotation.onInsert
-            this.isOptLock = colAnnotation.isOptimisticLock
-            this.javaType = kProp.returnType.javaType
+        internal constructor(other: ColDef):
+            this(other.fieldName, other.fieldType, other.columnName, other.restParamName, other.pkPos,
+                    other.onInsert, other.isOptLock, other.javaType) {
+            this.prop = other.prop
+        }
 
+        internal constructor(kProp: KProperty<Any?>, colAnnotation: Column):
+            this(kProp.name
+                , JTC(kProp)
+                , colAnnotation.columnName
+                , if( colAnnotation.restParamName.isNotEmpty() ) colAnnotation.restParamName else kProp.name
+                , colAnnotation.pkPos
+                , colAnnotation.onInsert
+                , colAnnotation.isOptimisticLock
+                , kProp.returnType.javaType
+            )
+        {
             val msgPrefix = "DAO error in class ${this@Entity::class.java.name}(${this@Entity.tableName}), field ${this.fieldName}"
 
             require( !this.isOptLock
@@ -88,6 +97,19 @@ abstract class Entity protected constructor() {
             require( this.pkPos == 0 || (this.onInsert != Generated.OnTheDbAlways && this.onInsert != Generated.OnTheDbWhenNull) ) {
                 "$msgPrefix: PK columns can't be generated on the database side, value ${this.onInsert} is illegal"
             }
+        }
+
+        override fun compareTo(other: ColDef): Int {
+            var cmp: Int
+            cmp = this.fieldName    .compareTo(other.fieldName);      if( cmp != 0 ) return cmp
+            cmp = this.fieldType    .compareTo(other.fieldType);      if( cmp != 0 ) return cmp
+            cmp = this.columnName   .compareTo(other.columnName);     if( cmp != 0 ) return cmp
+            cmp = this.restParamName.compareTo(other.restParamName);  if( cmp != 0 ) return cmp
+            cmp = this.pkPos        .compareTo(other.pkPos);          if( cmp != 0 ) return cmp
+            cmp = this.onInsert     .compareTo(other.onInsert);       if( cmp != 0 ) return cmp
+            cmp = this.isOptLock    .compareTo(other.isOptLock);      if( cmp != 0 ) return cmp
+            cmp = this.javaType.javaClass.name.compareTo(other.javaType.javaClass.name);   if( cmp != 0 ) return cmp
+            return 0
         }
 
         /**
@@ -174,13 +196,15 @@ abstract class Entity protected constructor() {
 
     // ------------------------------------------------------------- Exposed variables
     internal val tableName = Entity.tblDefsMap[this.tblDefKey]!!.tableName
-    internal val colDefs   = Entity.tblDefsMap[this.tblDefKey]!!.colDefs
+    internal val colDefs   = Entity.tblDefsMap[this.tblDefKey]!!.colDefs.map { this.ColDef(it) }
 
-    internal val pkCols                 = Entity.tblDefsMap[this.tblDefKey]!!.pkCols
-    internal val optLockCol             = Entity.tblDefsMap[this.tblDefKey]?.optLockCol
-    internal val pkAndOptLockCols       = Entity.tblDefsMap[this.tblDefKey]!!.pkAndOptLockCols
-    internal val allColsButPk           = Entity.tblDefsMap[this.tblDefKey]?.allColsButPk
-    internal val allColsButPkAndOptLock = Entity.tblDefsMap[this.tblDefKey]?.allColsButPkAndOptLock
+    internal val pkCols                 = Entity.tblDefsMap[this.tblDefKey]!!.pkCols.map { this.ColDef(it) }
+    internal val pkAndOptLockCols       = Entity.tblDefsMap[this.tblDefKey]!!.pkAndOptLockCols.map { this.ColDef(it) }
+    internal val allColsButPk           = Entity.tblDefsMap[this.tblDefKey]?.allColsButPk?.map { this.ColDef(it) }
+    internal val allColsButPkAndOptLock = Entity.tblDefsMap[this.tblDefKey]?.allColsButPkAndOptLock?.map { this.ColDef(it) }
+    internal val optLockCol             =
+            if( Entity.tblDefsMap[this.tblDefKey]?.optLockCol == null ) null
+            else ColDef(Entity.tblDefsMap[this.tblDefKey]?.optLockCol!!)
 
     // ------------------------------------------------------------- Methods
     private fun constructFromAnnotations() {
@@ -247,7 +271,7 @@ abstract class Entity protected constructor() {
 
         val dupPk = cdefsByPkPos.keys.firstOrNull { cdefsByPkPos[it]!!.size > 1 }
         if( dupPk != null )
-            return "duplicate fields with pkPos $dupPk: ${cdefsByPkPos[dupPk]!!.map { it.fieldName }.joinToString(", ")}"
+            return "duplicate fields with pkPos $dupPk: ${cdefsByPkPos[dupPk]!!.joinToString(", ") { it.fieldName }}"
 
         return null
     }

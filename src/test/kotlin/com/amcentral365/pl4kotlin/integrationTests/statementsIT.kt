@@ -120,10 +120,12 @@ class statementsIT {
     }
 
 
-    private fun testSelectStatement(recsToTest: Int) {
-        for(k in recsToTest downTo 1) {
+    private fun testSelectStatement(numOfRecordsToTest: Int) {
+        logger.info { "running testSelectStatement($numOfRecordsToTest)" }
+        for(k in numOfRecordsToTest downTo 1) {
             val tto1 = TestTbl(k)
-            val selCnt = SelectStatement(tto1).select(tto1.allColsButPk!!).byPk().run()
+            logger.debug { "  $k: running testSelectStatement for pk ${tto1.pk1}, ${tto1.pk2}" }
+            val selCnt = SelectStatement(tto1, getGoodConnection = ::getConnection).select(tto1.allColsButPk!!).byPk().run()
             assertEquals(1, selCnt)
 
             val tto2 = this.jdbcreadTestTblRec(tto1.pk1, k.toShort())
@@ -135,7 +137,7 @@ class statementsIT {
 
 
 
-    private fun jdbcreadTestTblRec(pk1: Int, pk2: Short): TestTbl? {
+    private fun jdbcreadTestTblRec(ppk1: Int, ppk2: Short): TestTbl? {
         val sql = "select bit17_val, bool_col, char_col, created_ts, date_col, double_col, " +
                          "enum_col, float_col, modified_ts, num_col, time_col, uuid1, " +
                          "uuid2, vc_col, null_col " +
@@ -145,14 +147,16 @@ class statementsIT {
         // do not catch exceptions, let test fail if one is thrown
         getConnection().use { conn ->
             conn.prepareStatement(sql).use { stmt ->
-                stmt.setInt(  1, pk1)
-                stmt.setShort(2, pk2)
+                stmt.setInt(  1, ppk1)
+                stmt.setShort(2, ppk2)
                 stmt.executeQuery().use { rs ->
                     if( !rs.next() )
                         return null
 
                     return TestTbl().apply {
                         var n = 0
+                        pk1       = ppk1
+                        pk2       = ppk2
                         bit17Val  = rs.getLong(++n)
                         boolVal   = rs.getBoolean(++n)
                         charVal   = rs.getString(++n)

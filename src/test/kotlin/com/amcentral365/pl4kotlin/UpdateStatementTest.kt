@@ -40,11 +40,11 @@ internal class UpdateStatementTest {
         assertEquals("UPDATE tx SET val1Col = ? WHERE pkCol1 = ? AND pkCol2 = ?", sql)
 
         assertEquals(1, stmt.updateDescrs.size)
-        SelectStatementTest.checkDescr(stmt.updateDescrs[0], this.val1ColDef)
+        EntityTest.checkDescr(stmt.updateDescrs[0], this.val1ColDef)
 
         assertEquals(2, stmt.whereDescrs.size)
-        SelectStatementTest.checkDescr(stmt.whereDescrs[0], this.pk1ColDef)
-        SelectStatementTest.checkDescr(stmt.whereDescrs[1], this.pk2ColDef)
+        EntityTest.checkDescr(stmt.whereDescrs[0], this.pk1ColDef)
+        EntityTest.checkDescr(stmt.whereDescrs[1], this.pk2ColDef)
     }
 
 
@@ -58,15 +58,15 @@ internal class UpdateStatementTest {
                       "WHERE optLockCol = ? AND pkCol1 = ? AND pkCol2 = ?", sql)
 
         assertEquals(4, stmt.updateDescrs.size)
-        SelectStatementTest.checkDescr(stmt.updateDescrs[0], this.val1ColDef)
-        SelectStatementTest.checkDescr(stmt.updateDescrs[1], this.val2ColDef)
-        SelectStatementTest.checkDescr(stmt.updateDescrs[2], this.val3ColDef)
-        SelectStatementTest.checkDescr(stmt.updateDescrs[3], this.val4ColDef)
+        EntityTest.checkDescr(stmt.updateDescrs[0], this.val1ColDef)
+        EntityTest.checkDescr(stmt.updateDescrs[1], this.val2ColDef)
+        EntityTest.checkDescr(stmt.updateDescrs[2], this.val3ColDef)
+        EntityTest.checkDescr(stmt.updateDescrs[3], this.val4ColDef)
 
         assertEquals(3, stmt.whereDescrs.size)
-        SelectStatementTest.checkDescr(stmt.whereDescrs[0], this.optLockColDef)
-        SelectStatementTest.checkDescr(stmt.whereDescrs[1], this.pk1ColDef)
-        SelectStatementTest.checkDescr(stmt.whereDescrs[2], this.pk2ColDef)
+        EntityTest.checkDescr(stmt.whereDescrs[0], this.optLockColDef)
+        EntityTest.checkDescr(stmt.whereDescrs[1], this.pk1ColDef)
+        EntityTest.checkDescr(stmt.whereDescrs[2], this.pk2ColDef)
     }
 
 
@@ -78,9 +78,9 @@ internal class UpdateStatementTest {
         assertEquals("UPDATE tx SET val3Col = ?, pkCol1 = ?, optLockCol = ?", sql)
 
         assertEquals(3, stmt.updateDescrs.size)
-        SelectStatementTest.checkDescr(stmt.updateDescrs[0], this.val3ColDef)
-        SelectStatementTest.checkDescr(stmt.updateDescrs[1], this.pk1ColDef)
-        SelectStatementTest.checkDescr(stmt.updateDescrs[2], this.optLockColDef)
+        EntityTest.checkDescr(stmt.updateDescrs[0], this.val3ColDef)
+        EntityTest.checkDescr(stmt.updateDescrs[1], this.pk1ColDef)
+        EntityTest.checkDescr(stmt.updateDescrs[2], this.optLockColDef)
 
         assertEquals(0, stmt.whereDescrs.size)
     }
@@ -104,15 +104,15 @@ internal class UpdateStatementTest {
                       "WHERE pkCol2 = ? AND pkCol1 = ? AND ?*? + ?*? = ?*?", sql)
 
         assertEquals(4, stmt.updateDescrs.size)
-        SelectStatementTest.checkDescr(stmt.updateDescrs[0], this.val2ColDef)
-        SelectStatementTest.checkDescr(stmt.updateDescrs[1], this.val1ColDef, "sysdate+?/?", true, 24, 60)
-        SelectStatementTest.checkDescr(stmt.updateDescrs[2], this.val4ColDef)
-        SelectStatementTest.checkDescr(stmt.updateDescrs[3], this.val3ColDef, "?+?", true, 17, 19)
+        EntityTest.checkDescr(stmt.updateDescrs[0], this.val2ColDef)
+        EntityTest.checkDescr(stmt.updateDescrs[1], this.val1ColDef, "sysdate+?/?", true, 24, 60)
+        EntityTest.checkDescr(stmt.updateDescrs[2], this.val4ColDef)
+        EntityTest.checkDescr(stmt.updateDescrs[3], this.val3ColDef, "?+?", true, 17, 19)
 
         assertEquals(3, stmt.whereDescrs.size)
-        SelectStatementTest.checkDescr(stmt.whereDescrs[0], this.pk2ColDef)
-        SelectStatementTest.checkDescr(stmt.whereDescrs[1], this.pk1ColDef)
-        SelectStatementTest.checkDescr(stmt.whereDescrs[2], null, "?*? + ?*? = ?*?", true, 17, 18, 27, 28, 37, 38)
+        EntityTest.checkDescr(stmt.whereDescrs[0], this.pk2ColDef)
+        EntityTest.checkDescr(stmt.whereDescrs[1], this.pk1ColDef)
+        EntityTest.checkDescr(stmt.whereDescrs[2], null, "?*? + ?*? = ?*?", true, 17, 18, 27, 28, 37, 38)
     }
 
 
@@ -124,13 +124,13 @@ internal class UpdateStatementTest {
         assertEquals("UPDATE tx SET pkCol2 = ?", sql)
 
         assertEquals(1, stmt.updateDescrs.size)
-        SelectStatementTest.checkDescr(stmt.updateDescrs[0], this.pk2ColDef)
+        EntityTest.checkDescr(stmt.updateDescrs[0], this.pk2ColDef)
 
         assertEquals(0, stmt.whereDescrs.size)
 
         assertEquals(2, stmt.fetchbackDescrs.size)
-        SelectStatementTest.checkDescr(stmt.fetchbackDescrs[0], this.val2ColDef)
-        SelectStatementTest.checkDescr(stmt.fetchbackDescrs[1], this.val4ColDef)
+        EntityTest.checkDescr(stmt.fetchbackDescrs[0], this.val2ColDef)
+        EntityTest.checkDescr(stmt.fetchbackDescrs[1], this.val4ColDef)
     }
 
 

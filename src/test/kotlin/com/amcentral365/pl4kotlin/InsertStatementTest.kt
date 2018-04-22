@@ -52,9 +52,9 @@ internal class InsertStatementTest {
                 )
 
                 assertEquals(3, this.fetchDescr.size)
-                SelectStatementTest.checkDescr(this.fetchDescr[0], dbAlwAColDef)
-                SelectStatementTest.checkDescr(this.fetchDescr[1], dbAlwBColDef)
-                SelectStatementTest.checkDescr(this.fetchDescr[2], dbNullBColDef)
+                EntityTest.checkDescr(this.fetchDescr[0], dbAlwAColDef)
+                EntityTest.checkDescr(this.fetchDescr[1], dbAlwBColDef)
+                EntityTest.checkDescr(this.fetchDescr[2], dbNullBColDef)
 
                 return 0
             }

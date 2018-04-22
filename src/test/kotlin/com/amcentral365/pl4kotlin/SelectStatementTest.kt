@@ -27,16 +27,6 @@ internal class SelectStatementTest {
     val val2ColDef = txInst.colDefs.first { it.fieldName == Tx::val2Field.name }
     val optLockColDef = txInst.colDefs.first { it.fieldName == Tx::optLockField.name }
 
-    companion object {
-        fun checkDescr(descr: BaseStatement.Descr, colDef: Entity.ColDef?, expr: String?=null, asc: Boolean=true, vararg  binds: Any?) {
-            assertEquals(colDef, descr.colDef)
-            assertEquals(expr,   descr.expr)
-            assertEquals(asc,    descr.asc)
-            assertIterableEquals(Arrays.asList(*binds), descr.binds)
-        }
-    }
-
-
     @Test
     fun build() {
         var sql: String
@@ -93,23 +83,23 @@ internal class SelectStatementTest {
         )
 
         assertEquals( 3,  stmt.selectDescrs.size)
-        checkDescr(stmt.selectDescrs[0], this.pk2ColDef)
-        checkDescr(stmt.selectDescrs[1], this.val1ColDef, "sysdate - trunc(sysdate) + ? + ?", true, 7, 'x')
-        checkDescr(stmt.selectDescrs[2], this.val2ColDef)
+        EntityTest.checkDescr(stmt.selectDescrs[0], this.pk2ColDef)
+        EntityTest.checkDescr(stmt.selectDescrs[1], this.val1ColDef, "sysdate - trunc(sysdate) + ? + ?", true, 7, 'x')
+        EntityTest.checkDescr(stmt.selectDescrs[2], this.val2ColDef)
 
         assertEquals( 6,  stmt.whereDescrs.size)
-        checkDescr(stmt.whereDescrs[0], this.optLockColDef)
-        checkDescr(stmt.whereDescrs[1], this.pk1ColDef)
-        checkDescr(stmt.whereDescrs[2], this.pk2ColDef)
-        checkDescr(stmt.whereDescrs[3], this.val1ColDef)
-        checkDescr(stmt.whereDescrs[4], this.val2ColDef)
-        checkDescr(stmt.whereDescrs[5], null, "?+? = ?", true, 2, 29, 31)
+        EntityTest.checkDescr(stmt.whereDescrs[0], this.optLockColDef)
+        EntityTest.checkDescr(stmt.whereDescrs[1], this.pk1ColDef)
+        EntityTest.checkDescr(stmt.whereDescrs[2], this.pk2ColDef)
+        EntityTest.checkDescr(stmt.whereDescrs[3], this.val1ColDef)
+        EntityTest.checkDescr(stmt.whereDescrs[4], this.val2ColDef)
+        EntityTest.checkDescr(stmt.whereDescrs[5], null, "?+? = ?", true, 2, 29, 31)
 
         assertEquals( 4,  stmt.orderDescrs.size)
-        checkDescr(stmt.orderDescrs[0], this.val1ColDef, asc=false)
-        checkDescr(stmt.orderDescrs[1], this.pk1ColDef)
-        checkDescr(stmt.orderDescrs[2], null, "random(?)", true, -18)
-        checkDescr(stmt.orderDescrs[3], null, "concat(?,?) desc", true, 'a', "strB")
+        EntityTest.checkDescr(stmt.orderDescrs[0], this.val1ColDef, asc=false)
+        EntityTest.checkDescr(stmt.orderDescrs[1], this.pk1ColDef)
+        EntityTest.checkDescr(stmt.orderDescrs[2], null, "random(?)", true, -18)
+        EntityTest.checkDescr(stmt.orderDescrs[3], null, "concat(?,?) desc", true, 'a', "strB")
 
     }
 }

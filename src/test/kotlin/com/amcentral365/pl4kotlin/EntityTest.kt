@@ -1,12 +1,33 @@
 package com.amcentral365.pl4kotlin
 
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.assertThrows
+import java.util.Arrays
 import kotlin.test.assertTrue
 
 internal class EntityTest {
+
+    companion object {
+        fun checkColDefs(c1: Entity.ColDef?, c2: Entity.ColDef?) {
+            if( c1 == null )
+                Assertions.assertNull(c2)
+            else {
+                assertNotNull(c2)
+                assertEquals(0, c1.compareTo(c2!!))
+            }
+
+        }
+
+        fun checkDescr(descr: BaseStatement.Descr, colDef: Entity.ColDef?, expr: String?=null, asc: Boolean=true, vararg  binds: Any?) {
+            checkColDefs(colDef, descr.colDef)
+            assertEquals(expr,   descr.expr)
+            assertEquals(asc,    descr.asc)
+            Assertions.assertIterableEquals(Arrays.asList(*binds), descr.binds)
+        }
+    }
 
     @Test
     fun goodEntityConstructor() {
@@ -28,7 +49,7 @@ internal class EntityTest {
         assertEquals("valField", tx.colDefs[1].fieldName)
 
         assertEquals(1, tx.pkCols.size)
-        assertEquals(tx.colDefs[0], tx.pkCols[0])
+        checkColDefs(tx.colDefs[0], tx.pkCols[0])
     }
 
 
