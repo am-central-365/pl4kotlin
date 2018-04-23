@@ -16,24 +16,39 @@ import com.amcentral365.pl4kotlin.SelectStatement
 import com.amcentral365.pl4kotlin.UpdateStatement
 import com.amcentral365.pl4kotlin.DeleteStatement
 import com.amcentral365.pl4kotlin.JdbcTypeCode
+import java.sql.Connection
 import java.sql.Timestamp
-import java.time.LocalDateTime
 import java.util.UUID
 
 
 private val logger = KotlinLogging.logger {}
 
+/**
+ * Run integration tests for all statements.
+ * The tests are CRUD-ordered
+ *
+ * A few different techniques are used:
+ *   - connection management: sometimes we supply connection getter, and sometimes passing a pre-allocated connection
+ *   - specifying updated fields via class or entity instance reference (the result is the same)
+ *   - fetching back values after update
+ */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class statementsIT {
 
     val numOfRecordsToTest = 11
     var runTearDown = false
 
+    companion object {
+        lateinit var conn: Connection
+    }
+
     @Test fun m00Setup() {
         logger.info { "IT init" }
         initSql()
         runSqlSetup()
         this.runTearDown = true
+
+        statementsIT.conn = getConnection()
     }
 
     @Test fun m99TearDown() {
@@ -41,7 +56,7 @@ class statementsIT {
         if( this.runTearDown ) {
             runSqlTeardown()
         }
-
+        statementsIT.conn.close()
     }
 
     @Test fun m10InsertStatement() {
@@ -59,7 +74,7 @@ class statementsIT {
 
         assertNotNull(tto1.created)
         assertNotNull(tto1.modified)
-        assertEquals(tto1.created, tto1.modified)
+        assertEquals(tto1.created!!.time / 1000, tto1.modified!!.time / 1000)  // ignore milliseconds
 
         assertEquals(TestTbl.KNOWN_VC, tto1.vcVal)
         assertEquals(TestTbl.KNOWN_CHAR, tto1.charVal)
@@ -85,7 +100,7 @@ class statementsIT {
         for(k in (1..this.numOfRecordsToTest).shuffled()) {
             val tto1 = TestTbl(k)
             logger.debug { "  $k: running SelectStatement for pk(${tto1.pk1}, ${tto1.pk2})" }
-            val selCnt = SelectStatement(tto1, getGoodConnection = ::getConnection).select(tto1.allColsButPk!!).byPk().run()
+            val selCnt = SelectStatement(tto1).select(tto1.allColsButPk!!).byPk().run(statementsIT.conn)
             assertEquals(1, selCnt)
 
             val tto2 = this.jdbcreadTestTblRec(tto1.pk1, k.toShort())
@@ -98,9 +113,13 @@ class statementsIT {
     @Test fun m30testUpdateStatement() {
         logger.info { "running testUpdateStatement" }
 
+        // the test used to sometimes fail when modified_ts was declared with second precision,
+        // because things happened within the same second.
+        // now modify_ts is decalred as timestamp(6) to ensure nanosecond precision
+
         val pk2ToUpdate = 1
         val tto1 = TestTbl(pk2ToUpdate)
-        val selCnt = SelectStatement(tto1, getGoodConnection = ::getConnection).select(tto1.allColsButPk!!).byPk().run()
+        val selCnt = SelectStatement(tto1).select(tto1.allColsButPk!!).byPk().run(statementsIT.conn)
         assertEquals(1, selCnt)
 
         val newUuid1 = UUID.randomUUID()
@@ -113,7 +132,7 @@ class statementsIT {
         tto1.enumVal = newEnumVal
         tto1.created = Timestamp(tto1.created!!.time + 525252)
 
-        val updCnt = UpdateStatement(tto1, getGoodConnection = ::getConnection)
+        val updCnt = UpdateStatement(tto1)
                 .update(tto1::uuid1)
                 .update(TestTbl::uuid2)
                 .update(TestTbl::enumVal)
@@ -121,7 +140,7 @@ class statementsIT {
                 .byPkAndOptLock()
                 .fetchBack(tto1::created)
                 .fetchBack(tto1::modified)
-                .run()
+                .run(statementsIT.conn)
 
         assertEquals(1, updCnt)
         assertEquals(newUuid1, tto1.uuid1)
@@ -132,6 +151,8 @@ class statementsIT {
         val selRec = jdbcreadTestTblRec(tto1.pk1, tto1.pk2!!)
         assertNotNull(selRec)
         ensureEq(tto1, selRec!!)
+
+        statementsIT.conn.rollback()
     }
 
     @Test fun m40testDeleteStatement() {
@@ -140,7 +161,8 @@ class statementsIT {
         for(k in (1..this.numOfRecordsToTest).shuffled()) {
             val tto = TestTbl(k)
             logger.debug { "  $k: running DeleteStatement for pk(${tto.pk1}, ${tto.pk2})" }
-            val delCnt = DeleteStatement(tto, getGoodConnection = ::getConnection).byPk().run()
+            val delCnt = DeleteStatement(tto).byPk().run(statementsIT.conn)
+            statementsIT.conn.commit()
             assertEquals(1, delCnt)
             assertEquals(k.toShort(), tto.pk2)
 
@@ -194,9 +216,10 @@ class statementsIT {
         logger.info { "inserting $numOfRecordsToTest records" }
         for(k in 1..count) {
             val r = this.tweakForK(TestTbl(), k)
-            val insertCount = InsertStatement(r, getGoodConnection = ::getConnection).run()
+            val insertCount = InsertStatement(r).run(statementsIT.conn)
             assertEquals(1, insertCount)
         }
+        statementsIT.conn.commit()
     }
 
 
@@ -208,37 +231,36 @@ class statementsIT {
                    "where pk1 = ? and pk2 = ?"
 
         // do not catch exceptions, let test fail if one is thrown
-        getConnection().use { conn ->
-            conn.prepareStatement(sql).use { stmt ->
-                stmt.setInt(  1, ppk1)
-                stmt.setShort(2, ppk2)
-                stmt.executeQuery().use { rs ->
-                    if( !rs.next() )
-                        return null
+        statementsIT.conn.prepareStatement(sql).use { stmt ->
+            stmt.setInt(  1, ppk1)
+            stmt.setShort(2, ppk2)
+            stmt.executeQuery().use { rs ->
+                if( !rs.next() )
+                    return null
 
-                    return TestTbl().apply {
-                        var n = 0
-                        pk1       = ppk1
-                        pk2       = ppk2
-                        bit17Val  = rs.getLong(++n)
-                        boolVal   = rs.getBoolean(++n)
-                        charVal   = rs.getString(++n)
-                        created   = rs.getTimestamp(++n)
-                        dateVal   = rs.getDate(++n)
-                        doubleVal = rs.getDouble(++n)
-                        enumVal   = TestTbl.GreekLetters.valueOf(rs.getString(++n))
-                        floatVal  = rs.getFloat(++n)
-                        modified  = rs.getTimestamp(++n)
-                        numVal    = rs.getBigDecimal(++n)
-                        timeVal   = rs.getTime(++n)
-                        uuid1     = JdbcTypeCode.uuidFromBytes(rs.getBytes(++n))
-                        uuid2     = JdbcTypeCode.uuidFromBytes(rs.getBytes(++n))
-                        vcVal     = rs.getString(++n)
-                        nullVal   = rs.getString(++n)
-                    }
-               }
-            }
+                return TestTbl().apply {
+                    var n = 0
+                    pk1       = ppk1
+                    pk2       = ppk2
+                    bit17Val  = rs.getLong(++n)
+                    boolVal   = rs.getBoolean(++n)
+                    charVal   = rs.getString(++n)
+                    created   = rs.getTimestamp(++n)
+                    dateVal   = rs.getDate(++n)
+                    doubleVal = rs.getDouble(++n)
+                    enumVal   = TestTbl.GreekLetters.valueOf(rs.getString(++n))
+                    floatVal  = rs.getFloat(++n)
+                    modified  = rs.getTimestamp(++n)
+                    numVal    = rs.getBigDecimal(++n)
+                    timeVal   = rs.getTime(++n)
+                    uuid1     = JdbcTypeCode.uuidFromBytes(rs.getBytes(++n))
+                    uuid2     = JdbcTypeCode.uuidFromBytes(rs.getBytes(++n))
+                    vcVal     = rs.getString(++n)
+                    nullVal   = rs.getString(++n)
+                }
+           }
         }
+
     }
 
 }
