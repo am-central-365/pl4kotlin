@@ -90,35 +90,52 @@ internal class UpdateStatementTest {
     fun `update expression variations`() {
         val stmt = UpdateStatement(txInst)
                 .update(Tx::val2Field)
-                .update(Tx::val1Field, "sysdate+?/?", 24, 60)
+                .update(txInst::val2Field)
+                .update(Tx::val1Field,     "sysdate+?/?", 24, 60)
+                .update(txInst::val1Field, "sysdate+?/?", 24, 60)
                 .update("val4Col")
                 .update("val3Col", "?+?", 17, 19)
                 .by(Tx::pkField2)
+                .by(txInst::pkField2)
                 .by("pkCol1")
                 .by("?*? + ?*? = ?*?", 17, 18, 27, 28, 37, 38)
 
         val sql = stmt.build()
 
         assertEquals("UPDATE tx "+
-                        "SET val2Col = ?, val1Col = sysdate+?/?, val4Col = ?, val3Col = ?+? "+
-                      "WHERE pkCol2 = ? AND pkCol1 = ? AND ?*? + ?*? = ?*?", sql)
+                        "SET val2Col = ?, val2Col = ?" +
+                          ", val1Col = sysdate+?/?, val1Col = sysdate+?/?" +
+                          ", val4Col = ?" +
+                          ", val3Col = ?+? "+
+                      "WHERE pkCol2 = ? AND pkCol2 = ? "+
+                        "AND pkCol1 = ? "+
+                        "AND ?*? + ?*? = ?*?",
+            sql
+        )
 
-        assertEquals(4, stmt.updateDescrs.size)
+        assertEquals(6, stmt.updateDescrs.size)
         EntityTest.checkDescr(stmt.updateDescrs[0], this.val2ColDef)
-        EntityTest.checkDescr(stmt.updateDescrs[1], this.val1ColDef, "sysdate+?/?", true, 24, 60)
-        EntityTest.checkDescr(stmt.updateDescrs[2], this.val4ColDef)
-        EntityTest.checkDescr(stmt.updateDescrs[3], this.val3ColDef, "?+?", true, 17, 19)
+        EntityTest.checkDescr(stmt.updateDescrs[1], this.val2ColDef)
+        EntityTest.checkDescr(stmt.updateDescrs[2], this.val1ColDef, "sysdate+?/?", true, 24, 60)
+        EntityTest.checkDescr(stmt.updateDescrs[3], this.val1ColDef, "sysdate+?/?", true, 24, 60)
+        EntityTest.checkDescr(stmt.updateDescrs[4], this.val4ColDef)
+        EntityTest.checkDescr(stmt.updateDescrs[5], this.val3ColDef, "?+?", true, 17, 19)
 
-        assertEquals(3, stmt.whereDescrs.size)
+        assertEquals(4, stmt.whereDescrs.size)
         EntityTest.checkDescr(stmt.whereDescrs[0], this.pk2ColDef)
-        EntityTest.checkDescr(stmt.whereDescrs[1], this.pk1ColDef)
-        EntityTest.checkDescr(stmt.whereDescrs[2], null, "?*? + ?*? = ?*?", true, 17, 18, 27, 28, 37, 38)
+        EntityTest.checkDescr(stmt.whereDescrs[1], this.pk2ColDef)
+        EntityTest.checkDescr(stmt.whereDescrs[2], this.pk1ColDef)
+        EntityTest.checkDescr(stmt.whereDescrs[3], null, "?*? + ?*? = ?*?", true, 17, 18, 27, 28, 37, 38)
     }
 
 
     @Test
     fun fetchbacks() {
-        val stmt = UpdateStatement(txInst).update(Tx::pkField2).fetchBack(Tx::val2Field).fetchBack("val4Col")
+        val stmt = UpdateStatement(txInst)
+                .update(Tx::pkField2)
+                .fetchBack(Tx::val2Field)
+                .fetchBack(txInst::val2Field)
+                .fetchBack("val4Col")
         val sql = stmt.build()
 
         assertEquals("UPDATE tx SET pkCol2 = ?", sql)
@@ -128,9 +145,10 @@ internal class UpdateStatementTest {
 
         assertEquals(0, stmt.whereDescrs.size)
 
-        assertEquals(2, stmt.fetchbackDescrs.size)
+        assertEquals(3, stmt.fetchbackDescrs.size)
         EntityTest.checkDescr(stmt.fetchbackDescrs[0], this.val2ColDef)
-        EntityTest.checkDescr(stmt.fetchbackDescrs[1], this.val4ColDef)
+        EntityTest.checkDescr(stmt.fetchbackDescrs[1], this.val2ColDef)
+        EntityTest.checkDescr(stmt.fetchbackDescrs[2], this.val4ColDef)
     }
 
 

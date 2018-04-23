@@ -3,6 +3,7 @@ package com.amcentral365.pl4kotlin
 import com.google.common.annotations.VisibleForTesting
 import mu.KLogging
 import java.sql.Connection
+import kotlin.reflect.KMutableProperty0
 import kotlin.reflect.KProperty
 
 
@@ -26,8 +27,9 @@ open class DeleteStatement(entityDef: Entity, getGoodConnection: () -> Connectio
 
     // when prop or column name is used, its ColDef is detected, and the resulting statement translates to
     // "WHERE colName = ?". The property value is bound when the statement is ran.
-    fun by(prop: KProperty<Any>): DeleteStatement { this.addProperty(this.whereDescrs, prop);     return this }
-    fun by(colName: String):      DeleteStatement { this.addColName (this.whereDescrs, colName);  return this } // how is it not expr?
+    fun by(mprop:   KMutableProperty0<Any?>): DeleteStatement { this.addProperty(this.whereDescrs, mprop);    return this }
+    fun by(prop:    KProperty<Any?>):         DeleteStatement { this.addProperty(this.whereDescrs, prop);     return this }
+    fun by(colName: String):                  DeleteStatement { this.addColName (this.whereDescrs, colName);  return this } // how is it not expr?
 
     // free form clause, allowing to specify expressions and use any column
     fun by(expr: String, vararg binds: Any?): DeleteStatement { this.addColName(this.whereDescrs, null, expr, *binds);  return this }

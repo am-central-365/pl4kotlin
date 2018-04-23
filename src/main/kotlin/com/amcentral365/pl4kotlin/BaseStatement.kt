@@ -73,7 +73,8 @@ abstract class BaseStatement(val entityDef: Entity, private val getGoodConnectio
         var cnt = 0
         var reportSqlOnError = true
         try {
-            conn.prepareStatement(this.build()).use { stmt ->
+            val sql = this.build()
+            conn.prepareStatement(sql).use { stmt ->
                 this.bind(stmt, bindVals)
                 cnt = stmt.executeUpdate()
 
@@ -157,15 +158,15 @@ abstract class BaseStatement(val entityDef: Entity, private val getGoodConnectio
         list.add(Descr(colDef, expr, asc, Arrays.asList(*binds)))
     }
 
-    protected fun addProperty(list: MutableList<Descr>, prop: KProperty<Any>, expr: String? = null, asc: Boolean, vararg binds: Any?) {
-        val colDef = this.getColDefOrDie({ it.prop == prop }, "property ${prop.name} isn't a @Column")
+    protected fun addProperty(list: MutableList<Descr>, prop: KProperty<Any?>, expr: String? = null, asc: Boolean, vararg binds: Any?) {
+        val colDef = this.getColDefOrDie({ it.prop.name == prop.name }, "property ${prop.name} doesn't have attribute @Column")
         list.add(Descr(colDef, expr, asc, Arrays.asList(*binds)))
     }
 
     // asc - less versions, defaulting asc to true
     protected fun addColName(list: MutableList<Descr>, colName: String?, expr: String? = null, vararg binds: Any?) =
             this.addColName(list, colName, expr, true, *binds)
-    protected fun addProperty(list: MutableList<Descr>, prop: KProperty<Any>, expr: String? = null, vararg binds: Any?) =
+    protected fun addProperty(list: MutableList<Descr>, prop: KProperty<Any?>, expr: String? = null, vararg binds: Any?) =
             this.addProperty(list, prop, expr, true, *binds)
 
 }

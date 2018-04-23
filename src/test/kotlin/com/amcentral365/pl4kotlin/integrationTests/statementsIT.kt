@@ -1,20 +1,25 @@
 package com.amcentral365.pl4kotlin.integrationTests
 
-import com.amcentral365.pl4kotlin.DeleteStatement
-import com.amcentral365.pl4kotlin.InsertStatement
-import com.amcentral365.pl4kotlin.JdbcTypeCode
-import com.amcentral365.pl4kotlin.SelectStatement
 import mu.KotlinLogging
 import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.runners.MethodSorters
 import java.math.BigDecimal
-import java.sql.Connection
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+
+import com.amcentral365.pl4kotlin.InsertStatement
+import com.amcentral365.pl4kotlin.SelectStatement
+import com.amcentral365.pl4kotlin.UpdateStatement
+import com.amcentral365.pl4kotlin.DeleteStatement
+import com.amcentral365.pl4kotlin.JdbcTypeCode
+import java.sql.Timestamp
+import java.time.LocalDateTime
+import java.util.UUID
+
 
 private val logger = KotlinLogging.logger {}
 
@@ -90,10 +95,44 @@ class statementsIT {
         }
     }
 
-    /*@Test fun m30testUpdateStatement() {
+    @Test fun m30testUpdateStatement() {
         logger.info { "running testUpdateStatement" }
 
-    }*/
+        val pk2ToUpdate = 1
+        val tto1 = TestTbl(pk2ToUpdate)
+        val selCnt = SelectStatement(tto1, getGoodConnection = ::getConnection).select(tto1.allColsButPk!!).byPk().run()
+        assertEquals(1, selCnt)
+
+        val newUuid1 = UUID.randomUUID()
+        val oldUuid2 = tto1.uuid2
+        val newEnumVal = TestTbl.GreekLetters.values()[(tto1.enumVal!!.ordinal+2) % 5]
+        val oldModified = tto1.modified
+        val oldCreated  = tto1.created
+
+        tto1.uuid1   = newUuid1
+        tto1.enumVal = newEnumVal
+        tto1.created = Timestamp(tto1.created!!.time + 525252)
+
+        val updCnt = UpdateStatement(tto1, getGoodConnection = ::getConnection)
+                .update(tto1::uuid1)
+                .update(TestTbl::uuid2)
+                .update(TestTbl::enumVal)
+                .update(tto1::modified, "default")
+                .byPkAndOptLock()
+                .fetchBack(tto1::created)
+                .fetchBack(tto1::modified)
+                .run()
+
+        assertEquals(1, updCnt)
+        assertEquals(newUuid1, tto1.uuid1)
+        assertEquals(oldUuid2, tto1.uuid2)
+        assertEquals(oldCreated,     tto1.created)      // should have stayed the same
+        assertNotEquals(oldModified, tto1.modified)     // should have changed to current timestamp
+
+        val selRec = jdbcreadTestTblRec(tto1.pk1, tto1.pk2!!)
+        assertNotNull(selRec)
+        ensureEq(tto1, selRec!!)
+    }
 
     @Test fun m40testDeleteStatement() {
         logger.info { "running testDeleteStatement($numOfRecordsToTest)" }

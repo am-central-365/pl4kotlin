@@ -53,16 +53,18 @@ internal class DeleteStatementTest {
         EntityTest.checkDescr(stmt.whereDescrs[2], this.pk2ColDef)
 
         stmt = DeleteStatement(txInst)
-                .by(Tx::pkField2)
+                .by(Tx::pkField2)      // by class property
+                .by(txInst::pkField2)  // by instance property
                 .by("val2Col")
                 .by("? / ? + ? > ?", 'e', uuid, ts, 45)
                 .by("? * ?", "sX", ts)
         sql = stmt.build()
-        assertEquals("DELETE FROM tx WHERE pkCol2 = ? AND val2Col = ? AND ? / ? + ? > ? AND ? * ?", sql)
-        assertEquals(4, stmt.whereDescrs.size)
+        assertEquals("DELETE FROM tx WHERE pkCol2 = ? AND pkCol2 = ? AND val2Col = ? AND ? / ? + ? > ? AND ? * ?", sql)
+        assertEquals(5, stmt.whereDescrs.size)
         EntityTest.checkDescr(stmt.whereDescrs[0], this.pk2ColDef)
-        EntityTest.checkDescr(stmt.whereDescrs[1], this.val2ColDef)
-        EntityTest.checkDescr(stmt.whereDescrs[2], null, "? / ? + ? > ?", true, 'e', uuid, ts, 45)
-        EntityTest.checkDescr(stmt.whereDescrs[3], null, "? * ?", true, "sX", ts)
+        EntityTest.checkDescr(stmt.whereDescrs[1], this.pk2ColDef)
+        EntityTest.checkDescr(stmt.whereDescrs[2], this.val2ColDef)
+        EntityTest.checkDescr(stmt.whereDescrs[3], null, "? / ? + ? > ?", true, 'e', uuid, ts, 45)
+        EntityTest.checkDescr(stmt.whereDescrs[4], null, "? * ?", true, "sX", ts)
     }
 }
