@@ -2,11 +2,7 @@ package com.amcentral365.pl4kotlin.integrationTests
 
 import com.google.common.io.Resources
 import mu.KotlinLogging
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import java.io.ByteArrayInputStream
 import java.io.File
-import java.io.FileNotFoundException
 import java.io.InputStream
 import java.sql.SQLException
 
@@ -31,18 +27,18 @@ private fun getVendorScriptStream(suffix: String): InputStream {
     logger.debug("looking for script file $scriptFileName")
 
     val file = File(scriptFileName)
-    if( file.canRead() ) {
+    return if( file.canRead() ) {
         logger.info { "using script file $scriptFileName from the current directory" }
-        return file.inputStream()
+        file.inputStream()
     } else {
         logger.debug { "couldn't locate local file, checking internal resouorces..." }
         try {
             val inputStream = Resources.getResource(scriptFileName).openStream()
             logger.info { "using script file $scriptFileName from the jar" }
-            return inputStream
+            inputStream
         } catch (x: IllegalArgumentException) {
             logger.warn { "script file $scriptFileName isn't present in the local directory nor known to the test suite, skipping" }
-            return "".byteInputStream()
+            "".byteInputStream()
         }
     }
 }

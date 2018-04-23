@@ -1,7 +1,6 @@
 package com.amcentral365.pl4kotlin.integrationTests
 
 import mu.KotlinLogging
-import org.junit.jupiter.api.BeforeAll
 import java.io.FileInputStream
 import java.sql.Connection
 import java.sql.DriverManager
@@ -35,13 +34,13 @@ internal fun initSql() {
     logger.debug { "read config: $cfg" }
 
     val jdbcUrl  = cfg.getProperty("jdbcUrl")
-    logger.info { "  jdbcUrl: ${jdbcUrl}" }
+    logger.info { "  jdbcUrl: $jdbcUrl" }
 
     val username = cfg.getProperty("username")
-    logger.info { "  username: ${username}" }
+    logger.info { "  username: $username" }
 
     val password = cfg.getProperty("password")
-    logger.info { "  password: ${password}" }  // there is no point hiding the password: it isn't secret
+    logger.info { "  password: $password" }  // there is no point hiding the password: it isn't secret
 
     connInfo = ConnectionInfo(jdbcUrl, username, password)
 }

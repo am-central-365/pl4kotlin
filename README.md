@@ -1,8 +1,6 @@
 # pl4kotlin
 Persistence Layer for Kotlin
 
-**WORK IN PROGRESS, THE LIBRARY ISN'T YET USABLE**
-
 **The project needs a better name**
 
 The project is a library for mapping between JDBC RDBMS tables and Java

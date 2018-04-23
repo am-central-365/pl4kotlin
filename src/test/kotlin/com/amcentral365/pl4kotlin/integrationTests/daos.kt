@@ -14,7 +14,7 @@ import java.util.UUID
 
 @Table("test_tbl")
 class TestTbl(pk2: Int? = null): Entity() {
-    enum class GreekLetters { alpha, beta, gamma, delta, epsilon }
+    enum class GreekLetters { Alpha, Beta, Gamma, Delta, Epsilon }
 
     companion object {
         const val KNOWN_PK1: Int   = -451247
@@ -25,11 +25,11 @@ class TestTbl(pk2: Int? = null): Entity() {
         const val KNOWN_DOUBLE = Math.PI
         const val KNOWN_BITS   = (1L shl 15) or (1L shl 9) or (1L shl 8) or (1L shl 2)
 
-        val KNOWN_DATE  = Date.valueOf(LocalDate.now())
-        val KNOWN_TIME  = Time.valueOf(LocalTime.now())
-        val KNOWN_NUM   = BigDecimal.valueOf(Math.E)
-        val KNOWN_UUID1 = UUID.randomUUID()
-        val KNOWN_UUID2 = UUID.randomUUID()
+        val KNOWN_NUM:   BigDecimal = BigDecimal.valueOf(Math.E)
+        val KNOWN_DATE:  Date = Date.valueOf(LocalDate.now())
+        val KNOWN_TIME:  Time = Time.valueOf(LocalTime.now())
+        val KNOWN_UUID1: UUID = UUID.randomUUID()
+        val KNOWN_UUID2: UUID = UUID.randomUUID()
     }
 
     @Column("pk1",   pkPos = 1) var pk1: Int    = TestTbl.KNOWN_PK1
@@ -50,7 +50,7 @@ class TestTbl(pk2: Int? = null): Entity() {
     @Column("double_col")           var doubleVal: Double?       = TestTbl.KNOWN_DOUBLE
     @Column("bit17_val")            var bit17Val:  Long?         = TestTbl.KNOWN_BITS
     @Column("bool_col")             var boolVal:   Boolean?      = true
-    @Column("enum_col")             var enumVal:   GreekLetters? = GreekLetters.epsilon
+    @Column("enum_col")             var enumVal:   GreekLetters? = GreekLetters.Epsilon
     @Column("null_col")             var nullVal:   String?       = null
 
     var transVal1 = 25

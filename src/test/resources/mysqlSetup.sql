@@ -24,7 +24,7 @@ create table test_tbl(
   float_col   float(15,8),
   double_col  double,
   bit17_val   bit(17),
-  enum_col    enum('alpha', 'beta', 'gamma', 'delta', 'epsilon'),
+  enum_col    enum('Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon') character set ASCII collate ascii_bin,
   bool_col    boolean,
   null_col    text
 );

@@ -10,8 +10,8 @@ import java.util.UUID
 
 internal class InsertStatementTest {
     companion object {
-        val uuid = UUID.randomUUID()
-        val ts   = Timestamp(427)
+        val uuid: UUID = UUID.randomUUID()
+        val ts = Timestamp(427)
     }
 
     @Table("tx")
@@ -27,16 +27,16 @@ internal class InsertStatementTest {
         @Column("pkCol",  pkPos = 1) var pkField:   Int = 0
     }
 
-    val txInst = Tx()
-    val clAlwAColDef  = txInst.colDefs.first { it.fieldName == Tx::clAlwFieldA.name }
-    val clAlwBColDef  = txInst.colDefs.first { it.fieldName == Tx::clAlwFieldB.name }
-    val clNullAColDef = txInst.colDefs.first { it.fieldName == Tx::clNullFieldA.name }
-    val clNullBColDef = txInst.colDefs.first { it.fieldName == Tx::clNullFieldB.name }
-    val dbAlwAColDef  = txInst.colDefs.first { it.fieldName == Tx::dbAlwFieldA.name }
-    val dbAlwBColDef  = txInst.colDefs.first { it.fieldName == Tx::dbAlwFieldB.name }
-    val dbNullAColDef = txInst.colDefs.first { it.fieldName == Tx::dbNullFieldA.name }
-    val dbNullBColDef = txInst.colDefs.first { it.fieldName == Tx::dbNullFieldB.name }
-    val pkColDef      = txInst.colDefs.first { it.fieldName == Tx::pkField.name }
+    private val txInst = Tx()
+    private val clAlwAColDef  = txInst.colDefs.first { it.fieldName == Tx::clAlwFieldA.name }
+    private val clAlwBColDef  = txInst.colDefs.first { it.fieldName == Tx::clAlwFieldB.name }
+    private val clNullAColDef = txInst.colDefs.first { it.fieldName == Tx::clNullFieldA.name }
+    private val clNullBColDef = txInst.colDefs.first { it.fieldName == Tx::clNullFieldB.name }
+    private val dbAlwAColDef  = txInst.colDefs.first { it.fieldName == Tx::dbAlwFieldA.name }
+    private val dbAlwBColDef  = txInst.colDefs.first { it.fieldName == Tx::dbAlwFieldB.name }
+    private val dbNullAColDef = txInst.colDefs.first { it.fieldName == Tx::dbNullFieldA.name }
+    private val dbNullBColDef = txInst.colDefs.first { it.fieldName == Tx::dbNullFieldB.name }
+    private val pkColDef      = txInst.colDefs.first { it.fieldName == Tx::pkField.name }
 
     @Test
     fun build() {

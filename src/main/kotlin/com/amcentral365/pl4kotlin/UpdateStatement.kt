@@ -3,9 +3,7 @@ package com.amcentral365.pl4kotlin
 import com.google.common.annotations.VisibleForTesting
 import mu.KLogging
 import java.sql.Connection
-import java.util.*
 import kotlin.reflect.KMutableProperty0
-import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty
 
 

@@ -27,12 +27,12 @@ public enum JdbcTypeCode {
     @FunctionalInterface interface RsReader   { Object read(ResultSet rs, int idx) throws SQLException; }
 
     private static class Rec {
-        JdbcTypeCode jtc;
-        Type         javaType;
-        BindSetter   binder;      // Sets bind variable of PreparedStatement
-        RsReader     rsReader;    // Reads ResultSet value as Any
-        StrParser    strParser;   // Parses value from string, Used when handling REST parameters,
-                                  // May be NULL if parsing of the value is not supported.
+        final JdbcTypeCode jtc;
+        final Type         javaType;
+        final BindSetter   binder;      // Sets bind variable of PreparedStatement
+        final RsReader     rsReader;    // Reads ResultSet value as Any
+        final StrParser    strParser;   // Parses value from string, Used when handling REST parameters,
+                                        // May be NULL if parsing of the value is not supported.
 
         Rec(JdbcTypeCode jtc, Type type, BindSetter binder, StrParser strParser, RsReader rsReader)
           { this.jtc = jtc;  this.javaType = type;  this.binder = binder;  this.strParser = strParser;  this.rsReader = rsReader; }
@@ -50,45 +50,45 @@ public enum JdbcTypeCode {
 
     static {
         // java.lang types
-        _ms(JdbcTypeCode.String,    java.lang.String.class,   (ps, idx, val) -> ps.setString (idx, (java.lang.String) val), (rs, idx) -> rs.getString(idx), val -> val);
-        _ms(JdbcTypeCode.Short,     java.lang.Short.class,    (ps, idx, val) -> ps.setShort  (idx, (java.lang.Short)  val), (rs, idx) -> rs.getShort(idx),    java.lang.Short::valueOf);
-        _ms(JdbcTypeCode.Integer,   java.lang.Integer.class,  (ps, idx, val) -> ps.setInt    (idx, (java.lang.Integer)val), (rs, idx) -> rs.getInt(idx),      java.lang.Integer::valueOf);
-        _ms(JdbcTypeCode.Long,      java.lang.Long.class,     (ps, idx, val) -> ps.setLong   (idx, (java.lang.Long)   val), (rs, idx) -> rs.getLong(idx),     java.lang.Long::valueOf);
-        _ms(JdbcTypeCode.Float,     java.lang.Float.class,    (ps, idx, val) -> ps.setFloat  (idx, (java.lang.Float)  val), (rs, idx) -> rs.getFloat(idx),    java.lang.Float::valueOf);
-        _ms(JdbcTypeCode.Double,    java.lang.Double.class,   (ps, idx, val) -> ps.setDouble (idx, (java.lang.Double) val), (rs, idx) -> rs.getDouble(idx),   java.lang.Double::valueOf);
-        _ms(JdbcTypeCode.Boolean,   java.lang.Boolean.class,  (ps, idx, val) -> ps.setBoolean(idx, (java.lang.Boolean)val), (rs, idx) -> rs.getBoolean(idx),  java.lang.Boolean::valueOf);
-        _ms(JdbcTypeCode.Byte,      java.lang.Byte.class,     (ps, idx, val) -> ps.setByte   (idx, (java.lang.Byte)   val), (rs, idx) -> rs.getByte(idx),     java.lang.Byte::valueOf);
+        _ms(JdbcTypeCode.String,    java.lang.String.class,   (ps, idx, val) -> ps.setString (idx, (java.lang.String) val), ResultSet::getString, val -> val);
+        _ms(JdbcTypeCode.Short,     java.lang.Short.class,    (ps, idx, val) -> ps.setShort  (idx, (java.lang.Short)  val), ResultSet::getShort,    java.lang.Short::valueOf);
+        _ms(JdbcTypeCode.Integer,   java.lang.Integer.class,  (ps, idx, val) -> ps.setInt    (idx, (java.lang.Integer)val), ResultSet::getInt,      java.lang.Integer::valueOf);
+        _ms(JdbcTypeCode.Long,      java.lang.Long.class,     (ps, idx, val) -> ps.setLong   (idx, (java.lang.Long)   val), ResultSet::getLong,     java.lang.Long::valueOf);
+        _ms(JdbcTypeCode.Float,     java.lang.Float.class,    (ps, idx, val) -> ps.setFloat  (idx, (java.lang.Float)  val), ResultSet::getFloat,    java.lang.Float::valueOf);
+        _ms(JdbcTypeCode.Double,    java.lang.Double.class,   (ps, idx, val) -> ps.setDouble (idx, (java.lang.Double) val), ResultSet::getDouble,   java.lang.Double::valueOf);
+        _ms(JdbcTypeCode.Boolean,   java.lang.Boolean.class,  (ps, idx, val) -> ps.setBoolean(idx, (java.lang.Boolean)val), ResultSet::getBoolean,  java.lang.Boolean::valueOf);
+        _ms(JdbcTypeCode.Byte,      java.lang.Byte.class,     (ps, idx, val) -> ps.setByte   (idx, (java.lang.Byte)   val), ResultSet::getByte,     java.lang.Byte::valueOf);
         _ms(JdbcTypeCode.Enum,      java.lang.Enum.class,     (ps, idx, val) -> ps.setString (idx, val.toString()), null, null);  // read/parse are handled specially: conversion needs the real enum type
 
         // java.sql types
-        _ms(JdbcTypeCode.Date,       java.sql.Date.class,       (ps, idx, val) -> ps.setDate     (idx, (java.sql.Date)     val), (rs, idx) -> rs.getDate(idx),       java.sql.Date::valueOf);
-        _ms(JdbcTypeCode.Time,       java.sql.Time.class,       (ps, idx, val) -> ps.setTime     (idx, (java.sql.Time)     val), (rs, idx) -> rs.getTime(idx),       java.sql.Time::valueOf);
-        _ms(JdbcTypeCode.Timestamp,  java.sql.Timestamp.class,  (ps, idx, val) -> ps.setTimestamp(idx, (java.sql.Timestamp)val), (rs, idx) -> rs.getTimestamp(idx),  java.sql.Timestamp::valueOf);
-        _ms(JdbcTypeCode.Array,      java.sql.Array.class,      (ps, idx, val) -> ps.setArray    (idx, (java.sql.Array)    val), (rs, idx) -> rs.getArray(idx),      null);
-        _ms(JdbcTypeCode.Blob,       java.sql.Blob.class,       (ps, idx, val) -> ps.setBlob     (idx, (java.sql.Blob)     val), (rs, idx) -> rs.getBlob(idx), val -> new javax.sql.rowset.serial.SerialBlob(val.getBytes()));
-        _ms(JdbcTypeCode.Clob,       java.sql.Clob.class,       (ps, idx, val) -> ps.setClob     (idx, (java.sql.Clob)     val), (rs, idx) -> rs.getClob(idx), val -> val);
-        _ms(JdbcTypeCode.NClob,      java.sql.NClob.class,      (ps, idx, val) -> ps.setNClob    (idx, (java.sql.NClob)    val), (rs, idx) -> rs.getNClob(idx), val -> val);
-        _ms(JdbcTypeCode.Ref,        java.sql.Ref.class,        (ps, idx, val) -> ps.setRef      (idx, (java.sql.Ref)      val), (rs, idx) -> rs.getRef(idx),        null);
-        _ms(JdbcTypeCode.Rowid,      java.sql.RowId.class,      (ps, idx, val) -> ps.setRowId    (idx, (java.sql.RowId)    val), (rs, idx) -> rs.getRowId(idx),      null);
-        _ms(JdbcTypeCode.SQLXML,     java.sql.SQLXML.class,     (ps, idx, val) -> ps.setSQLXML   (idx, (java.sql.SQLXML)   val), (rs, idx) -> rs.getSQLXML(idx),     null);
+        _ms(JdbcTypeCode.Date,       java.sql.Date.class,       (ps, idx, val) -> ps.setDate     (idx, (java.sql.Date)     val), ResultSet::getDate,       java.sql.Date::valueOf);
+        _ms(JdbcTypeCode.Time,       java.sql.Time.class,       (ps, idx, val) -> ps.setTime     (idx, (java.sql.Time)     val), ResultSet::getTime,       java.sql.Time::valueOf);
+        _ms(JdbcTypeCode.Timestamp,  java.sql.Timestamp.class,  (ps, idx, val) -> ps.setTimestamp(idx, (java.sql.Timestamp)val), ResultSet::getTimestamp,  java.sql.Timestamp::valueOf);
+        _ms(JdbcTypeCode.Array,      java.sql.Array.class,      (ps, idx, val) -> ps.setArray    (idx, (java.sql.Array)    val), ResultSet::getArray,      null);
+        _ms(JdbcTypeCode.Blob,       java.sql.Blob.class,       (ps, idx, val) -> ps.setBlob     (idx, (java.sql.Blob)     val), ResultSet::getBlob, val -> new javax.sql.rowset.serial.SerialBlob(val.getBytes()));
+        _ms(JdbcTypeCode.Clob,       java.sql.Clob.class,       (ps, idx, val) -> ps.setClob     (idx, (java.sql.Clob)     val), ResultSet::getClob, val -> val);
+        _ms(JdbcTypeCode.NClob,      java.sql.NClob.class,      (ps, idx, val) -> ps.setNClob    (idx, (java.sql.NClob)    val), ResultSet::getNClob, val -> val);
+        _ms(JdbcTypeCode.Ref,        java.sql.Ref.class,        (ps, idx, val) -> ps.setRef      (idx, (java.sql.Ref)      val), ResultSet::getRef,        null);
+        _ms(JdbcTypeCode.Rowid,      java.sql.RowId.class,      (ps, idx, val) -> ps.setRowId    (idx, (java.sql.RowId)    val), ResultSet::getRowId,      null);
+        _ms(JdbcTypeCode.SQLXML,     java.sql.SQLXML.class,     (ps, idx, val) -> ps.setSQLXML   (idx, (java.sql.SQLXML)   val), ResultSet::getSQLXML,     null);
 
         // misc types
         _ms(JdbcTypeCode.Null,       null,                  (ps, idx, val) -> ps.setNull           (idx, Types.VARCHAR),  null,  null);  //  can't have Null var type
-        _ms(JdbcTypeCode.URL,        java.net.URL.class,    (ps, idx, val) -> ps.setURL            (idx, (java.net.URL)   val), (rs, idx) -> rs.getURL(idx),              null);
-        _ms(JdbcTypeCode.Reader,     java.io.Reader.class,  (ps, idx, val) -> ps.setCharacterStream(idx, (java.io.Reader) val), (rs, idx) -> rs.getCharacterStream(idx),  null);
+        _ms(JdbcTypeCode.URL,        java.net.URL.class,    (ps, idx, val) -> ps.setURL            (idx, (java.net.URL)   val), ResultSet::getURL,              null);
+        _ms(JdbcTypeCode.Reader,     java.io.Reader.class,  (ps, idx, val) -> ps.setCharacterStream(idx, (java.io.Reader) val), ResultSet::getCharacterStream,  null);
 
         // complex lambdas
         _ms(JdbcTypeCode.ByteArray,
             java.lang.Byte[].class,
             (ps, idx, val) -> ps.setBytes(idx, (byte[])val),
-            (rs, idx) -> rs.getBytes(idx),
+                ResultSet::getBytes,
             val -> new java.math.BigInteger(val,16).toByteArray()
         );
 
         _ms(JdbcTypeCode.BigDecimal,
             java.math.BigDecimal.class,
             (ps, idx, val) -> ps.setBigDecimal(idx, (java.math.BigDecimal) val),
-            (rs, idx) -> rs.getBigDecimal(idx),
+                ResultSet::getBigDecimal,
             val -> new java.math.BigDecimal(val.replaceAll(",", ""))
         );
 
@@ -101,6 +101,7 @@ public enum JdbcTypeCode {
 
     }
 
+    @SuppressWarnings("unchecked")
     static Object enumValFromStr(Type realEnumType, String enumStr) {
         return java.lang.Enum.valueOf((Class<? extends java.lang.Enum>)realEnumType, enumStr);
     }

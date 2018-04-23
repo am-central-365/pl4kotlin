@@ -44,14 +44,14 @@ abstract class Entity protected constructor() {
      * The class is declared inner to associate a ColDef it with its corresponding Entity.
      */
     inner class ColDef private constructor(
-            val fieldName:     String,
-            val fieldType:     JdbcTypeCode,
-            val columnName:    String,
-            val restParamName: String,
-            val pkPos:         Int,
-            val onInsert:      Generated,
-            val isOptLock:     Boolean,
-            val javaType:      java.lang.reflect.Type
+            val fieldName:        String,
+            val fieldType:        JdbcTypeCode,
+            val columnName:       String,
+            val restParamName:    String,
+            val pkPos:            Int,
+            val onInsert:         Generated,
+            val isOptLock:        Boolean,
+            private val javaType: java.lang.reflect.Type
     ): Comparable<ColDef> {
 
         internal lateinit var prop: KMutableProperty1<out Entity, Any?>
@@ -180,13 +180,13 @@ abstract class Entity protected constructor() {
          */
         fun parse(str: String) {
             val value: Any?
-            if( this.fieldType == JdbcTypeCode.Enum )
-                value = JdbcTypeCode.enumValFromStr(this.javaType, str)
-            else {
-                val parser = JdbcTypeCode.getParser(this.fieldType) ?:
-                    throw UnsupportedOperationException("Parsing of type ${this.fieldType} is not supported")
-                value = parser.parse(str)
-            }
+            value = if( this.fieldType == JdbcTypeCode.Enum )
+                        JdbcTypeCode.enumValFromStr(this.javaType, str)
+                    else {
+                        val parser = JdbcTypeCode.getParser(this.fieldType) ?:
+                                throw UnsupportedOperationException("Parsing of type ${this.fieldType} is not supported")
+                        parser.parse(str)
+                    }
 
             logger.debug { "setting ${this@Entity.tableName}.${this.fieldName} to $value" }
             this.setValue(value)

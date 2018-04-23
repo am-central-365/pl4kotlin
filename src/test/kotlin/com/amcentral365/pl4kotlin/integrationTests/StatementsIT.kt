@@ -33,10 +33,10 @@ private val logger = KotlinLogging.logger {}
  *   - fetching back values after update
  */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-class statementsIT {
+class StatementsIT {
 
-    val numOfRecordsToTest = 11
-    var runTearDown = false
+    private val numOfRecordsToTest = 11
+    private var runTearDown = false
 
     companion object {
         lateinit var conn: Connection
@@ -48,7 +48,7 @@ class statementsIT {
         runSqlSetup()
         this.runTearDown = true
 
-        statementsIT.conn = getConnection()
+        StatementsIT.conn = getConnection()
     }
 
     @Test fun m99TearDown() {
@@ -56,7 +56,7 @@ class statementsIT {
         if( this.runTearDown ) {
             runSqlTeardown()
         }
-        statementsIT.conn.close()
+        StatementsIT.conn.close()
     }
 
     @Test fun m10InsertStatement() {
@@ -85,7 +85,7 @@ class statementsIT {
         assertEquals(TestTbl.KNOWN_DOUBLE, tto1.doubleVal)
         assertEquals(TestTbl.KNOWN_BITS, tto1.bit17Val)
         assertTrue(tto1.boolVal!!)
-        assertEquals(TestTbl.GreekLetters.epsilon, tto1.enumVal)
+        assertEquals(TestTbl.GreekLetters.Epsilon, tto1.enumVal)
         assertNull(tto1.nullVal)
 
         val tto2 = this.jdbcreadTestTblRec(tto1.pk1, tto1.pk2!!)
@@ -100,7 +100,7 @@ class statementsIT {
         for(k in (1..this.numOfRecordsToTest).shuffled()) {
             val tto1 = TestTbl(k)
             logger.debug { "  $k: running SelectStatement for pk(${tto1.pk1}, ${tto1.pk2})" }
-            val selCnt = SelectStatement(tto1).select(tto1.allColsButPk!!).byPk().run(statementsIT.conn)
+            val selCnt = SelectStatement(tto1).select(tto1.allColsButPk!!).byPk().run(StatementsIT.conn)
             assertEquals(1, selCnt)
 
             val tto2 = this.jdbcreadTestTblRec(tto1.pk1, k.toShort())
@@ -115,11 +115,11 @@ class statementsIT {
 
         // the test used to sometimes fail when modified_ts was declared with second precision,
         // because things happened within the same second.
-        // now modify_ts is decalred as timestamp(6) to ensure nanosecond precision
+        // now modify_ts is declared as timestamp(6) to ensure nanosecond precision
 
         val pk2ToUpdate = 1
         val tto1 = TestTbl(pk2ToUpdate)
-        val selCnt = SelectStatement(tto1).select(tto1.allColsButPk!!).byPk().run(statementsIT.conn)
+        val selCnt = SelectStatement(tto1).select(tto1.allColsButPk!!).byPk().run(StatementsIT.conn)
         assertEquals(1, selCnt)
 
         val newUuid1 = UUID.randomUUID()
@@ -140,7 +140,7 @@ class statementsIT {
                 .byPkAndOptLock()
                 .fetchBack(tto1::created)
                 .fetchBack(tto1::modified)
-                .run(statementsIT.conn)
+                .run(StatementsIT.conn)
 
         assertEquals(1, updCnt)
         assertEquals(newUuid1, tto1.uuid1)
@@ -152,7 +152,7 @@ class statementsIT {
         assertNotNull(selRec)
         ensureEq(tto1, selRec!!)
 
-        statementsIT.conn.rollback()
+        StatementsIT.conn.rollback()
     }
 
     @Test fun m40testDeleteStatement() {
@@ -161,8 +161,8 @@ class statementsIT {
         for(k in (1..this.numOfRecordsToTest).shuffled()) {
             val tto = TestTbl(k)
             logger.debug { "  $k: running DeleteStatement for pk(${tto.pk1}, ${tto.pk2})" }
-            val delCnt = DeleteStatement(tto).byPk().run(statementsIT.conn)
-            statementsIT.conn.commit()
+            val delCnt = DeleteStatement(tto).byPk().run(StatementsIT.conn)
+            StatementsIT.conn.commit()
             assertEquals(1, delCnt)
             assertEquals(k.toShort(), tto.pk2)
 
@@ -208,7 +208,7 @@ class statementsIT {
         doubleVal = doubleVal!! - k
         bit17Val = bit17Val!! or (1L shl (k % 17))
         boolVal = k % 2 == 0
-        enumVal = TestTbl.GreekLetters.values()[k % 5]  // round robin alpha to epsilon
+        enumVal = TestTbl.GreekLetters.values()[k % 5]  // round robin Alpha to Epsilon
     }
 
 
@@ -216,10 +216,10 @@ class statementsIT {
         logger.info { "inserting $numOfRecordsToTest records" }
         for(k in 1..count) {
             val r = this.tweakForK(TestTbl(), k)
-            val insertCount = InsertStatement(r).run(statementsIT.conn)
+            val insertCount = InsertStatement(r).run(StatementsIT.conn)
             assertEquals(1, insertCount)
         }
-        statementsIT.conn.commit()
+        StatementsIT.conn.commit()
     }
 
 
@@ -231,7 +231,7 @@ class statementsIT {
                    "where pk1 = ? and pk2 = ?"
 
         // do not catch exceptions, let test fail if one is thrown
-        statementsIT.conn.prepareStatement(sql).use { stmt ->
+        StatementsIT.conn.prepareStatement(sql).use { stmt ->
             stmt.setInt(  1, ppk1)
             stmt.setShort(2, ppk2)
             stmt.executeQuery().use { rs ->

@@ -4,10 +4,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.assertThrows
-import java.sql.PreparedStatement
 import java.sql.Timestamp
-import java.util.Arrays
-
 
 internal class UpdateStatementTest {
 
@@ -22,14 +19,14 @@ internal class UpdateStatementTest {
         @Column("optLockCol", isOptimisticLock = true) var optLockField: Timestamp? = null
     }
 
-    val txInst = Tx()
-    val pk1ColDef  = txInst.colDefs.first { it.fieldName == Tx::pkField1.name }
-    val pk2ColDef  = txInst.colDefs.first { it.fieldName == Tx::pkField2.name }
-    val val1ColDef = txInst.colDefs.first { it.fieldName == Tx::val1Field.name }
-    val val2ColDef = txInst.colDefs.first { it.fieldName == Tx::val2Field.name }
-    val val3ColDef = txInst.colDefs.first { it.fieldName == Tx::val3Field.name }
-    val val4ColDef = txInst.colDefs.first { it.fieldName == Tx::val4Field.name }
-    val optLockColDef = txInst.colDefs.first { it.fieldName == Tx::optLockField.name }
+    private val txInst = Tx()
+    private val pk1ColDef  = txInst.colDefs.first { it.fieldName == Tx::pkField1.name }
+    private val pk2ColDef  = txInst.colDefs.first { it.fieldName == Tx::pkField2.name }
+    private val val1ColDef = txInst.colDefs.first { it.fieldName == Tx::val1Field.name }
+    private val val2ColDef = txInst.colDefs.first { it.fieldName == Tx::val2Field.name }
+    private val val3ColDef = txInst.colDefs.first { it.fieldName == Tx::val3Field.name }
+    private val val4ColDef = txInst.colDefs.first { it.fieldName == Tx::val4Field.name }
+    private val optLockColDef = txInst.colDefs.first { it.fieldName == Tx::optLockField.name }
 
 
     @Test

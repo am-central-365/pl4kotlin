@@ -5,8 +5,6 @@ import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.assertThrows
 import java.sql.Timestamp
-import java.util.Arrays
-
 
 
 internal class SelectStatementTest {
@@ -20,12 +18,12 @@ internal class SelectStatementTest {
         @Column("optLockCol", isOptimisticLock = true) var optLockField: Timestamp? = null
     }
 
-    val txInst = Tx()
-    val pk1ColDef  = txInst.colDefs.first { it.fieldName == Tx::pkField1.name }
-    val pk2ColDef  = txInst.colDefs.first { it.fieldName == Tx::pkField2.name }
-    val val1ColDef = txInst.colDefs.first { it.fieldName == Tx::val1Field.name }
-    val val2ColDef = txInst.colDefs.first { it.fieldName == Tx::val2Field.name }
-    val optLockColDef = txInst.colDefs.first { it.fieldName == Tx::optLockField.name }
+    private val txInst = Tx()
+    private val pk1ColDef  = txInst.colDefs.first { it.fieldName == Tx::pkField1.name }
+    private val pk2ColDef  = txInst.colDefs.first { it.fieldName == Tx::pkField2.name }
+    private val val1ColDef = txInst.colDefs.first { it.fieldName == Tx::val1Field.name }
+    private val val2ColDef = txInst.colDefs.first { it.fieldName == Tx::val2Field.name }
+    private val optLockColDef = txInst.colDefs.first { it.fieldName == Tx::optLockField.name }
 
     @Test
     fun build() {
