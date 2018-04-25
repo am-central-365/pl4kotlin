@@ -89,7 +89,7 @@ private fun parseStatements(inputStream: InputStream): List<ScriptStatement> {
 
 private fun runStatements(scriptFileName: String, statements: List<ScriptStatement>, ignoreErrors: Boolean=true) {
     require( connInfo != null )
-    println("++ runStatements($scriptFileName), ignoreErrors: $ignoreErrors")
+    logger.info { "runStatements($scriptFileName), ignoreErrors: $ignoreErrors" }
 
     getConnection().use { conn ->
         statements.forEach {

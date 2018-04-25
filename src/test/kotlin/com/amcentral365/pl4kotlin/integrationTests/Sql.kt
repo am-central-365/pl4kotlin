@@ -25,8 +25,6 @@ internal data class ConnectionInfo(val jdbcUrl: String, private val username: St
 
 
 internal fun initSql() {
-    println("++ initSql")
-
     val dbConfigFileName = System.getProperty("dbConfig", "mysql.properties")
     logger.info { "using config file $dbConfigFileName" }
 

@@ -93,6 +93,33 @@
         <scope>test</scope>
       </dependency>
 
+      <dependency>  <!-- https://mvnrepository.com/artifact/postgresql/postgresql -->
+        <groupId>postgresql</groupId>
+        <artifactId>postgresql</artifactId>
+        <version>9.1-901.jdbc4</version>
+        <scope>test</scope>
+      </dependency>
+
+      <!-- Due to legal reasons, there is no publicly available Oracle JDBC drivers in legit Maven repos
+           But it is easy to install one:
+           1. Download it from ORacle site to your local box
+              http://www.oracle.com/technetwork/database/features/jdbc/jdbc-ucp-122-3110062.html
+           2. Install it into your local repo:
+              mvn install:install-file -DgroupId=com.oracle -DartifactId=ojdbc8 \
+                -Dversion=12.2.0.1 -Dpackaging=jar -Dfile=$HOME/Downloads/ojdbc8.jar -DgeneratePom=true
+
+           Other options:
+           a) package the ojdbc8.jar into the uber jar. There may be legal issues though,
+           b) use Oracle Maven repo (you need to be registered on OTN)
+              http://www.oracle.com/webfolder/application/maven/index.html
+      -->
+      <dependency>
+        <groupId>com.oracle</groupId>
+        <artifactId>ojdbc8</artifactId>
+        <version>12.2.0.1</version>
+        <scope>test</scope>
+      </dependency>
+
     </dependencies>
 
     <build>

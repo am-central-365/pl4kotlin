@@ -77,7 +77,7 @@ class StatementsIT {
         assertEquals(tto1.created!!.time / 1000, tto1.modified!!.time / 1000)  // ignore milliseconds
 
         assertEquals(TestTbl.KNOWN_VC, tto1.vcVal)
-        assertEquals(TestTbl.KNOWN_CHAR, tto1.charVal)
+        assertEquals(TestTbl.KNOWN_CHAR.trimEnd(), tto1.charVal?.trimEnd())  // some DBs ignore truncate trailing whitespace, and some don't
         assertEquals(TestTbl.KNOWN_DATE, tto1.dateVal)
         assertEquals(TestTbl.KNOWN_TIME, tto1.timeVal)
         assertEquals(TestTbl.KNOWN_NUM, tto1.numVal)
@@ -190,8 +190,10 @@ class StatementsIT {
         assertEquals(tto1.nullVal,   tto2.nullVal)
         assertEquals(tto1.created,   tto2.created)
         assertEquals(tto1.modified,  tto2.modified)
+
         // MySQL right-trims CHAR unless PAD_CHAR_TO_FULL_LENGTH is enabled
-        assertEquals(tto1.charVal!!.trimEnd(), tto2.charVal)
+        // Oracle doesn't truncate it.
+        assertEquals(tto1.charVal?.trimEnd(), tto2.charVal?.trimEnd())
 
         // BigDecimal should use their own Compare
         assertTrue(tto1.numVal!!.compareTo(tto2.numVal) == 0)

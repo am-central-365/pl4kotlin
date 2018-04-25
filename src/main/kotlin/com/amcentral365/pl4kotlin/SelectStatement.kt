@@ -95,7 +95,7 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
                 stmt ->
                     this.bind(stmt, bindVals)
                     rs = stmt.executeQuery()
-                    if( rs!!.first() ) {
+                    if( rs!!.next() ) {
                         this.selectDescrs.forEachIndexed { k, v -> v.colDef!!.read(rs!!, k+1)}
                         rowCount++
                     }
