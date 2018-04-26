@@ -93,10 +93,10 @@
         <scope>test</scope>
       </dependency>
 
-      <dependency>  <!-- https://mvnrepository.com/artifact/postgresql/postgresql -->
-        <groupId>postgresql</groupId>
+      <dependency>  <!-- https://github.com/pgjdbc/pgjdbc -->
+        <groupId>org.postgresql</groupId>
         <artifactId>postgresql</artifactId>
-        <version>9.1-901.jdbc4</version>
+        <version>42.2.2</version>
         <scope>test</scope>
       </dependency>
 
