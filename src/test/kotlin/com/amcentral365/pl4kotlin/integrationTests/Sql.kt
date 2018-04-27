@@ -48,7 +48,9 @@ internal fun getConnection(): Connection {
     require( connInfo != null )
     val conn = DriverManager.getConnection(connInfo!!.jdbcUrl, connInfo!!.connProps)
     conn.autoCommit = false
-    conn.transactionIsolation = Connection.TRANSACTION_READ_COMMITTED
+    conn.transactionIsolation = /* SQLite supports only TRANSACTION_SERIALIZABLE and TRANSACTION_READ_UNCOMMITTED */
+            if( connInfo!!.dbVendor == "sqlite" ) Connection.TRANSACTION_SERIALIZABLE
+            else                                  Connection.TRANSACTION_READ_COMMITTED
     logger.debug { "database connection obtained" }
     return conn
 }

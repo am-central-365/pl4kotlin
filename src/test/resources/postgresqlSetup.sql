@@ -2,12 +2,6 @@
 # create user ituser with password 'itpass';
 # create database it owner ituser;
 #
-# --
-# create schema if not exists authorization ituser;
-# grant all on schema ituser to ituser;
-# grant all on database it to ituser;
-# alter default privileges in schema ituser grant all on tables to ituser;
-# alter role ituser set search_path = ituser,public;
 
 drop table if exists test_tbl
 /

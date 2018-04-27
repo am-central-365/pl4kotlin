@@ -16,6 +16,7 @@ import com.amcentral365.pl4kotlin.SelectStatement
 import com.amcentral365.pl4kotlin.UpdateStatement
 import com.amcentral365.pl4kotlin.DeleteStatement
 import com.amcentral365.pl4kotlin.JdbcTypeCode
+import java.math.RoundingMode
 import java.sql.Connection
 import java.sql.Timestamp
 import java.util.UUID
@@ -37,9 +38,11 @@ class StatementsIT {
 
     private val numOfRecordsToTest = 11
     private var runTearDown = false
+    private var isSqLite = false
 
     companion object {
         lateinit var conn: Connection
+        private  var isSqLite: Boolean = false
     }
 
     @Test fun m00Setup() {
@@ -49,6 +52,7 @@ class StatementsIT {
         this.runTearDown = true
 
         StatementsIT.conn = getConnection()
+        StatementsIT.isSqLite = connInfo!!.dbVendor == "sqlite"
     }
 
     @Test fun m99TearDown() {
@@ -132,15 +136,22 @@ class StatementsIT {
         tto1.enumVal = newEnumVal
         tto1.created = Timestamp(tto1.created!!.time + 525252)
 
-        val updCnt = UpdateStatement(tto1)
+        // SqlLite does not recognize 'set column = DEFAULT' in updates,
+        val modifiedDefault =
+            if( StatementsIT.isSqLite ) "strftime('%Y-%m-%d %H:%M:%f', 'NOW')" else "default"
+
+        val updStmt = UpdateStatement(tto1)
                 .update(tto1::uuid1)
                 .update(TestTbl::uuid2)
                 .update(TestTbl::enumVal)
-                .update(tto1::modified, "default")
-                .byPkAndOptLock()
+                .update(tto1::modified, modifiedDefault)
                 .fetchBack(tto1::created)
                 .fetchBack(tto1::modified)
-                .run(StatementsIT.conn)
+
+        if( StatementsIT.isSqLite ) updStmt.byPk()
+        else                        updStmt.byPkAndOptLock()
+
+        val updCnt = updStmt.run(StatementsIT.conn)
 
         assertEquals(1, updCnt)
         assertEquals(newUuid1, tto1.uuid1)
@@ -196,7 +207,11 @@ class StatementsIT {
         assertEquals(tto1.charVal?.trimEnd(), tto2.charVal?.trimEnd())
 
         // BigDecimal should use their own Compare
-        assertTrue(tto1.numVal!!.compareTo(tto2.numVal) == 0)
+        val bestPrecision = 14  // Max SqlLite precision is 14, other RDBMS work w/o reducing precision
+        assertTrue(0 ==
+            tto1.numVal?.setScale(bestPrecision, RoundingMode.HALF_UP)?.compareTo(
+            tto2.numVal?.setScale(bestPrecision, RoundingMode.HALF_UP))
+        )
     }
 
     private fun tweakForK(r: TestTbl, k: Int): TestTbl = r.apply {
