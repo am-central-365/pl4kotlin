@@ -11,6 +11,7 @@
 
 <div class="grid-header">
     <h2>Persistence Layer for Kotlin</h2>
+    <p class="wip">Work in progress</p>
 </div>
 
 
@@ -127,42 +128,42 @@
         As an example, consider
          <a href="http://www.orafaq.com/wiki/SCOTT#Original_SCOTT.27s_tables_since_Oracle_4">EMP table</a>
         from Oracle's SCOTT schema:
-        <pre>
-            SCOTT> DESC emp
-
-             Name                             Null?    Type
-             -------------------------------- -------- ----------------------
-             EMPNO                            NOT NULL NUMBER(4)
-             ENAME                                     VARCHAR2(10 CHAR)
-             JOB                                       VARCHAR2(9 CHAR)
-             MGR                                       NUMBER(4)
-             HIREDATE                                  DATE
-             SAL                                       NUMBER(7,2)
-             COMM                                      NUMBER(7,2)
-             DEPTNO                                    NUMBER(2)
-
-            SCOTT> SELECT * FROM emp ORDER BY empno;
-
-                 EMPNO ENAME      JOB              MGR HIREDATE           SAL       COMM     DEPTNO
-            ---------- ---------- --------- ---------- ----------- ---------- ---------- ----------
-                  7369 SMITH      CLERK           7902 17-DEC-1980        800                    20
-                  7499 ALLEN      SALESMAN        7698 20-FEB-1981       1600        300         30
-                  7521 WARD       SALESMAN        7698 22-FEB-1981       1250        500         30
-                  7566 JONES      MANAGER         7839 02-APR-1981       2975                    20
-                  7654 MARTIN     SALESMAN        7698 28-SEP-1981       1250       1400         30
-                  7698 BLAKE      MANAGER         7839 01-MAY-1981       2850                    30
-                  7782 CLARK      MANAGER         7839 09-JUN-1981       2450                    10
-                  7788 SCOTT      ANALYST         7566 19-APR-1987       3000                    20
-                  7839 KING       PRESIDENT            17-NOV-1981       5000                    10
-                  7844 TURNER     SALESMAN        7698 08-SEP-1981       1500          0         30
-                  7876 ADAMS      CLERK           7788 23-MAY-1987       1100                    20
-                  7900 JAMES      CLERK           7698 03-DEC-1981        950                    30
-                  7902 FORD       ANALYST         7566 03-DEC-1981       3000                    20
-                  7934 MILLER     CLERK           7782 23-JAN-1982       1300                    10
-
-            14 rows selected.
-        </pre>
     </p>
+    <pre>
+        SCOTT> DESC emp
+
+         Name                             Null?    Type
+         -------------------------------- -------- ----------------------
+         EMPNO                            NOT NULL NUMBER(4)
+         ENAME                                     VARCHAR2(10 CHAR)
+         JOB                                       VARCHAR2(9 CHAR)
+         MGR                                       NUMBER(4)
+         HIREDATE                                  DATE
+         SAL                                       NUMBER(7,2)
+         COMM                                      NUMBER(7,2)
+         DEPTNO                                    NUMBER(2)
+
+        SCOTT> SELECT * FROM emp ORDER BY empno;
+
+             EMPNO ENAME      JOB              MGR HIREDATE           SAL       COMM     DEPTNO
+        ---------- ---------- --------- ---------- ----------- ---------- ---------- ----------
+              7369 SMITH      CLERK           7902 17-DEC-1980        800                    20
+              7499 ALLEN      SALESMAN        7698 20-FEB-1981       1600        300         30
+              7521 WARD       SALESMAN        7698 22-FEB-1981       1250        500         30
+              7566 JONES      MANAGER         7839 02-APR-1981       2975                    20
+              7654 MARTIN     SALESMAN        7698 28-SEP-1981       1250       1400         30
+              7698 BLAKE      MANAGER         7839 01-MAY-1981       2850                    30
+              7782 CLARK      MANAGER         7839 09-JUN-1981       2450                    10
+              7788 SCOTT      ANALYST         7566 19-APR-1987       3000                    20
+              7839 KING       PRESIDENT            17-NOV-1981       5000                    10
+              7844 TURNER     SALESMAN        7698 08-SEP-1981       1500          0         30
+              7876 ADAMS      CLERK           7788 23-MAY-1987       1100                    20
+              7900 JAMES      CLERK           7698 03-DEC-1981        950                    30
+              7902 FORD       ANALYST         7566 03-DEC-1981       3000                    20
+              7934 MILLER     CLERK           7782 23-JAN-1982       1300                    10
+
+        14 rows selected.
+    </pre>
 
     <p>
         Its Kotlin POJO might look like this:
@@ -182,12 +183,96 @@
         }
     </pre>
 
+    <p>
+        We define the table name and properties, mapped to the table columns.
+        We could have also defined other properties and methods, there is no difference
+        from a regular class here.
+    </p>
+
+    <p>
+        There is no need to define a property for every table column. Columns not defined
+        are just not mentioned in the generated SQL statements. Audit columns, for example,
+        are typically populated by DEFAULT clause or set by triggers.
+    </p>
+
 <h2><a name="TableAnnotation">@Table annotation</a></h2>
+    <p>
+        The annotation takes a single parameter: the database table name.
+        The table name is used when generating SL statements.
+    </p>
+
 <h2><a name="ColumnAnnotation">@Column Annotation</a></h2>
+    <p>
+        Defines property linkage to a table column. The table column is a mandatory
+        argument. There are other annotation attributes: to mark a column as part of the primary key,
+        to specify its value on insert, and so on.
+    </p>
+
+    <p class="note">
+        When speaking about properties and columns, we often use these terms interchangeably
+        because the library enforces 1:1 mapping between properties and columns.
+    </p>
+
 <h3><a name="columnName">columnName</a></h3>
+    <p>
+        Defined the database table column name. The name is used in generated SQL statements.
+    </p>
+
 <h3><a name="restParamName">restParamName</a></h3>
+    <p>
+        One of the ways to use the library is to simplify mapping REST API to database table
+        operations. The value specifies name if the GET/POST/PUT/... parameter. It is used
+        when parsing form values.
+    </p>
+
+    <p class="wip">Not yet implemented</p>
+
 <h3><a name="pkPos">pkPos</a></h3>
+    <p>
+        Used to mark the column as part of the table's Primary Key. The attribute value is the
+        position withing the PK. E.g. for Primary Key on columns a,b,c, the corresponding
+        properties must have their @Column defined with pkPos 1, 2, and 3. There is no known
+        harm in defining different order than in the PK. There is no good reason to do that either.
+        Zero, the default, indicates non-PK columns.
+    </p>
+
+    <p>
+        The values must be sequential, starting with 1 and without gaps. A table-mapped class
+        must define at least one PK column.
+    </p>
+
 <h3><a name="isOptimisticLock">isOptimisticLock</a></h3>
+    <p>
+        Dentoes the column used for
+        <a href="https://en.wikipedia.org/wiki/Optimistic_concurrency_control">Optimistic Concurrency Control</a> -
+        a <a href="https://en.wikipedia.org/wiki/Compare-and-swap">CAS</a>-like technique to ensure consistency
+        when record may be modified by multiple parties. On UPDATE, the column value is used in the WHERE clause,
+        and also modified by the statement to the next unique value (by incrementing it, or setting to current
+        timestamp).
+    </p>
+
+    <p>
+        In SQL, this translates to statements like any of these:
+    </p>
+
+    <pre>
+        UPDATE tbl SET c1=?, c2=?, ... optLockCol=optLockCol+1 WHERE optLockCol=? AND ...     -- for numberic columns
+        UPDATE tbl SET c1=?, c2=?, ... optLockCol=systimestamp WHERE optLockCol=? AND ...     -- for timestamp columns
+        UPDATE tbl SET c1=?, c2=?, ... optLockCol=default      WHERE optLockCol=? AND ...     -- generic
+          ("default" being an expression like the first two)
+    </pre>
+
+    <p>
+        If other tansaction has changed the row, its optLockCol has changed too, and our UPDATE
+        results in no updates rows. We can check the number of affected rows returned by the library
+        function to see of that has happened. The row must be re-read from the database.
+    </p>
+
+    <p class="note">
+        The technique is only working transaction isolation is READ_COMMITTED. It won't work for
+        SERIALIZABLE.
+    </p>
+
 <h3><a name="onInsert">onInsert</a></h3>
 <h1><a name="Statements">Statements</a></h1>
 <h2><a name="ColumnSelectors">Column selectors</a></h2>
@@ -202,6 +287,9 @@
 <h2><a name="EntityClass">Entity Class</a></h2>
 <h3><a name="ColDef">ColDef inner class</a></h3>
 <h2><a name="BaseStatementClass">BaseStatement Class</a></h2>
+<h2><a name="Tests">Tests</a></h2>
+<h3><a name="UnitTests">Unit tests</a></h3>
+<h3><a name="IntegrationTests">Integration tests</a></h3>
 
 </div>  <!-- grid-main -->
 
@@ -217,6 +305,7 @@
                 <li><a href="#TransactionControl">Transaction control</a></li>
             </ul>
         </li>
+
         <li>
             <a href="#DefiningPOJOs">Defining POJOs</a>
             <ul>
@@ -242,6 +331,7 @@
                 <li><a href="#DeleteStatement">DeleteStatement</a></li>
             </ul>
         </li>
+
         <li>
             <a href="#HackingTheCode">Hacking the code</a>
             <ul>
@@ -258,9 +348,16 @@
                     </ul>
                 </li>
                 <li><a href="#BaseStatementClass">BaseStatement Class</a></li>
+                <li>
+                    <a href="#Tests">Tests</a>
+                    <ul>
+                        <li><a href="#UnitTests">Unit tests</a></li>
+                        <li><a href="#IntegrationTests">Integration tests</a></li>
+                    </ul>
+                </li>
             </ul>
-
         </li>
+
     </ul>
 </div>
 

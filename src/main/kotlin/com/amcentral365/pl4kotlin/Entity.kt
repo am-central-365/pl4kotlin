@@ -209,13 +209,12 @@ abstract class Entity protected constructor() {
     // ------------------------------------------------------------- Methods
     private fun constructFromAnnotations() {
         val table = this::class.findAnnotation<Table>()
-        require( table != null ) {
-            "DAO error: class: ${this::class.java.name} must be annotated with @Table to be used as an Entity"
-        }
+        require( table != null )
+            { "DAO error: class: ${this::class.java.name} must be annotated with @Table to be used as an Entity" }
+
         val tableName = table!!.tableName.trim()
-        require( tableName.isNotEmpty() ) {
-            "DAO error in class: ${this::class.java.name}: annotation attribute tableName can't be empty"
-        }
+        require( tableName.isNotEmpty() )
+            { "DAO error in class: ${this::class.java.name}: annotation attribute tableName can't be empty" }
 
         var colWithOptLock: ColDef? = null
         val cdefs = mutableListOf<ColDef>()
@@ -242,14 +241,12 @@ abstract class Entity protected constructor() {
             }
         }
 
-        require( cdefs.isNotEmpty() ) {
-            "DAO error: class ${this::class.java.name} does not declare any fields wih Column annotation"
-        }
+        require( cdefs.isNotEmpty() )
+            { "DAO error: class ${this::class.java.name} does not declare any fields wih Column annotation" }
 
         val pkProblems: String? = this.validatePkPositions(cdefs)
-        require( pkProblems.isNullOrEmpty() ) {
-            "DAO error in class ${this::class.java.name}, the PKs are messed up: $pkProblems"
-        }
+        require( pkProblems.isNullOrEmpty() )
+            { "DAO error in class ${this::class.java.name}, the PKs are messed up: $pkProblems" }
 
         Entity.tblDefsMap.putIfAbsent(this.tblDefKey, TableDef(tableName, cdefs))
     }

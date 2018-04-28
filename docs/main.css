@@ -7,17 +7,37 @@ p {
     font-size: large;
 }
 
+pre {
+    background-color: whitesmoke;
+}
+
+.wip {
+    color: red;
+    fint-size: larger;
+}
+
+.note {
+    font-style: italic;
+    margin-left: 2em;
+}
+
 .grid-container {
     display: grid;
     grid-template-areas:
       'header  header'
       'sidebar content'
       'footer  footer'
+    ;
+    margin-right: 2em;
 }
 
 .grid-content {
     grid-area: content;
+    text-align: justify;
 }
+
+.grid-content p,pre,h2,h3,h4,h5,h6 { margin-left: 1em; }
+
 
 .grid-header {
     grid-area: header;
@@ -39,3 +59,4 @@ p {
 .grid-sidebar li       { margin-top: 0.5em; }
 .grid-sidebar ul ul    { font-size: 95%; }
 .grid-sidebar ul ul ul { font-size: 95%; }
+
