@@ -2,12 +2,40 @@ p {
     margin-top: 1em;
 }
 
-.title {
-    text-align: center
-}
-
 .name {
     font-family: monospace;
     font-size: large;
 }
 
+.grid-container {
+    display: grid;
+    grid-template-areas:
+      'header  header'
+      'sidebar content'
+      'footer  footer'
+}
+
+.grid-content {
+    grid-area: content;
+}
+
+.grid-header {
+    grid-area: header;
+    text-align: center;
+}
+
+.grid-footer {
+    grid-area:  footer;
+    text-align: center;
+    font-size:  small;
+}
+
+.grid-sidebar {
+    grid-area: sidebar;
+    margin: 0.4em 1em 0.3em 0.5em
+}
+
+.grid-sidebar ul       { margin-bottom: 1em; }
+.grid-sidebar li       { margin-top: 0.5em; }
+.grid-sidebar ul ul    { font-size: 95%; }
+.grid-sidebar ul ul ul { font-size: 95%; }

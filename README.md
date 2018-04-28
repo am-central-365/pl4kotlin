@@ -3,37 +3,59 @@ Persistence Layer for Kotlin
 
 **The project needs a better name**
 
-The project is a library for mapping between JDBC RDBMS tables and Java
+The project is a library for mapping JDBC table rows and Java
 objects. Currently only 1:1 mapping is supported. e.g. a POJO instance
-maps to a single record in a table. All four CRUD operations are
+maps to a single record of a table. All four CRUD operations are
 supported.
 
 The goal is to simplify basic database operations without getting in
 the way. You can always tell what SQL statement is going to be executed
-as a result of your request. All statements utilize bind variable to
-improve efficiency and avoid SQL injection.
+as result of your request. All generated statements utilize bind variable
+to improve efficiency and prevent SQL injection.
 
 SQL beginners will appreciate simplicity of routine operations
 automation. Experienced users may like flexibility of mixing the
 library and JDBC code.
 
-## Building
+## Tested with
+
+* MySql
+* Oracle
+* PostgreSQL
+* SQLite
+
+It is likely that other RDBMS are also supported, but we never had
+chance to confirm that. The library avoids any non-ANSI SQL (like
+Oracle ```returning``` clause).
+
+## Building the library
 To build the library JAR, use Maven:
 ```
 mvn package
 ```
 The resulting jar is located in ```target``` subdirectory.
 
-Other standard Maven variations are ```mvn clean install```,  ```mvn test```, and so on.
-Check out [Apache Maven](https://maven.apache.org/) docs for details.
+Other standard Maven variations are ```mvn clean install```,
+```mvn test```, and so on. Check out [Apache Maven](https://maven.apache.org/)
+docs for details.
+
+## Maven dependency
+
+```XML
+    <dependency>
+        <groupId>com.amcentral365</groupId>
+        <artifactId>pl4kotlin</artifactId>
+        <version>${pl4kotlin.version}</version>
+    </dependency>
+```
 
 ## Quick Start
 
 Consider Oracle's [SCOTT schema](http://www.orafaq.com/wiki/SCOTT#Original_SCOTT.27s_tables_since_Oracle_4).
-We can define its DAO as:
+We can define its DAO as follows:
 
 #### The DAO class
-The class is derived from base class Entity provided by the library.
+All classes must be derived from base class Entity provided by the library.
 Persisted members are marked with with @Column annotation. There are a
 few attributes beside column name and pkPos, they are described in the
 docs.
@@ -49,13 +71,20 @@ class Emp: Entity() {
 
     // feel free to add constructors, transient members, methods, etc
 }
-
 ```
 
+field ```hireDate``` corresponds to database column ```hiredate```,
+```commission``` to column ```com```, etc. On write (Insert, Update)
+fiels values are stored in the row's columns. On read, they are loaded
+from the row. Field values are used in the ```WHERE``` clause of the
+corresponding SQL.
 
-There are multiple ways to supply columns participating in the SQL
-operation. Typically we can specify the Kotlin object's field, the
-column name, or mention it in a SQL expression. The result is the same.
+
+#### Referencing fields
+There are multiple ways to supply participating columns. Typically we
+can use a Kotlin object's field because it provides better type chacking
+and refactoring. Column name can also be used - the generated SQL is the same.
+as a SQL expression. The result is the same.
 
 
 #### Creating data
@@ -67,14 +96,10 @@ pass it to the InsertStatement:
   val count = InsertStatement(scott).run()
 ```
 
-Since we didn't provide ```Connection``` object to ```run()`` method, a
-transaction new database connection is opened. Data is inserted into the
-table, auto-generated fields are fetched back, and the transaction is
-committed.
-
-If we wanted more control over transaction lifetime, we could supply a
-Connection object to ```run()```. Then the library does not attempt to
-control the transaction.
+An INSERT statement is generated and ```scott``` object's field values
+are written to their corresponding columns, If they class had any
+auto-generated fields, their values are automatically fetched back
+in the same transaction.
 
 
 #### Reading data
@@ -83,28 +108,43 @@ control the transaction.
   val count = SelectStatement(martin).select(martin.allColsButPk!!).byPk().run()
 ```
 
-We've populated record's Primary Key column empno, and called
-```SelectStatement```'s ```run()``` to fetched other fields from the
-database. Variable ```count``` can be checked to see if the record was
-indeed fetched.
+This transalates to SQL statment:
+```SQL
+SELECT ename, hiredate, com, ... FROM emp WHERE emptno = ?
+```
+Value of ```martin.empno``` is bound to the statement, and the query is
+executed. If the record is found, values of the fetched columns are stored
+in the corresponding fields of object ```martin```.
 
 
 #### Updating data
-Let's increase Allen's commission to 350. We assign new value to the
+Unlike other statements, columns which need to be updated must be listed
+explicitly.
+
+Let's change Allen's commission to 350. We assign new value to the
 object's field and call ```UpdateStatement``` to update it:
 ```Kotlin
   val allen = Emp(empno=7499, commission = 350f)
   val count = UpdateStatement(allen).update(Emp::commission).byPk().run()
 ```
+Note that we used class field ```Emp::commission```. We could also
+specify the object's field: ```allen::commission```. Or, we could have
+supplied the column name as string: ```update("com")```. In all three
+forms the parameter is only used to identify the column and its corresponding
+field.
+
+The generated SQL is:
+```SQL
+UPDATE emp SET com = ? WHERE empno = ?
+```
 
 Sometimes we want to update a column to a SQL expression. Say, we wanted
-to increase commission by X percent. Further, to make the SQL reusable
-in the RDBMS cache, we could specify as a bind variable:
+to increase commission by 15 percent. Further, to make the SQL reusable
+in the RDBMS cache, we wanted to provide its value via a bind variable:
 
 ```Kotlin
-  val increasePercent = 1.1f
   val count = UpdateStatement(allen)
-                .update(Emp::commission, "com * ?", increasePercent)
+                .update(allen::commission, "com * ?", 1.15)
                 .byPk()
                 .fetchBack("com")
                 .run()
@@ -112,21 +152,34 @@ in the RDBMS cache, we could specify as a bind variable:
 
 ##### Fetching data back
 Sometimes we want to read back the updated data. This is especially
-useful when column value is updated to SQL ```default``` expresion (as in
-```create table T(..., modify_ts timestamp default current_timestamp)```).
+useful when column value is updated to SQL ```default``` expresion, as in
+```create table T(..., modified_ts timestamp default systimestamp```.
 
-In the example above, we fetch back commission by callig ```fetchBack```
-method on the ```UpdateStatement``` object. The value is stored in the
-appropriate POJO field after statement execution.
+In the example above, we fetched back the reesulting commission by calling
+```fetchBack``` method of the ```UpdateStatement``` object.
+The value is stored in the appropriate POJO field after statement execution.
 
 
 #### Deleting data
 For the sake of demonstrating multi-row operations with expressions,
-let's delete all salesmen with zero commission:
+let's delete all salesmen records with zero commission:
 
 ```Kotlin
   val count = DeleteStatement(Emp()).by("job = 'SALESMAN'").by("com <= 0").run()
 ```
 
 Since we are not using any POJO data, we have simply passed a new object
-without bothering to initialize it.
+without bothering to initialize it. We also did not use any fields,
+specifying the condition as a free-form expression,
+
+### Controlling transactions
+As one of its arguments, POJO constructor takes a function to retrun
+database connection. The function is called when ```run()``` is called
+without parameters. The obtained connection is used to execute the
+SQL statement, and then transaction is committed or rolled back
+depending on the outcome. Then the connection object is closed.
+
+If more granular control over transaction lifetime is needed, ```run()```
+can be invoked with a ```Connection``` object. Then the library does not
+attempt to commit/rollback nor close the connection. This allows to run
+multiple statements in the same transaction.
