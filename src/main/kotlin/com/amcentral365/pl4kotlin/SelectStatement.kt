@@ -54,7 +54,6 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
 
     // when prop or column name is used, its ColDef is detected, and the resulting statement translates to
     // "WHERE colName = ?". The property value is bound when the statement is ran.
-    fun by(mprop:   KMutableProperty0<Any?>): SelectStatement { this.addProperty(this.whereDescrs, mprop);    return this }
     fun by(prop:    KProperty<Any?>):         SelectStatement { this.addProperty(this.whereDescrs, prop);     return this }
     fun by(colName: String):                  SelectStatement { this.addColName (this.whereDescrs, colName);  return this } // how is it not expr?
 
