@@ -1,25 +1,21 @@
-p {
-    margin-top: 1em;
-}
+body { font-family: Helvetica Verdana Sans-serif; font-size: 14pt; }
 
-.name {
-    font-family: monospace;
-    font-size: large;
-}
+h1 { font-size: 20pt; }
+h2 { font-size: 18pt; }
+h3 { font-size: 16pt; }
+h4 { font-size: 14pt; }
 
-pre {
-    background-color: whitesmoke;
-}
+p   { margin-top: 1em; }
+pre { background-color: whitesmoke; font-size: smaller; }
 
-.wip {
-    color: red;
-    fint-size: larger;
-}
+table       { font-size: smaller; }
+table tr    { vertical-align: top; }
+table th,td { border-bottom: 1px solid black;  padding: 0.2em 0.7em;  }
+table th:first-child,td:first-child { padding-left: 0 }
 
-.note {
-    font-style: italic;
-    margin-left: 2em;
-}
+.name { font-family: monospace; font-size: large; }
+.wip  { color: red; font-size: larger; }
+.note { font-style: italic; margin-left: 2em; }
 
 .grid-container {
     display: grid;
@@ -31,12 +27,7 @@ pre {
     margin-right: 2em;
 }
 
-.grid-content {
-    grid-area: content;
-    text-align: justify;
-}
-
-.grid-content p,pre,h2,h3,h4,h5,h6 { margin-left: 1em; }
+.grid-content { grid-area: content; text-align: justify; }
 
 
 .grid-header {
@@ -47,16 +38,15 @@ pre {
 .grid-footer {
     grid-area:  footer;
     text-align: center;
-    font-size:  small;
+    font-size:  smaller;
 }
 
 .grid-sidebar {
     grid-area: sidebar;
-    margin: 0.4em 1em 0.3em 0.5em
+    margin: 0.4em 2em 0.3em 0.5em
 }
 
 .grid-sidebar ul       { margin-bottom: 1em; }
 .grid-sidebar li       { margin-top: 0.5em; }
 .grid-sidebar ul ul    { font-size: 95%; }
 .grid-sidebar ul ul ul { font-size: 95%; }
-
