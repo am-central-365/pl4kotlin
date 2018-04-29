@@ -130,58 +130,60 @@
         from Oracle's SCOTT schema:
     </p>
     <pre>
-        SCOTT> DESC emp
+    SCOTT> DESC emp
 
-         Name                             Null?    Type
-         -------------------------------- -------- ----------------------
-         EMPNO                            NOT NULL NUMBER(4)
-         ENAME                                     VARCHAR2(10 CHAR)
-         JOB                                       VARCHAR2(9 CHAR)
-         MGR                                       NUMBER(4)
-         HIREDATE                                  DATE
-         SAL                                       NUMBER(7,2)
-         COMM                                      NUMBER(7,2)
-         DEPTNO                                    NUMBER(2)
+     Name                             Null?    Type
+     -------------------------------- -------- ----------------------
+     EMPNO                            NOT NULL NUMBER(4)
+     ENAME                                     VARCHAR2(10 CHAR)
+     JOB                                       VARCHAR2(9 CHAR)
+     MGR                                       NUMBER(4)
+     HIREDATE                                  DATE
+     SAL                                       NUMBER(7,2)
+     COMM                                      NUMBER(7,2)
+     DEPTNO                                    NUMBER(2)
 
-        SCOTT> SELECT * FROM emp ORDER BY empno;
+    SCOTT> SELECT * FROM emp ORDER BY empno;
 
-             EMPNO ENAME      JOB              MGR HIREDATE           SAL       COMM     DEPTNO
-        ---------- ---------- --------- ---------- ----------- ---------- ---------- ----------
-              7369 SMITH      CLERK           7902 17-DEC-1980        800                    20
-              7499 ALLEN      SALESMAN        7698 20-FEB-1981       1600        300         30
-              7521 WARD       SALESMAN        7698 22-FEB-1981       1250        500         30
-              7566 JONES      MANAGER         7839 02-APR-1981       2975                    20
-              7654 MARTIN     SALESMAN        7698 28-SEP-1981       1250       1400         30
-              7698 BLAKE      MANAGER         7839 01-MAY-1981       2850                    30
-              7782 CLARK      MANAGER         7839 09-JUN-1981       2450                    10
-              7788 SCOTT      ANALYST         7566 19-APR-1987       3000                    20
-              7839 KING       PRESIDENT            17-NOV-1981       5000                    10
-              7844 TURNER     SALESMAN        7698 08-SEP-1981       1500          0         30
-              7876 ADAMS      CLERK           7788 23-MAY-1987       1100                    20
-              7900 JAMES      CLERK           7698 03-DEC-1981        950                    30
-              7902 FORD       ANALYST         7566 03-DEC-1981       3000                    20
-              7934 MILLER     CLERK           7782 23-JAN-1982       1300                    10
+         EMPNO ENAME      JOB              MGR HIREDATE           SAL       COMM     DEPTNO
+    ---------- ---------- --------- ---------- ----------- ---------- ---------- ----------
+          7369 SMITH      CLERK           7902 17-DEC-1980        800                    20
+          7499 ALLEN      SALESMAN        7698 20-FEB-1981       1600        300         30
+          7521 WARD       SALESMAN        7698 22-FEB-1981       1250        500         30
+          7566 JONES      MANAGER         7839 02-APR-1981       2975                    20
+          7654 MARTIN     SALESMAN        7698 28-SEP-1981       1250       1400         30
+          7698 BLAKE      MANAGER         7839 01-MAY-1981       2850                    30
+          7782 CLARK      MANAGER         7839 09-JUN-1981       2450                    10
+          7788 SCOTT      ANALYST         7566 19-APR-1987       3000                    20
+          7839 KING       PRESIDENT            17-NOV-1981       5000                    10
+          7844 TURNER     SALESMAN        7698 08-SEP-1981       1500          0         30
+          7876 ADAMS      CLERK           7788 23-MAY-1987       1100                    20
+          7900 JAMES      CLERK           7698 03-DEC-1981        950                    30
+          7902 FORD       ANALYST         7566 03-DEC-1981       3000                    20
+          7934 MILLER     CLERK           7782 23-JAN-1982       1300                    10
 
-        14 rows selected.
+    14 rows selected.
     </pre>
 
     <p>
         Its Kotlin POJO might look like this:
     </p>
 
+    <a name="@TableEmp">
     <pre>
-        @Table("emp")
-        class Emp: Entity() {
-            @Column("empno",  pkPos = 1) var empno:      Int = 0
-            @Column("ename")             var empName:    String?
-            @Column("job")               var job:        String?
-            @Column("mgr")               var manager:    Short?
-            @Column("hiredate")          var hireDate:   Date?
-            @Column("sal")               var salary:     Float?
-            @Column("com")               var commission: Float?
-            @Column("deptno")            var deptno:     Short?
-        }
+    @Table("emp")
+    class Emp: Entity() {
+        @Column("empno",  pkPos = 1) var empno:      Int = 0
+        @Column("ename")             var empName:    String?
+        @Column("job")               var job:        String?
+        @Column("mgr")               var manager:    Short?
+        @Column("hiredate")          var hireDate:   Date?
+        @Column("sal")               var salary:     Float?
+        @Column("com")               var commission: Float?
+        @Column("deptno")            var deptno:     Short?
+    }
     </pre>
+    </a>
 
     <p>
         We define the table name and properties, mapped to the table columns.
@@ -308,7 +310,7 @@
                 The library computes the value and assigns it to the property. Then the value is bound to
                 the appropriate bind variable as usual.
             </td>
-            <td>The clause only applies to UUID and Timestamp columns, setting them to random uuid or
+            <td>The clause only works for UUID and Timestamp columns, setting them to random uuid or
                 current timestamp on the clinet machine,
             </td>
         </tr>
@@ -327,10 +329,96 @@
         function is called to obtain one. In this case the library controls the transaction.
     </p>
 <h2><a name="ColumnSelectors">Column selectors</a></h2>
+    <h3><a name="SingleColumn">Single Column</a></h3>
+        <p>
+        There are multiple ways exist to specify a column, chosing between them is a matter of preference.
+        Examples below use an excerpt from our <a href="#@TableEmp">sample POJO</a>:
+        </p>
+
+        <pre>
+    @Table("emp")
+    class Emp: Entity() {
+        ...
+        @Column("sal") var salary: Float?
+        ...
+    }
+    ...
+    val empInstance = Emp()
+    val anotherEmpInstance = Emp()
+        </pre>
+
+        <ul>
+            <li>
+                <h4><a name="ByInstanceProperty">by instance property</a></h4>
+                <p>
+                    Given an object of a class, we can use reference to the object's property to specify its column:
+                </p>
+                <pre>    SelectStatement(empInstance).select(<b>empInstance::salary</b>) ...</pre>
+                <p>
+                    There are few things to note here. Rather than calling a property, we pass reference to it
+                    with Kotlin's '::' operator. Secondly, the instance doesn't matter,
+                    <code>anotherEmpInstance::salary</code> would do as well. That is because the library uses
+                    the passed property's <code>name</code> to find the column definition. In the extreme, the
+                    passed property doesn't even need to be of <code>Emp</code> type - as long as its name matches
+                    the desired <code>Emp</code> property. Doing that would be really confusing though.
+                </p>
+            </li>
+
+            <li>
+                <h4><a name="ByClassProperty">by class property</a></h4>
+                <p>
+                    Since all the library uses is property name, we can as well pass the class instead of its
+                    particular instance:
+                </p>
+                <pre>    SelectStatement(empInstance).select(<b>Emp::salary</b>) ...</pre>
+                <p>
+                    Chosing between the class or its instance is a matter of preference and refactoring abilities
+                    of hte editor you're using. The end result is the same.
+                </p>
+            </li>
+
+            <li>
+                <h4><a name="ByColumnName">by column name</a></h4>
+                <p>
+                    Properties are associated with columns, and we can specifying the column name
+                    directly. The column must be defined in the Entity class.
+                </p>
+                <pre>    SelectStatement(empInstance).select(<b>"sal"</b>) ...</pre>
+                <p>
+                    While more flexible, string literals are harder to refactor. There is no type checking wither.
+                    The method would work best when column names are generated by the code or not known in advance.
+                </p>
+            </li>
+
+            <li>
+                <h4><a name="ByColumnExpressions">by column expression</a></h4>
+                <p>
+                    Sometimes we need more than a simple column. Where it makes sense, the library allows
+                    specifying an expression which is emitted into the generated SQL statement. Since using
+                    bind variables is a good practice, the expressions support them.
+                </p>
+                <pre>
+    val fmt = "yyyy-mm-dd"
+    val d1 = "2010-04-01"
+    val d2 = "2010-04-15"
+    SelectStatement(...).by(<b>"hiredate between to_date(?, ?) and to_date(?, ?)", d1, fmt, d2, fmt</b>) ...</pre>
+                <p>
+                    Chosing between column name and expression may get ambiguous for the compiler: both take
+                    String as the argument. Help it chose the correct method by passing parameter name:
+                </p>
+                <pre>
+    SelectStatement(...).by(<b>colName =</b> "sal")
+    SelectStatement(...).by(<b>expr =</b> "comm is not null")</pre>
+            </li>
+        </ul>
+
+
+    <h3><a name="ColumnGroups">Column Groups</a></h3>
     <p>
-        The library assigns columns into a few groups and allows specifying them to avoid listing every column
-        in the statement. Rather than being a special magic value, the groups are lists of actual columns
-        and can be used by your code.
+        The library automatically arranges columns into a few groups and allows to specify instead of a signle
+        column where it makes sense. This makes code more expressive, generic, and shorter. Rather than being a
+        special magic value, the groups are lists of actual columns and can be used outside of library calls.
+        You can also define and use your lists.
     </p>
 
     <p class="note">
@@ -369,7 +457,10 @@
         </tr>
         <tr><td><span class="name">optLockCol</span></td><td>The Optimistic Lock column if it was defined, otherwise null</td><td></td></tr>
     </table>
-    
+
+    <p>
+
+    </p>
 <h2><a name="InsertStatement">InsertStatement</a></h2>
 <h2><a name="SelectStatement">SelectStatement</a></h2>
 <h2><a name="UpdateStatement">UpdateStatement</a></h2>
@@ -419,7 +510,22 @@
         <li>
             <a href="#Statements">Statements</a>
             <ul>
-                <li><a href="#ColumnSelectors">Column selectors</a></li>
+                <li>
+                    <a href="#ColumnSelectors">Column selectors</a>
+                    <ul>
+                        <li>
+                            <a href="#SingleColumn">Single column</a>
+                            <ul>
+                                <li><a href="#ByInstanceProperty">by instance property</a></li>
+                                <li><a href="#ByClassProperty">by class property</a></li>
+                                <li><a href="#ByColumnName">by column name</a></li>
+                                <li><a href="#ByColumnExpressions">by column expression</a></li>
+                            </ul>
+                        </li>
+
+                        <li><a href="#ColumnGroups">Column groups</a></li>
+                    </ul>
+                </li>
                 <li><a href="#InsertStatement">InsertStatement</a></li>
                 <li><a href="#SelectStatement">SelectStatement</a></li>
                 <li><a href="#UpdateStatement">UpdateStatement</a></li>
