@@ -13,14 +13,6 @@ open class InsertStatement(entityDef: Entity, getGoodConnection: () -> Connectio
 
     override fun run(conn: Connection): Int = this.runDML(conn, this.bindColDefs, this.fetchDescr)
 
-    /**
-     * Override BaseStatement's bind() to honor bind value generation.
-     * Unlike other
-    override fun bind(stmt: PreparedStatement, vals: List<Any?>) =
-        // we KNOW vals is this.bindColDefs: we've just passed it to run() which has called us
-        this.bindColDefs.forEachIndexed { k, v -> this.bind(stmt, k+1, v.getBindValue()) }
-     */
-
     override fun build(): String {
         this.bindColDefs.clear()
         this.fetchDescr.clear()

@@ -27,11 +27,9 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
     // and the result of the expression is fetched into the property.
     // Technically we could have the same method for column name, but it doesn't make sense logically
     // (select expr into a column?), and therefore this form was deliberately omitted.
-    fun select(mprop: KMutableProperty0<Any?>): SelectStatement { this.addProperty(this.selectDescrs, mprop);  return this }
+    //fun select(mprop: KMutableProperty0<Any?>): SelectStatement { this.addProperty(this.selectDescrs, mprop);  return this }
     fun select(prop:  KProperty<Any?>):         SelectStatement { this.addProperty(this.selectDescrs,  prop);  return this }
 
-    fun select(targetProp: KMutableProperty0<Any?>, expr: String, vararg binds: Any?): SelectStatement
-        { this.addProperty(this.selectDescrs, targetProp, expr, *binds);  return this }
     fun select(targetProp: KProperty<Any?>, expr: String, vararg binds: Any?): SelectStatement
         { this.addProperty(this.selectDescrs, targetProp, expr, *binds);  return this }
 
@@ -67,9 +65,8 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
     // ----- ORDER BY columns or expressions
     // ORDER BY property/column ASC/DESC
     // The expression version is free form, with optional binds.
-    fun orderBy(mprop:   KMutableProperty0<Any?>, asc: Boolean=true):  SelectStatement { this.addProperty(this.orderDescrs, mprop, null, asc);    return this }
-    fun orderBy(prop:    KProperty<Any?>,         asc: Boolean=true):  SelectStatement { this.addProperty(this.orderDescrs, prop, null, asc);     return this }
-    fun orderBy(colName: String,                  asc: Boolean=true):  SelectStatement { this.addColName (this.orderDescrs, colName, null, asc);  return this }
+    fun orderBy(prop:    KProperty<Any?>, asc: Boolean=true):  SelectStatement { this.addProperty(this.orderDescrs, prop, null, asc);     return this }
+    fun orderBy(colName: String,          asc: Boolean=true):  SelectStatement { this.addColName (this.orderDescrs, colName, null, asc);  return this }
 
     fun orderBy(expr: String, vararg binds: Any?): SelectStatement { this.addColName(this.orderDescrs, null, expr, *binds);  return this }
 

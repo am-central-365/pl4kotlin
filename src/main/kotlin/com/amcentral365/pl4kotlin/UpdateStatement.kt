@@ -23,10 +23,7 @@ open class UpdateStatement(entityDef: Entity, getGoodConnection: () -> Connectio
     //
     // The expression form translates to: "set column = expr(binds)".
     // Unlike SelectStatement, we allow specifying target column by its name, because it makes sense in SQL.
-    fun update(mprop: KMutableProperty0<Any?>): UpdateStatement { this.addProperty(this.updateDescrs, mprop);  return this }
     fun update(prop:  KProperty<Any?>):             UpdateStatement { this.addProperty(this.updateDescrs,  prop);  return this }
-    fun update(mprop: KMutableProperty0<Any?>, expr: String, vararg binds: Any?): UpdateStatement   // set col = expr(binds)
-        { this.addProperty(this.updateDescrs, mprop, expr, *binds);  return this }
     fun update(targetProp: KProperty<Any?>, expr: String, vararg binds: Any?): UpdateStatement   // set col = expr(binds)
         { this.addProperty(this.updateDescrs, targetProp, expr, *binds);  return this }
 
@@ -50,7 +47,6 @@ open class UpdateStatement(entityDef: Entity, getGoodConnection: () -> Connectio
 
     // when prop or column name is used, its ColDef is detected, and the resulting statement translates to
     // "WHERE colName = ?". The property value is bound when the statement is ran.
-    fun by(mprop: KMutableProperty0<Any?>): UpdateStatement { this.addProperty(this.whereDescrs,  mprop);    return this }
     fun by(prop:  KProperty<Any?>):         UpdateStatement { this.addProperty(this.whereDescrs,  prop);     return this }
     fun by(colName: String):                UpdateStatement { this.addColName (this.whereDescrs,  colName);  return this } // how is it not expr?
 
@@ -60,7 +56,6 @@ open class UpdateStatement(entityDef: Entity, getGoodConnection: () -> Connectio
 
     // ----- FETCHBACK columns
     // These columns are read back after update, by the Pk (adding OptLock is redundant because we ar in the same transaction)
-    fun fetchBack(mprop:   KMutableProperty0<Any?>): UpdateStatement { this.addProperty(this.fetchbackDescrs, mprop);    return this }
     fun fetchBack(prop:    KProperty<Any?>):         UpdateStatement { this.addProperty(this.fetchbackDescrs, prop);     return this }
     fun fetchBack(colName: String):                  UpdateStatement { this.addColName( this.fetchbackDescrs, colName);  return this }
 
