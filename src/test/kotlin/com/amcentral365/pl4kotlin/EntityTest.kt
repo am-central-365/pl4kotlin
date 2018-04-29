@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.assertThrows
+import java.sql.Timestamp
 import java.util.Arrays
 import kotlin.test.assertTrue
 
@@ -127,6 +128,62 @@ internal class EntityTest {
 
         val x = assertThrows<IllegalArgumentException>("should have failed on bad optLock type") { Tx() }
         assertTrue(x.message!!.contains("supported Optimistic Lock types are Timestamp and Number"), "wrong error message: ${x.message}")
+    }
+
+
+    @Test
+    fun `bad client-generated-always type`() {
+        @Table("tx")
+        class Tx: Entity() {
+            @Column("pk0", pkPos = 1) var field0: Int = 0
+            @Column("pkA", onInsert = Generated.OnTheClientAlways) var fieldA: String = "..."
+        }
+
+        val x = assertThrows<IllegalArgumentException>("should have failed on bad client-generated type") { Tx() }
+        assertTrue(x.message!!.contains("client-side generation is only supported for UUID and Timestamp"), "wrong error message: ${x.message}")
+    }
+
+
+    @Test
+    fun `bad client-generated-when-null type`() {
+        @Table("tx")
+        class Tx: Entity() {
+            @Column("pk0", pkPos = 1) var field0: Int = 0
+            @Column("pkA", onInsert = Generated.OneTheClientWhenNull) var fieldA: String = "..."
+        }
+
+        val x = assertThrows<IllegalArgumentException>("should have failed on bad client-generated type") { Tx() }
+        assertTrue(x.message!!.contains("client-side generation is only supported for UUID and Timestamp"), "wrong error message: ${x.message}")
+    }
+
+
+    //@Test
+    // Throws:
+    // Kotlin.reflect.jvm.internal.KotlinReflectionInternalError: Cannot calculate JVM erasure for type: [ERROR : Unknown type parameter 0]
+    fun `pass on proper client-generated type`() {
+        fun <T> mustPass() {
+            @Table("tx")
+            class Tx: Entity() {
+                @Column("pk0", pkPos = 1) var field0: Int = 0
+                @Column("pkA", onInsert = Generated.OnTheClientAlways) var fieldA: T? = null
+            }
+
+            Tx()  // should throw no exceptions
+        }
+
+        mustPass<Number>()
+        mustPass<Int>()
+        mustPass<Short>()
+        mustPass<Long>()
+        mustPass<Float>()
+        mustPass<Double>()
+        mustPass<java.lang.Short>()
+        mustPass<java.lang.Integer>()
+        mustPass<java.lang.Long>()
+        mustPass<java.lang.Float>()
+        mustPass<java.lang.Double>()
+        mustPass<java.lang.Boolean>()
+        mustPass<java.sql.Timestamp>()
     }
 
 
