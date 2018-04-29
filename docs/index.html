@@ -77,7 +77,7 @@
     It is unlikely the library will satisfy all application needs. There is no support
     for joins nor parent-child relations (needless to say, N:M isn't supported too).
     Perhaps the most visible limitation is <span class="name">SelectStatement</span>
-    inability to fetch more than one single record. This may be lifted in the future
+    inability to fetch more than a single record. This may be lifted in the future
     versions when support for iterators is added.
 </p>
 
@@ -277,9 +277,9 @@
 <h3><a name="onInsert">onInsert</a></h3>
     <p>
        On update, each updated column must be specified explicitly. But inserts are different: all
-        columns must be assigned values. But sometimes the values must be set by the database to the
-        DEFAULT values of the column. Also, sometimes we want to generate the value on the client,
-        but don't want to bother coding that.
+        columns must be assigned values. But sometimes we want the values to be set by the database as
+        defined by the DEFAULT values of the column. And for some other columns  we want to generate
+        the value on the client, but don't want to bother coding that explicitly.
     </p>
 
     <p>
@@ -444,15 +444,15 @@
             <td>All columns except the ones being part of the primary key</td>
             <td>
                 Useful in <span class="name">select()</span> method of the SELECT statements. If data is
-                fetched by PK, there is no need to re-fetch it back.
+                filtered by PK, there is no need to re-select it.
             </td>
         </tr>
         <tr>
             <td><span class="name">allColsButPkAndOptLock</span></td>
             <td>All columns except PK and the the Optimistic Lock column, if defined</td>
             <td>
-                Useful in <span class="name">select()</span> method of the SELECT statements when fetching data
-                by PK and optimistic lock. There is no need to read these columns again.
+                Useful in <span class="name">select()</span> method of the SELECT statements when filtering
+                data by PK and optimistic lock. There is no need to read these columns again.
             </td>
         </tr>
         <tr><td><span class="name">optLockCol</span></td><td>The Optimistic Lock column if it was defined, otherwise null</td><td></td></tr>
@@ -462,7 +462,92 @@
 
     </p>
 <h2><a name="InsertStatement">InsertStatement</a></h2>
+    <p>
+        InsertStatement is the simplest of all, but with a couple of peculiarities. The generated SQL is:
+    </p>
+    <pre>
+    INSERT INTO t(c1, c2, ...) VALUES(?, ?, ...)
+    </pre>
+
+    <p>
+        The list of participating columns is built as directed by the <a href="#onInsert">onInsert</a>
+        attribute of the <a href="#ColumnAnnotation">@Column</a> annotation.
+    </p>
+
+    <p>
+        Database-side generated values are automatically read by after INSERT by a SELECT statement
+        running in the same transaction. That is why none of the primary key columns can be
+        database-side generated: they are used to read the inserted record and their value must
+        be known by the client.
+    </p>
+
+    <p>Sample code:</p>
+    <pre>
+    val scott = Emp(empno=7788, ename="Scott", /* other initializations */)
+    val count = InsertStatement(scott).run()</pre>
+
 <h2><a name="SelectStatement">SelectStatement</a></h2>
+    <p>
+        When ran, it reads data into the provided Entity object and returns the number of fetched records.
+        Current library limitation is single row read. The future plans include adding
+        <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-iterator/index.html">Iterator</a>
+        support to fetch multiple rows. That would require a parameter-less constructor defined by
+        the derived class.
+    </p>
+
+    <h4><a name="selectSelectMethods">select() methods</a></h4>
+    <p>
+        Use variations of <code>select()</code> methods to specify columns to be read.
+    </p>
+
+    <p class="note">
+        The statement only fetches requested column values, the other values do not change.
+        <a href="#ColumnGroups">Column Groups</a> selector helps specifying the desired set of
+        columns without listing each one individually.
+    </p>
+
+    <p>
+        Sometimes we want to tranform the column value on read. The library supports that by
+        providing <code>select(targetProp: KProperty&lt;Any?>, expr: String, vararg binds: Any?)</code>
+        method. Instead of <code>SELECT columnName</code> the generated SQL becomes <code>SELECT expr</code>
+        and the result is stored in the column, defined by <code>targetProp</code>. For example:
+    </p>
+
+    <pre>    SelectStatement(empInstance).select(<b>Emp::hireDate, "trunc(hiredate. 'DD')"</b>).byPk().build()  </pre>
+    <p>generates the following SQL:</p>
+    <pre>    SELECT <b>trunc(hiredate. 'DD')</b> FROM emp WHERE empno = ?</pre>
+    <p>and the result is stored in property <code>hireDate</code> of <code>empInstance</code> object</p>
+
+    <h4><a name="selectByMethods">by() methods</a></h4>
+    <p>
+        The <code>by()</code> methods contribute to the <code>WHERE</code> caluse of the resulting
+        SQL statement. The library provides shortcuts to filter by the primary key and, optionally,
+        by the <a href="#isOptimisticLock">optimistic lock column</a> if one is defined.
+    </p>
+
+    <p>Sample code:</p>
+    <pre>
+    val martin: Emp(empno=7654)
+    val count = SelectStatement(martin).select(martin.allColsButPk!!).byPk().run()</pre>
+
+    <h4><a name="selectOrderByMethods">orderBy() methods</a></h4>
+    <p class="note">
+        These methods currently do not make sense since only single record selection is supported.
+        They'll come handy when the library start supporting multi-row selects.
+    </p>
+
+    <p>
+        When these methods are used, an <code>ORDER BY</code> clause is added to the SQL statement.
+        Any variation of <a href="#ColumnSelectors">Column Selectors</a> can be used to specify
+        ordering. The property/column name methods take an additional parameter <code>asc</code>
+        to specify <code>ASC</code> or <code>DESC</code> order as defined by the SQL standard.
+    </p>
+
+    <p>Example:</p>
+    <pre>    SelectStatement(...) ... <b>orderBy(Emp::hireDate, false)</b>.build()</pre>
+    <pr>generates this ORDER BY clause:</pr>
+    <pre>    SELECT ... FROM emp WHERE ... <b>ORDER BY hiredate DESC</b></pre>
+
 <h2><a name="UpdateStatement">UpdateStatement</a></h2>
 <h2><a name="DeleteStatement">DeleteStatement</a></h2>
 
@@ -527,7 +612,14 @@
                     </ul>
                 </li>
                 <li><a href="#InsertStatement">InsertStatement</a></li>
-                <li><a href="#SelectStatement">SelectStatement</a></li>
+                <li>
+                    <a href="#SelectStatement">SelectStatement</a>
+                    <ul>
+                        <li><a href="#selectSelectMethods">select() methods</a></li>
+                        <li><a href="#selectByMethods">by() methods</a></li>
+                        <li><a href="#selectOrderByMethods">orderBy() methods</a></li>
+                    </ul>
+                </li>
                 <li><a href="#UpdateStatement">UpdateStatement</a></li>
                 <li><a href="#DeleteStatement">DeleteStatement</a></li>
             </ul>

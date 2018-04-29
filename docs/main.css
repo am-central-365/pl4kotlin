@@ -5,8 +5,9 @@ h2 { font-size: 18pt; }
 h3 { font-size: 16pt; }
 h4 { font-size: 14pt; }
 
-p   { margin-top: 1em; }
-pre { overflow: auto;  background-color: whitesmoke;  font-size: smaller; }
+p    { margin-top: 1em; }
+pre  { overflow: auto;  background-color: whitesmoke;  font-size: smaller; }
+code { font-size: smaller; }
 
 table       { font-size: smaller; }
 table tr    { vertical-align: top; }
