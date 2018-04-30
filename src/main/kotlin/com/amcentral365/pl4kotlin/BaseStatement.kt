@@ -81,6 +81,8 @@ abstract class BaseStatement(val entityDef: Entity, private val getGoodConnectio
                 // if any values need to be fetched back (because SQL engine computed them), do that.
                 if( cnt > 0 && fetchBacks != null && fetchBacks.isNotEmpty()  ) {
                     reportSqlOnError = false
+                    // TODO: UpdateStatement may update multiple rows. Shall we use byPK (which may not
+                    // TODO: even make sense), or use the original statement's whereDescrs ?
                     cnt = SelectStatement(this.entityDef).selectByDescrs(fetchBacks).byPk().run(conn)
                 }
 

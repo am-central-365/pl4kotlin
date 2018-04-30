@@ -47,17 +47,17 @@ open class UpdateStatement(entityDef: Entity, getGoodConnection: () -> Connectio
 
     // when prop or column name is used, its ColDef is detected, and the resulting statement translates to
     // "WHERE colName = ?". The property value is bound when the statement is ran.
-    fun by(prop:  KProperty<Any?>):         UpdateStatement { this.addProperty(this.whereDescrs,  prop);     return this }
-    fun by(colName: String):                UpdateStatement { this.addColName (this.whereDescrs,  colName);  return this } // how is it not expr?
+    fun by(prop:  KProperty<Any?>): UpdateStatement { this.addProperty(this.whereDescrs,  prop);     return this }
+    fun by(colName: String):        UpdateStatement { this.addColName (this.whereDescrs,  colName);  return this }
 
     // free form clause, allowing to specify expressions and use any column
     fun by(expr: String, vararg binds: Any?): UpdateStatement { this.addColName(this.whereDescrs, null, expr, *binds);  return this }
 
 
     // ----- FETCHBACK columns
-    // These columns are read back after update, by the Pk (adding OptLock is redundant because we ar in the same transaction)
-    fun fetchBack(prop:    KProperty<Any?>):         UpdateStatement { this.addProperty(this.fetchbackDescrs, prop);     return this }
-    fun fetchBack(colName: String):                  UpdateStatement { this.addColName( this.fetchbackDescrs, colName);  return this }
+    // These columns are read back after update, by the Pk (adding OptLock is redundant because we are in the same transaction)
+    fun fetchBack(prop:    KProperty<Any?>, expr: String? = null, vararg binds: Any?): UpdateStatement { this.addProperty(this.fetchbackDescrs,    prop, expr, *binds);  return this }
+    fun fetchBack(colName: String,          expr: String? = null, vararg binds: Any?): UpdateStatement { this.addColName (this.fetchbackDescrs, colName, expr, *binds);  return this }
 
 
     public override fun build(): String {

@@ -57,7 +57,8 @@ internal class SelectStatementTest {
                 .select(txInst::pkField2)  // instance property
                 .select(Tx::val1Field,     "sysdate - trunc(sysdate) + ? + ?", 7, 'x')  // expression into class property
                 .select(txInst::val1Field, "sysdate - trunc(sysdate) + ? + ?", 7, 'x')  // expression into instance property
-                .select("val2Col")         // column name
+                .select("val2Col")                         // column name
+                .select("val2Col", "trunc(sysdate, 'DD')") // expression into column
                 .byPkAndOptLock()          // by canned expression
                 .by(Tx::val1Field)         // by class property
                 .by(txInst::val1Field)     // by instance property
@@ -74,7 +75,8 @@ internal class SelectStatementTest {
         // select expression must have a target column/property, translates to "expr into column"
         assertTrue( stmt.selectDescrs.all { it.colDef != null },
                 "All SELECT expressions must have a target column/property")
-        assertEquals("SELECT pkCol2, pkCol2, sysdate - trunc(sysdate) + ? + ?, sysdate - trunc(sysdate) + ? + ?, val2Col "+
+        assertEquals("SELECT pkCol2, pkCol2, sysdate - trunc(sysdate) + ? + ?, "+
+                            "sysdate - trunc(sysdate) + ? + ?, val2Col, trunc(sysdate, 'DD') "+
                 "FROM tx "+
                 "WHERE optLockCol = ? AND pkCol1 = ? AND pkCol2 = ? "+
                   "AND val1Col = ? AND val1Col = ? " +
@@ -84,12 +86,13 @@ internal class SelectStatementTest {
                 sql
         )
 
-        assertEquals(5,  stmt.selectDescrs.size)
+        assertEquals(6,  stmt.selectDescrs.size)
         EntityTest.checkDescr(stmt.selectDescrs[0], this.pk2ColDef)
         EntityTest.checkDescr(stmt.selectDescrs[1], this.pk2ColDef)
         EntityTest.checkDescr(stmt.selectDescrs[2], this.val1ColDef, "sysdate - trunc(sysdate) + ? + ?", true, 7, 'x')
         EntityTest.checkDescr(stmt.selectDescrs[3], this.val1ColDef, "sysdate - trunc(sysdate) + ? + ?", true, 7, 'x')
         EntityTest.checkDescr(stmt.selectDescrs[4], this.val2ColDef)
+        EntityTest.checkDescr(stmt.selectDescrs[5], this.val2ColDef, "trunc(sysdate, 'DD')")
 
         assertEquals(7,  stmt.whereDescrs.size)
         EntityTest.checkDescr(stmt.whereDescrs[0], this.optLockColDef)

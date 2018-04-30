@@ -28,13 +28,14 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
     // Technically we could have the same method for column name, but it doesn't make sense logically
     // (select expr into a column?), and therefore this form was deliberately omitted.
     //fun select(mprop: KMutableProperty0<Any?>): SelectStatement { this.addProperty(this.selectDescrs, mprop);  return this }
-    fun select(prop:  KProperty<Any?>):         SelectStatement { this.addProperty(this.selectDescrs,  prop);  return this }
+    fun select(prop:  KProperty<Any?>): SelectStatement { this.addProperty(this.selectDescrs,    prop);  return this }
+    fun select(colName: String):        SelectStatement { this.addColName (this.selectDescrs, colName);  return this }
 
     fun select(targetProp: KProperty<Any?>, expr: String, vararg binds: Any?): SelectStatement
         { this.addProperty(this.selectDescrs, targetProp, expr, *binds);  return this }
+    fun select(colName: String, expr: String, vararg binds: Any?): SelectStatement
+        { this.addColName(this.selectDescrs, colName, expr, *binds);  return this }
 
-    fun select(colName: String): SelectStatement
-        { this.addColName(this.selectDescrs, colName);  return this }
 
     fun select(colDefs: List<Entity.ColDef>): SelectStatement
         { this.selectDescrs.addAll(colDefs.map { Descr(it) });  return this }
