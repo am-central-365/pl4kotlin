@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html xmlns="http://www.w3.org/1999/html">
 <head>
     <meta charset="UTF-8"/>
     <title>Persistence Layer for Kotlin</title>
@@ -658,17 +658,126 @@
 
 
 <h1><a name="HackingTheCode">Hacking the code</a></h1>
-<h2><a name="JdbcTypeCode">JdbcTypeCode Class</a></h2>
-<h3><a name="MappingKotlinTypes">Mapping Kotlin types</a></h3>
-<h2><a name="EntityClass">Entity Class</a></h2>
-<h3><a name="ColDef">ColDef inner class</a></h3>
-<h2><a name="BaseStatementClass">BaseStatement Class</a></h2>
-<h2><a name="Tests">Tests</a></h2>
-<h3><a name="UnitTests">Unit tests</a></h3>
-<h3><a name="IntegrationTests">Integration tests</a></h3>
+    <p>
+        Every higher-level code is a generalization. While it makes certain things simpler,
+        it also restricts or complicates other paths. This library is no exception, but an attempt
+        was made to make it to reduce the pain. The aim was to help writing shorter code for relatively
+        simple use cases, while allowing use of other database-related code or libraries.
+    </p>
 
+    <p>
+        Here is how we try to achieve this. The library can control transactions, but also provides way
+        to relinquish it. It keeps no inner state except for static (almost) compile-time structures and
+        current values of the properties. The methods help to emit trivial SQL code, but also take free-form
+        expressions, allowing to make the SQL as complex as needed. Only standard SQL constructs are
+        generated, simplifying support for different RDBMS flavors.
+    </p>
+
+<h2><a name="TheBigPicture">The big picture</a></h2>
+    <p>
+        There are two major classes: the <code>Entity</code> describing the DAOs, and <code>BaseStatement</code>
+        performing operations on them. There is also a thin layer supporting JDBC/Java/Kotlin type translation.
+    </p>
+
+<h2><a name="JdbcTypeCode">JdbcTypeCode Class</a></h2>
+    <p>
+        This <code>enum</code> class lists the supported JDBC types and references to methods
+        passing them to/from the JDBC driver. Its heart is a table of type <code>Rec</code>
+        containing information about every supported type: the Java class, the setter, getter,
+        and parser methods, and its internal library type.
+    </p>
+
+    <p class="note">
+        Parsers are methods to convert into their type from String. These are used when reading
+        data passed by REST calls. Some supported types do not define parsers even while they should.
+        They are to add to the library should such need arise.
+    </p>
+
+    <p>
+        Since Kotlin and Java primitive types differ, we provide our own type codes for supported
+        data types. Maybe we can get away without that, time will show.
+    </p>
+
+    <p>
+        Not every JDBC type is supported by the library, some exotic types were left out not because
+        of technical difficulties, but because of lack of desire to test them. In fact, only a
+        subset of supported types was tested with real databases. Moreover, not all supported types
+        even have reader or parser defined. This is mainly because of lack of demand.
+    </p>
+
+<h3><a name="MappingKotlinTypes">Mapping Kotlin types</a></h3>
+    <p>
+        It doesn't seem that Kotlin primitive types map to their Java analogs directly.
+        But in our code we treat Korlin <code>Int</code> same as Java <code>Integer</code>.
+        For that reason, function <code>k2j()</code> from typeMappings.kt first checks for Kotlin
+        types. If the type is not recognized, it calls JdbcTypeCode to attempt to handle the
+        type as Java's.
+    </p>
+<h2><a name="EntityClass">Entity Class</a></h2>
+    <p>
+        Database objects are described by a user-defined class, derived from <code>Entity</code>. The
+        class defines properties corresponding to database column, and provides additional information
+        about them with <a href="#Column">@Column</a> annotation. That information is used for type
+        translation when binding values and reading them back.
+    </p>
+
+    <p>
+        The class also defines named <a href="#ColumnGroups">Column Groups</a>.
+    </p>
+
+<h3><a name="ColDef">ColDef inner class</a></h3>
+    <p>
+        The class defines database table columns and their mapping to class properties.
+        It stores <a href="#Column">@Column</a> annotation attributes, its
+        <a href="#JdbcTypeCode">type code</a>, reference to the Kotlin property, etc.
+    </p>
+
+    <p>
+        The class also contains methods to read and set property from JDBC ResultSet,
+        parse its values from <code>String</code>, bind it by calling into
+        <code>JdbcTypeCode</code> methods, etc.
+    </p>
+
+
+<h2><a name="BaseStatementClass">BaseStatement Class</a></h2>
+    <p>
+        <code>BaseStatement</code> class provides DML statmenet executor and a number of helper
+        functons. It is an abstract class requiring a function to generate SQL statement, called
+        <code>build()</code>. Derived classes Select/Insert/Update/DeleteStatement override the
+        method.
+    </p>
+
+    <p>
+        These derived classes also define functions to list columns/expressions to be used
+        in select, set, where, order by etc portions of their SQL statements. These lists are
+        used when building the SQL.
+    </p>
+
+    <p>
+        <code>SelectStatement</code> is special in the sense that it provides its own <code>run()</code>
+        method. Other classes use standard <code>runDML()</code> method from <code>VaseStatement</code>.
+    </p>
+
+<h2><a name="Tests">Tests</a></h2>
+    <p>
+        The library comes with Unit and Integration tests. Not all paths are covered,
+        but the goal is to cover as mach as it makes sense.
+    </p>
+
+<h3><a name="UnitTests">Unit tests</a></h3>
+    <p>
+        The library uses JUnit 5 and pom-located Kotlin "kotlin-test-junit" magic making things
+        work in Maven.
+    </p>
+
+<h3><a name="IntegrationTests">Integration tests</a></h3>
+    <p class="wip">
+        talk about verify, failsafe plugin, "mvn -DdbConfig=X.properties verify",
+        setting up Docker, and test harness with setup/teardown nder resources dir.
+    </p>
 </div>  <!-- grid-main -->
 
+<!-- ================================== TOC ===================================== -->
 
 <div class="grid-sidebar">
     <ul>
@@ -748,6 +857,7 @@
         <li>
             <a href="#HackingTheCode">Hacking the code</a>
             <ul>
+                <li><a href="#TheBigPicture">The big picture</a></li>
                 <li>
                     <a href="#JdbcTypeCode">JdbcTypeCode class</a>
                     <ul>
