@@ -81,14 +81,14 @@ public enum JdbcTypeCode {
         _ms(JdbcTypeCode.ByteArray,
             java.lang.Byte[].class,
             (ps, idx, val) -> ps.setBytes(idx, (byte[])val),
-                ResultSet::getBytes,
+            ResultSet::getBytes,
             val -> new java.math.BigInteger(val,16).toByteArray()
         );
 
         _ms(JdbcTypeCode.BigDecimal,
             java.math.BigDecimal.class,
             (ps, idx, val) -> ps.setBigDecimal(idx, (java.math.BigDecimal) val),
-                ResultSet::getBigDecimal,
+            ResultSet::getBigDecimal,
             val -> new java.math.BigDecimal(val.replaceAll(",", ""))
         );
 

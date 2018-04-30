@@ -45,12 +45,6 @@
         <version>24.0-jre</version>
       </dependency>
 
-      <dependency>  <!-- Spark framework: the Web server http://sparkjava.com/ -->
-        <groupId>com.sparkjava</groupId>
-        <artifactId>spark-core</artifactId>
-        <version>2.7.1</version>
-      </dependency>
-
       <dependency>  <!-- Logging. https://github.com/MicroUtils/kotlin-logging -->
         <groupId>io.github.microutils</groupId>
         <artifactId>kotlin-logging</artifactId>
@@ -79,13 +73,6 @@
         <scope>test</scope>
       </dependency>
 
-      <dependency>  <!-- http://mockk.io/ Simplifies mocking objects for Kotlin unit tests -->
-        <groupId>io.mockk</groupId>
-        <artifactId>mockk</artifactId>
-        <version>1.7.8</version>
-        <scope>test</scope>
-      </dependency>
-
       <dependency>  <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
         <groupId>mysql</groupId>
         <artifactId>mysql-connector-java</artifactId>
@@ -107,20 +94,20 @@
         <scope>test</scope>
       </dependency>
 
-      <!-- Due to legal reasons, there is no publicly available Oracle JDBC drivers in legit Maven repos
-           But it is easy to install one:
-           1. Download it from ORacle site to your local box
-              http://www.oracle.com/technetwork/database/features/jdbc/jdbc-ucp-122-3110062.html
-           2. Install it into your local repo:
-              mvn install:install-file -DgroupId=com.oracle -DartifactId=ojdbc8 \
-                -Dversion=12.2.0.1 -Dpackaging=jar -Dfile=$HOME/Downloads/ojdbc8.jar -DgeneratePom=true
-
-           Other options:
-           a) package the ojdbc8.jar into the uber jar. There may be legal issues though,
-           b) use Oracle Maven repo (you need to be registered on OTN)
-              http://www.oracle.com/webfolder/application/maven/index.html
-      -->
       <dependency>
+        <!-- Due to legal reasons, there is no publicly available Oracle JDBC drivers in legit Maven repos
+             But it is easy to install one:
+             1. Download it from Oracle site to your local box
+                http://www.oracle.com/technetwork/database/features/jdbc/jdbc-ucp-122-3110062.html
+             2. Install it into your local repo:
+                mvn install:install-file -DgroupId=com.oracle -DartifactId=ojdbc8 \
+                  -Dversion=12.2.0.1 -Dpackaging=jar -Dfile=$HOME/Downloads/ojdbc8.jar -DgeneratePom=true
+
+             Other options:
+             a) package the ojdbc8.jar into the uber jar. There may be legal issues though,
+             b) use Oracle Maven repo (you need to be registered on OTN)
+                http://www.oracle.com/webfolder/application/maven/index.html
+        -->
         <groupId>com.oracle</groupId>
         <artifactId>ojdbc8</artifactId>
         <version>12.2.0.1</version>
