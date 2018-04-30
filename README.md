@@ -3,14 +3,14 @@ Persistence Layer for Kotlin
 
 **The project needs a better name**
 
-The project is a library for mapping JDBC table rows and Java
+The project is a library for mapping between JDBC table rows and Java
 objects. Currently only 1:1 mapping is supported. e.g. a POJO instance
 maps to a single record of a table. All four CRUD operations are
 supported.
 
 The goal is to simplify basic database operations without getting in
 the way. You can always tell what SQL statement is going to be executed
-as result of your request. All generated statements utilize bind variable
+as a result of the request. All generated statements utilize bind variable
 to improve efficiency and prevent SQL injection.
 
 SQL beginners will appreciate simplicity of routine operations
@@ -75,7 +75,7 @@ class Emp: Entity() {
 
 field ```hireDate``` corresponds to database column ```hiredate```,
 ```commission``` to column ```com```, etc. On write (Insert, Update)
-fiels values are stored in the row's columns. On read, they are loaded
+field values are stored in the row. On read, they are loaded
 from the row. Field values are used in the ```WHERE``` clause of the
 corresponding SQL.
 
@@ -84,22 +84,22 @@ corresponding SQL.
 There are multiple ways to supply participating columns. Typically we
 can use a Kotlin object's field because it provides better type chacking
 and refactoring. Column name can also be used - the generated SQL is the same.
-as a SQL expression. The result is the same.
+Finally, a SQL expression form gives maximum flexibilty.
 
 
 #### Creating data
 To add a record to the database table, we instantiate a new object and
-pass it to the InsertStatement:
+pass it to InsertStatement:
 
 ```Kotlin
   val scott = Emp(empno=7788, ename="Scott" /* other fields */)
   val count = InsertStatement(scott).run()
 ```
 
-An INSERT statement is generated and ```scott``` object's field values
-are written to their corresponding columns, If they class had any
-auto-generated fields, their values are automatically fetched back
-in the same transaction.
+An INSERT statement is generated and ```scott``` object's property values
+are written to their corresponding columns, If the class declared any
+database-side generated fields, their values are automatically fetched
+back in the same transaction.
 
 
 #### Reading data
@@ -112,14 +112,13 @@ This transalates to SQL statment:
 ```SQL
 SELECT ename, hiredate, com, ... FROM emp WHERE emptno = ?
 ```
-Value of ```martin.empno``` is bound to the statement, and the query is
-executed. If the record is found, values of the fetched columns are stored
-in the corresponding fields of object ```martin```.
+Statement's bind variable is set to the value of property ```martin.empno```,
+and the query is executed. If the record was found, values of the fetched
+columns are stored in the corresponding fields of object ```martin```.
 
 
 #### Updating data
-Unlike other statements, columns which need to be updated must be listed
-explicitly.
+Columns which need to be updated must be listed explicitly.
 
 Let's change Allen's commission to 350. We assign new value to the
 object's field and call ```UpdateStatement``` to update it:
@@ -131,7 +130,7 @@ Note that we used class field ```Emp::commission```. We could also
 specify the object's field: ```allen::commission```. Or, we could have
 supplied the column name as string: ```update("com")```. In all three
 forms the parameter is only used to identify the column and its corresponding
-field.
+property.
 
 The generated SQL is:
 ```SQL
@@ -151,13 +150,14 @@ in the RDBMS cache, we wanted to provide its value via a bind variable:
 ```
 
 ##### Fetching data back
-Sometimes we want to read back the updated data. This is especially
-useful when column value is updated to SQL ```default``` expresion, as in
+In cases like the above, we want to read back the updated value(s). This
+is especially useful when column value is updated to SQL ```default```
+expresion, as in
 ```create table T(..., modified_ts timestamp default systimestamp```.
 
 In the example above, we fetched back the reesulting commission by calling
-```fetchBack``` method of the ```UpdateStatement``` object.
-The value is stored in the appropriate POJO field after statement execution.
+```fetchBack``` method. The value is stored in the appropriate POJO
+property after statement execution.
 
 
 #### Deleting data
@@ -169,17 +169,18 @@ let's delete all salesmen records with zero commission:
 ```
 
 Since we are not using any POJO data, we have simply passed a new object
-without bothering to initialize it. We also did not use any fields,
+without bothering to initialize it. We also did not use any properties,
 specifying the condition as a free-form expression,
 
+
 ### Controlling transactions
-As one of its arguments, POJO constructor takes a function to retrun
-database connection. The function is called when ```run()``` is called
+As one of its arguments, POJO constructor takes a function to return
+database connection. The function is called when ```run()``` is invoked
 without parameters. The obtained connection is used to execute the
 SQL statement, and then transaction is committed or rolled back
 depending on the outcome. Then the connection object is closed.
 
-If more granular control over transaction lifetime is needed, ```run()```
+If external control over transaction lifetime is needed, ```run()```
 can be invoked with a ```Connection``` object. Then the library does not
-attempt to commit/rollback nor close the connection. This allows to run
+attempt to commit/rollback nor close the connection. This allows running
 multiple statements in the same transaction.
