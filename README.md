@@ -1,7 +1,7 @@
 # pl4kotlin
-Persistence Layer for Kotlin
-
 **The project needs a better name**
+
+## Persistence Layer for Kotlin
 
 The project is a library for mapping between JDBC table rows and Java
 objects. Currently only 1:1 mapping is supported. e.g. a POJO instance
