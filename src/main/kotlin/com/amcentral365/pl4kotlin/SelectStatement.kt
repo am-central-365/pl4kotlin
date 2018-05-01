@@ -5,7 +5,6 @@ import mu.KLogging
 import java.sql.Connection
 import java.sql.SQLException
 import java.sql.ResultSet
-import kotlin.reflect.KMutableProperty0
 import kotlin.reflect.KProperty
 import kotlin.reflect.jvm.jvmName
 
@@ -27,7 +26,6 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
     // and the result of the expression is fetched into the property.
     // Technically we could have the same method for column name, but it doesn't make sense logically
     // (select expr into a column?), and therefore this form was deliberately omitted.
-    //fun select(mprop: KMutableProperty0<Any?>): SelectStatement { this.addProperty(this.selectDescrs, mprop);  return this }
     fun select(prop:  KProperty<Any?>): SelectStatement { this.addProperty(this.selectDescrs,    prop);  return this }
     fun select(colName: String):        SelectStatement { this.addColName (this.selectDescrs, colName);  return this }
 

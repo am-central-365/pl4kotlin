@@ -124,8 +124,8 @@ abstract class BaseStatement(val entityDef: Entity, private val getGoodConnectio
     protected fun emitWhereList(whereDescrs: List<Descr>): String =
         this.emitList(whereDescrs, " AND ") { descr -> "${descr.colDef!!.columnName} = ?" }
 
-    protected fun emitOrderByList(orderbyDescrs: List<Descr>): String =
-        this.emitList(orderbyDescrs, ", ") {
+    protected fun emitOrderByList(orderByDescrs: List<Descr>): String =
+        this.emitList(orderByDescrs, ", ") {
             descr -> descr.colDef!!.columnName + if( descr.asc == null || descr.asc ) "" else " DESC"
         }
 

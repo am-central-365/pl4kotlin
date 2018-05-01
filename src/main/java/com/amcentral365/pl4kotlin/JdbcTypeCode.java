@@ -38,7 +38,7 @@ public enum JdbcTypeCode {
           { this.jtc = jtc;  this.javaType = type;  this.binder = binder;  this.strParser = strParser;  this.rsReader = rsReader; }
     }
 
-    static Map<JdbcTypeCode, Rec> meta = new HashMap<>();
+    static final Map<JdbcTypeCode, Rec> meta = new HashMap<>();
     static Map<Type, Rec> typeRecMap = new HashMap<>();
 
 

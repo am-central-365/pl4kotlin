@@ -38,7 +38,6 @@ class StatementsIT {
 
     private val numOfRecordsToTest = 11
     private var runTearDown = false
-    private var isSqLite = false
 
     companion object {
         lateinit var conn: Connection

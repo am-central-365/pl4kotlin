@@ -83,17 +83,17 @@
 
     <h4><a name="LimitationsPostgreSQL">PostgreSQL</a></h4>
     <p>
-        PostgreSQL offers variaty of built-in types, but only primitive data ones
-        are supported by the library. For example, 'bytea' should be used to store
-        UUIDs. That is because Postgres expects explicit conversion or special type
-        <span class="name">Other</span> when binding values. Future version of the
-        library may support it in a generic way.
+        PostgreSQL offers variety of built-in types, but only primitive data ones
+        are supported by the library. For example, <code>bytea</code> should be used
+        to store <code>UUID</code>s. That is because Postgres expects explicit
+        conversion or special type <span class="name">Other</span> when binding values.
+        Future version of the library may support it in a generic way.
     </p>
 
     <h4><a name="LimitationsSQLite">SQLite</a></h4>
     <p>
         SQLite can't update column value to <span class="name">default</span>, and
-        limits timestamps precision to seconds. BigDecimal prcesion is 14 digits.
+        limits timestamps precision to seconds. BigDecimal precision is 14 digits.
         Its supported transaction isolation levels are SERIALIZABLE and READ_UNCOMMITTED.
     </p>
 
@@ -120,7 +120,7 @@
 <h1><a name="DefiningPOJOs">Defining POJOs</a></h1>
     <p>
         All classes must be derived from library-provided class Entity, and have @Table
-        annotatation. Persisted members are marked with with @Column annotation. The base
+        annotation. Persisted members are marked with with @Column annotation. The base
         class and the annotations are provided by the library.
     </p>
 
@@ -245,7 +245,7 @@
 
 <h3><a name="isOptimisticLock">isOptimisticLock</a></h3>
     <p>
-        Dentoes the column is used for
+        Denotes that the column is used for
         <a href="https://en.wikipedia.org/wiki/Optimistic_concurrency_control">Optimistic Concurrency Control</a> -
         a <a href="https://en.wikipedia.org/wiki/Compare-and-swap">CAS</a>-like technique to ensure consistency
         when record may be modified by multiple parties. First, the record is read from the database and modified.
@@ -258,14 +258,14 @@
     </p>
 
     <pre>
-    UPDATE tbl SET c1=?, ... optLockCol=optLockCol+1 WHERE optLockCol=? AND ...   -- for numberic columns
+    UPDATE tbl SET c1=?, ... optLockCol=optLockCol+1 WHERE optLockCol=? AND ...   -- for numeric columns
     UPDATE tbl SET c1=?, ... optLockCol=systimestamp WHERE optLockCol=? AND ...   -- for timestamp columns
     UPDATE tbl SET c1=?, ... optLockCol=default      WHERE optLockCol=? AND ...   -- generic
       ("default" being an expression like the first two)
     </pre>
 
     <p>
-        If another tansaction has changed the row, its optLockCol has changed too, and our UPDATE
+        If another transaction has changed the row, its optLockCol has changed too, and our UPDATE
         results in no updates rows. We can check the number of affected rows returned by the library
         function to see of that has happened. The row must be re-read from the database.
     </p>
@@ -311,11 +311,11 @@
                 the appropriate bind variable as usual.
             </td>
             <td>The clause only works for UUID and Timestamp columns, setting them to random uuid or
-                current timestamp on the clinet machine,
+                current timestamp on the client machine,
             </td>
         </tr>
         <tr><td><span class="name">OneTheClientWhenNull</span></td>
-            <td>Same as OnTheClientAlways, but new value is only computed if the current propert value is null.</td>
+            <td>Same as OnTheClientAlways, but new value is only computed if the current property value is null.</td>
             <td>See OnTheClientAlways comments.</td>
         </tr>
         <tr><td><span class="name">Never</span></td><td>Property value is used</td><td>This is the default behavior</td></tr>
@@ -331,7 +331,7 @@
 <h2><a name="ColumnSelectors">Column selectors</a></h2>
     <h3><a name="SingleColumn">Single Column</a></h3>
         <p>
-        There are multiple ways exist to specify a column, chosing between them is a matter of preference.
+        There are multiple ways exist to specify a column, choosing between them is a matter of preference.
         Examples below use an excerpt from our <a href="#@TableEmp">sample POJO</a>:
         </p>
 
@@ -367,7 +367,7 @@
         </p>
         <pre>    SelectStatement(empInstance).select(<b>Emp::salary</b>) ...</pre>
         <p>
-            Chosing between the class or its instance is a matter of preference and refactoring abilities
+            Choosing between the class or its instance is a matter of preference and refactoring abilities
             of hte editor you're using. The end result is the same.
         </p>
 
@@ -396,7 +396,7 @@
     val d2 = "2010-04-15"
     SelectStatement(...).by(<b>"hiredate between to_date(?, ?) and to_date(?, ?)", d1, fmt, d2, fmt</b>) ...</pre>
         <p>
-            Chosing between column name and expression may get ambiguous for the compiler: both take
+            Choosing between column name and expression may get ambiguous for the compiler: both take
             String as the argument. Help it chose the correct method by passing parameter name:
         </p>
         <pre>
@@ -405,7 +405,7 @@
 
     <h3><a name="ColumnGroups">Column Groups</a></h3>
     <p>
-        The library automatically arranges columns into a few groups and allows to specify instead of a signle
+        The library automatically arranges columns into a few groups and allows to specify instead of a single
         column where it makes sense. This makes code more expressive, generic, and shorter. Rather than being a
         special magic value, the groups are lists of actual columns and can be used outside of library calls.
         You can also define and use your lists.
@@ -497,7 +497,7 @@
     </p>
 
     <p>
-        Sometimes we want to tranform the column value on read. The library supports that by
+        Sometimes we want to transform the column value on read. The library supports that by
         providing <code>select(targetProp: KProperty&lt;Any?>, expr: String, vararg binds: Any?)</code>
         method. Instead of <code>SELECT columnName</code> the generated SQL becomes <code>SELECT expr</code>
         and the result is stored in the column, defined by <code>targetProp</code>. For example:
@@ -510,7 +510,7 @@
 
     <h4><a name="selectByMethods">by() methods</a></h4>
     <p>
-        The <code>by()</code> methods contribute to the <code>WHERE</code> caluse of the resulting
+        The <code>by()</code> methods contribute to the <code>WHERE</code> clause of the resulting
         SQL statement. The library provides shortcuts to filter by the primary key and, optionally,
         by the <a href="#isOptimisticLock">optimistic lock column</a> if one is defined.
     </p>
@@ -539,7 +539,7 @@
 
     <p>Example:</p>
     <pre>    SelectStatement(...) ... <b>orderBy(Emp::hireDate, false)</b>.build()</pre>
-    <pr>generates this <code>ORDER BY</code> clause:</pr>
+    <p>generates this <code>ORDER BY</code> clause:</p>
     <pre>    SELECT ... FROM emp WHERE ... <b>ORDER BY hiredate DESC</b></pre>
 
     <p>
@@ -592,7 +592,7 @@
     <h4><a name="updateFetchBackMethods">fetchBack() methods</a></h4>
     <p>
         Often, especially when expressions were used to compute the new values, it is desirable to
-        get these values back. Of course we could reun a separate <a href="#SelectStatement">SelectStatement</a>,
+        get these values back. Of course we could run a separate <a href="#SelectStatement">SelectStatement</a>,
         but the library provides a shortcut.
     </p>
 
@@ -623,7 +623,7 @@
         but nothing good would come out of it. The library runs a <code>SELECT</code> statement and fetches the
         first row corresponding to the PK. If the passed object was a dummy like in our example above, it is
         unlikely that any row will be returned. In any case, the result is undefined. Worse yet, the returned
-        affected row cound is messed up.
+        affected row count is messed up.
     </p>
 
 <h2><a name="DeleteStatement">DeleteStatement</a></h2>
@@ -648,7 +648,7 @@
     <h4><a name="deleteMultipleRows">Deleting multiple rows</a></h4>
     <p>
         Just like in <a href="#updateMultipleRows">updating multiple rows</a>, we can specify
-        a relaxed <code>WHERE</code> condition. The returned affected rows count relfects the number
+        a relaxed <code>WHERE</code> condition. The returned affected rows count reflects the number
         of deleted rows.
     </p>
 
@@ -708,7 +708,7 @@
 <h3><a name="MappingKotlinTypes">Mapping Kotlin types</a></h3>
     <p>
         It doesn't seem that Kotlin primitive types map to their Java analogs directly.
-        But in our code we treat Korlin <code>Int</code> same as Java <code>Integer</code>.
+        But in our code we treat Kotlin <code>Int</code> same as Java <code>Integer</code>.
         For that reason, function <code>k2j()</code> from typeMappings.kt first checks for Kotlin
         types. If the type is not recognized, it calls JdbcTypeCode to attempt to handle the
         type as Java's.
@@ -741,8 +741,8 @@
 
 <h2><a name="BaseStatementClass">BaseStatement Class</a></h2>
     <p>
-        <code>BaseStatement</code> class provides DML statmenet executor and a number of helper
-        functons. It is an abstract class requiring a function to generate SQL statement, called
+        <code>BaseStatement</code> class provides DML statement executor and a number of helper
+        functions. It is an abstract class requiring a function to generate SQL statement, called
         <code>build()</code>. Derived classes Select/Insert/Update/DeleteStatement override the
         method.
     </p>
@@ -789,7 +789,7 @@
         The code comes with a few helper functions located under
         <code>src/test/kotlin/com/amcentral365/pl4kotlin/integrationTests</code>.
         The functions are defined in files <code>Sql.kt</code> and <code>Script.kt</code>.
-        There are funcitons to parse configuration file, establish connection, run
+        There are functions to parse configuration file, establish connection, run
         setup and teardown scripts, and more.
     </p>
 

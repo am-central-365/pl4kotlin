@@ -31,7 +31,7 @@ private fun getVendorScriptStream(suffix: String): InputStream {
         logger.info { "using script file $scriptFileName from the current directory" }
         file.inputStream()
     } else {
-        logger.debug { "couldn't locate local file, checking internal resouorces..." }
+        logger.debug { "couldn't locate local file, checking internal resources..." }
         try {
             val inputStream = Resources.getResource(scriptFileName).openStream()
             logger.info { "using script file $scriptFileName from the jar" }
@@ -47,7 +47,7 @@ private fun getVendorScriptStream(suffix: String): InputStream {
 private data class ScriptStatement(val lineNo: Int, val text: String)
 
 /**
- * Break file into (potentially multiline) statements, separated by blank lines, ';', or '/'
+ * Break file into (potentially multi-line) statements, separated by blank lines, ';', or '/'
  * Limitations:
  *   any blank line is treated as statement terminator. No blank lines inside PL/SQL block.
  */

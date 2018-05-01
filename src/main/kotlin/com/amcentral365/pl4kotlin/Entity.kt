@@ -79,10 +79,10 @@ abstract class Entity protected constructor() {
             require( this.pkPos == 0 || (this.onInsert != Generated.OnTheDbAlways && this.onInsert != Generated.OnTheDbWhenNull) )
                 { "$msgPrefix: PK columns can't be generated on the database side, value ${this.onInsert} is illegal" }
 
-            // client-side generated fields must be of suported type
-            val generatedOnTheClinet = this.onInsert == Generated.OnTheClientAlways || this.onInsert == Generated.OneTheClientWhenNull
+            // client-side generated fields must be of supported type
+            val generatedOnTheClient = this.onInsert == Generated.OnTheClientAlways || this.onInsert == Generated.OneTheClientWhenNull
             val supportsGeneration   = this.fieldType == JdbcTypeCode.UUID || fieldType == JdbcTypeCode.Timestamp
-            require( !generatedOnTheClinet || supportsGeneration )
+            require( !generatedOnTheClient || supportsGeneration )
                 { "$msgPrefix: client-side generation is only supported for UUID and Timestamp. Got ${this.fieldType.name}" }
         }
 
