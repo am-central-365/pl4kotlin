@@ -760,7 +760,7 @@
 
 <h2><a name="Tests">Tests</a></h2>
     <p>
-        The library comes with Unit and Integration tests. Not all paths are covered,
+        The library comes with Unit and Integration tests. Not all code paths are covered,
         but the goal is to cover as mach as it makes sense.
     </p>
 
@@ -771,10 +771,33 @@
     </p>
 
 <h3><a name="IntegrationTests">Integration tests</a></h3>
-    <p class="wip">
-        talk about verify, failsafe plugin, "mvn -DdbConfig=X.properties verify",
-        setting up Docker, and test harness with setup/teardown nder resources dir.
+    <p>
+        The tests run against real databases with Maven FailSafe plugin. The plugin
+        runs at <code>verify</code> stage which is invoked at <code>mvn verify</code>,
+        <code>mvn install</code>, or <code>mvn deploy</code> phases. See
+        <a href="https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html">
+            Maven Build Lifecycle</a>
+        documentation for details.
     </p>
+
+    <p class="note">
+        For a test to be recognized as Integration, its file name must start or end
+        with "IT" or "ITCase".
+    </p>
+
+    <p>
+        The code comes with a few helper functions located under
+        <code>src/test/kotlin/com/amcentral365/pl4kotlin/integrationTests</code>.
+        The functions are defined in files <code>Sql.kt</code> and <code>Script.kt</code>.
+        There are funcitons to parse configuration file, establish connection, run
+        setup and teardown scripts, and more.
+    </p>
+
+    <p>
+        The directory contains <code>README.md</code> file describing how to setup and run the tests
+        in detail.
+    </p>
+
 </div>  <!-- grid-main -->
 
 <!-- ================================== TOC ===================================== -->

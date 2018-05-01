@@ -28,6 +28,12 @@ username=ituser
 password=itpass
 ```
 
+#### Canned configs
+The code comes with sample configs for Oracle, MySql, PostgreSQL and SQLite.
+They assume the database is installed on the local machine. See section
+[Installing test databases with Docker](#Installing-test-databases-with-Docker)
+below.
+
 ### Setup and teardown scripts
 These scripts are used to create and clean database objects.
 They are called prior to running every test.
@@ -79,3 +85,22 @@ Ignored lines between statements:
 
 This allows to support complex stetements such as Oracle PL/SQL blocks,
 the only requirement is to avoid blank lines.
+
+## Installing test databases with Docker
+If you don't have RDBMS installed elsewhere, you can install locally
+with Docker. Examples below assume you already have Docker running.
+
+#### MySql
+https://hub.docker.com/_/mysql/
+
+#### Oracle
+https://github.com/oracle/docker-images/tree/master/OracleDatabase/SingleInstance
+
+#### PostgreSQL
+https://hub.docker.com/_/postgres/
+
+#### SQLite
+
+Since SQLite is embedded into your code, install its binaries:
+
+```sudo apt-get install -y sqlite3 libsqlite3-dev```
