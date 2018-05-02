@@ -8,6 +8,8 @@
     <properties>
         <kotlin.version>1.2.41</kotlin.version>
         <junit.version>5.1.0</junit.version>
+        <dokka.version>0.9.16</dokka.version>
+        <jdk.version>8</jdk.version>
 
         <kotlin.compiler.incremental>false</kotlin.compiler.incremental>
         <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
@@ -152,6 +154,43 @@
         </plugin>
 
         <plugin>
+          <groupId>org.jetbrains.dokka</groupId>
+          <artifactId>dokka-maven-plugin</artifactId>
+          <version>${dokka.version}</version>
+          <executions>
+            <execution>
+              <phase>pre-site</phase>
+              <goals>
+                <goal>dokka</goal>
+                <!--goal>javadoc</goal>
+                <goal>javadocJar</goal-->
+              </goals>
+            </execution>
+          </executions>
+          <configuration>
+            <outputFormat>markdown</outputFormat>  <!-- html, javadoc, html-as-java, markdown (gfm, jekyll) -->
+            <cacheRoot>.dokka-cache</cacheRoot>
+            <jdkVersion>${jdk.version}</jdkVersion>
+
+            <sources>
+              <source>${project.basedir}/src/main/kotlin</source>
+              <source>${project.basedir}/src/main/java</source>
+            </sources>
+
+            <includes>
+              <include>Module.md</include>
+            </includes>
+            <sourceLinks>
+              <link>
+                <dir>${project.basedir}</dir>
+                <url>https://github.com/am-central-365/pl4kotlin/blob/master</url>
+                <urlSuffix>#L</urlSuffix>
+              </link>
+            </sourceLinks>
+          </configuration>
+        </plugin>
+
+        <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
           <version>3.5.1</version>
@@ -219,6 +258,15 @@
         </plugin>
 
       </plugins>
+
     </build>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>jcenter</id>
+      <name>JCenter</name>
+      <url>https://jcenter.bintray.com/</url>
+    </pluginRepository>
+  </pluginRepositories>
 
 </project>

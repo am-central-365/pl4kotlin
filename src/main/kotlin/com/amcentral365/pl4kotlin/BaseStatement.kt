@@ -9,18 +9,38 @@ import java.util.Arrays
 import kotlin.reflect.KProperty
 import kotlin.reflect.jvm.jvmName
 
-
+/**
+ * Provides DML statement executor and a number of helper functions. It is an abstract class requiring function
+ * `build()` called to generate the SQL statement. Derived classes Select/Insert/Update/DeleteStatement override
+ * the method.
+ *
+ * @constructor Takes [entityDef] instance of a class mapping POJOs to a database table. Such classes
+ *   must be derived from [Entity]. The other argument, [getGoodConnection], is a user-provided function
+ *   called to get a valid database connection. The function is used when [Connection] object was not
+ *   supplied to [run] method.
+ *
+ * @property entityDef The object whose values are used to modify or read the database table.
+ * @property getGoodConnection A user-provided function used to obtain connections. If you
+ *   always provide the [Connection] object to [run] explicitly, there is no need to pass the argument.
+ */
 abstract class BaseStatement(val entityDef: Entity, private val getGoodConnection: () -> Connection?) {
     companion object: KLogging()
 
     /**
      * Creates SQL statement text. The method is specific to the statement and must be overridden.
      * The method is protected because some statements only build SQL text when they run:
-     *   INSERT statement with Generated.OnXXXWhenNull check property value while building the statement.
-     *   separating build() and run() could lead to inconsistency as property values may change in between.
+     * `INSERT` statement with properties marked Generated.OnXwhenNull check the properties value
+     *  while building the statement. Separating [build] and [run] could lead to inconsistency as
+     *  the values may change between the calls.
      */
     protected abstract fun build(): String
 
+    /**
+     * Build (if needed) and execute the statement, using the [conn] connection. Most derived classes
+     * implement the function by calling [runDML].
+     *
+     * @return the number of affected rows.
+     */
     abstract fun run(conn: Connection): Int
 
     // ----------------------------------------------------------------------------------------------
@@ -38,8 +58,9 @@ abstract class BaseStatement(val entityDef: Entity, private val getGoodConnectio
     private   var manageTx = false
 
     /**
-     * Establish a database connection and invoke run(conn). Close the connection after running.
-     * The function is just like connectAndRun, but executes fixed "run(Connection)" defined by the derived class.
+     * Establish a database connection by calling [getGoodConnection] and invoke [run] version with the
+     * [Connection] parameter. The obtained connection is committed or rolled back depending on the outcome,
+     * of the operation, and then closed.
      */
     fun run(): Any = this.connectAndRun<Any>(this::run)
 

@@ -156,7 +156,7 @@ internal class EntityTest {
     }
 
 
-    //@Test
+    /*@Test
     // Throws:
     // Kotlin.reflect.jvm.internal.KotlinReflectionInternalError: Cannot calculate JVM erasure for type: [ERROR : Unknown type parameter 0]
     fun `pass on proper client-generated type`() {
@@ -183,7 +183,7 @@ internal class EntityTest {
         mustPass<java.lang.Double>()
         mustPass<java.lang.Boolean>()
         mustPass<java.sql.Timestamp>()
-    }
+    }*/
 
 
     @Test

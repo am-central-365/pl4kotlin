@@ -231,16 +231,16 @@
 
 <h3><a name="pkPos">pkPos</a></h3>
     <p>
-        Used to mark the column as part of the table's Primary Key. The attribute value is the
-        position withing the PK. E.g. for Primary Key on columns a,b,c, the corresponding
-        properties must have their @Column defined with pkPos 1, 2, and 3. There is no known
-        harm in defining different order than in the PK. There is no good reason to do that either.
-        Zero, the default, indicates non-PK columns.
+      Used to mark the column as part of the table's Primary Key. The value is the position
+      withing the PK. E.g. for Primary Key on columns a,b,c, the corresponding properties must
+      have their @Column defined with pkPos 1, 2, and 3. There is no known harm in defining
+      different order than in the PK. There is no good reason to do that either. Zero, the default,
+      indicates a non-PK column.
     </p>
 
     <p>
-        The values must be sequential, starting with 1 and without gaps. A table-mapped class
-        must define at least one PK column.
+       The values must be sequential, starting with 1. A table-mapped class must define at
+      least one PK column.
     </p>
 
 <h3><a name="isOptimisticLock">isOptimisticLock</a></h3>
@@ -277,9 +277,9 @@
 <h3><a name="onInsert">onInsert</a></h3>
     <p>
        On update, each updated column must be specified explicitly. But inserts are different: all
-        columns must be assigned values. But sometimes we want the values to be set by the database as
-        defined by the DEFAULT values of the column. And for some other columns  we want to generate
-        the value on the client, but don't want to bother coding that explicitly.
+       columns must be assigned values. But sometimes we want the values to be set by the database as
+       defined by the DEFAULT values of the column. And for some other columns  we want to generate
+       the value on the client, but don't want to bother coding that explicitly.
     </p>
 
     <p>
@@ -742,9 +742,9 @@
 <h2><a name="BaseStatementClass">BaseStatement Class</a></h2>
     <p>
         <code>BaseStatement</code> class provides DML statement executor and a number of helper
-        functions. It is an abstract class requiring a function to generate SQL statement, called
-        <code>build()</code>. Derived classes Select/Insert/Update/DeleteStatement override the
-        method.
+        functions. It is an abstract class requiring implementation of function <code>build()</code>
+        use to generate the particular SQL statement. Derived classes Select/Insert/Update/DeleteStatement
+        override the function.
     </p>
 
     <p>
