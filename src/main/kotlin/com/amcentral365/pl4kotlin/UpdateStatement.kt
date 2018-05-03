@@ -5,7 +5,7 @@ import mu.KLogging
 import java.sql.Connection
 import kotlin.reflect.KProperty
 
-
+/** Run SQL `UPDATE` statement for the given [entityDef]. See [BaseStatement] constructor for parameters description. */
 open class UpdateStatement(entityDef: Entity, getGoodConnection: () -> Connection? = { null }): BaseStatement(entityDef, getGoodConnection) {
     companion object: KLogging()
 

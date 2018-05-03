@@ -4,7 +4,7 @@ import com.google.common.annotations.VisibleForTesting
 import mu.KLogging
 import java.sql.Connection
 
-
+/** Run SQL `INSERT` statement for the given [entityDef]. See [BaseStatement] constructor for parameters description. */
 open class InsertStatement(entityDef: Entity, getGoodConnection: () -> Connection? = { null }): BaseStatement(entityDef, getGoodConnection) {
     companion object: KLogging()
 
