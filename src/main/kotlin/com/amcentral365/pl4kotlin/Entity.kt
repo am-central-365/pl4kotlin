@@ -16,6 +16,16 @@ import kotlin.reflect.jvm.jvmName
 
 private val logger = KotlinLogging.logger {}
 
+/**
+ * Serves as base for application classes defining POJO to database table mapping.
+ *
+ * The class's constructor parses [Table] and [Column] annotations and translates them into
+ * a list of [ColDef]. The list is used by [BaseStatement] and its derivatives to build SQL
+ * statements. It is also used to determine bind value types.
+ *
+ * The annotations are only parsed on first use and then cached. Instantiating subsequent
+ * objects bears no penalty.
+ */
 abstract class Entity protected constructor() {
 
     /**
@@ -42,6 +52,14 @@ abstract class Entity protected constructor() {
      * Defines an Entity field (or variable, or property, in Kotlin terms) associated with a database column.
      *
      * The class is declared inner to associate a ColDef it with its corresponding Entity.
+     * @property fieldName The Kotlin property name.
+     * @property fieldType The library's code for the field type. Only a subset of JDBC types is supported.
+     * @property columnName The database table's column name. Checked for uniqueness.
+     * @property restParamName Used to instantiate objects from REST data
+     * @property pkPos Column position withing the table's Primary Key. Sequential, must start with 1.
+     * @property onInsert Defines handling of hthe database column when a record is added to the database table.
+     * @property isOptLock Defines the column as Optimistic Lock. Only one column of type Number or Timestamp
+     *                     can be marked as OptLock.
      */
     inner class ColDef private constructor(
             val fieldName:        String,
@@ -105,6 +123,7 @@ abstract class Entity protected constructor() {
                 , kProp.returnType.javaType
             )
 
+        /** Part of Comparable interface. The order is [fieldName], [fieldType], etc. */
         override fun compareTo(other: ColDef): Int {
             var cmp: Int
             cmp = this.fieldName    .compareTo(other.fieldName);      if( cmp != 0 ) return cmp
@@ -118,20 +137,21 @@ abstract class Entity protected constructor() {
             return 0
         }
 
-        /**
-         * Assign value to the appropriate Entity member.
-         * Nothing is changed on the database, just the property value is set.
-         */
+        /** Assign value to the appropriate Entity member. Nothing is changed on the database, just the property value is set. */
         fun setValue(value: Any?) = this.prop.setter.call(this@Entity, value)
 
-        /**
-         * Get current property value of the Entity member.
-         * Nothing is read from the database, just the current value is returned.
-         */
+        /** Get current property value of the Entity member. Nothing is read from the database, just the current value is returned.*/
         fun getValue(): Any? = this.prop.getter.call(this@Entity)
 
         /**
+         * Return the property value, generating it if needed, as defined by the [onInsert] annotation.
          *
+         * When the property's [onInsert] annotation is [Generated.OnTheClientAlways] or
+         * [Generated.OneTheClientWhenNull], the value is computed by this function (when other
+         * conditions apply). The property is set to the generated value.
+         *
+         * @throws UnsupportedOperationException when property type is not supported, Supported types
+         *      are [UUID] and [Timestamp],
          */
         fun getBindValue(inserting: Boolean = false): Any? {
             var value = this.getValue()

@@ -13,10 +13,36 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-
+/**
+ * One of the core library classes defining supported types and bind/read transaltions.
+ */
 public enum JdbcTypeCode {
-      Null
-    , String, Timestamp, Integer, Long, UUID, Enum                           // most common
+      /** Only used for values, Property types can not be Null. */
+      Null,
+
+      /** {@link java.lang.String}. Maps to/from CAHAR, VARCHAR, TEXT, etc. */
+      String,
+
+      /** date + time + fraction. See Java doc for {@link java.sql.Timestamp} */
+      Timestamp,
+
+      /** {@link java.lang.Integer}. Maps to/from SQL int, number(*,0) - see JDBC docs */
+      Integer,
+
+      /** {@link java.lang.Long}. Maps to/from ,SQL int, number(*,0) - see JDBC docs */
+      Long,
+
+      /**
+       * {@link java.util.UUID}
+       *
+       * Currently, the lirbrary is only supporting raw database types such as {@code raw(16)},
+       * {@code binary(16)}, {@code bytea}, and similar.
+       */
+      UUID,
+
+      /** The Kotlin/Java type is an Enum. The database can be MySQL Enum or a VARCHAR column */
+      Enum
+
     , BigDecimal, Boolean, Byte, ByteArray, Date, Double, Float, Short, Time // less common
     , Array, Blob, Clob, NClob, Ref, Rowid, SQLXML, Reader, URL              // even less common
     , Object;                                                                // the last resort
