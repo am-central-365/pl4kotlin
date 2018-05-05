@@ -1,6 +1,5 @@
 package com.amcentral365.pl4kotlin.integrationTests
 
-import com.google.common.io.Resources
 import mu.KotlinLogging
 import java.io.File
 import java.io.InputStream
@@ -33,10 +32,10 @@ private fun getVendorScriptStream(suffix: String): InputStream {
     } else {
         logger.debug { "couldn't locate local file, checking internal resources..." }
         try {
-            val inputStream = Resources.getResource(scriptFileName).openStream()
+            val inputStream = ClassLoader.getSystemClassLoader().getResource(scriptFileName).openStream()
             logger.info { "using script file $scriptFileName from the jar" }
             inputStream
-        } catch (x: IllegalArgumentException) {
+        } catch (x: Exception) {
             logger.warn { "script file $scriptFileName isn't present in the local directory nor known to the test suite, skipping" }
             "".byteInputStream()
         }

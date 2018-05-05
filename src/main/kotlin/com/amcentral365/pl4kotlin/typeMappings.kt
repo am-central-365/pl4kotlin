@@ -25,7 +25,7 @@ private fun k2j(kc: KType): JdbcTypeCode {
     }
 }
 
-
+/** Given a property [kp], determine its [JdbcTypeCode]. The function processes Kotlin and Java types. */
 @Contract("null -> null")
 fun JTC(kp: KProperty<*>?): JdbcTypeCode = if( kp == null ) JdbcTypeCode.Null else k2j(kp.returnType)
 //fun JTC(kc: KClass<*>?):    JdbcTypeCode = if( kc == null ) JdbcTypeCode.Null else JdbcTypeCode.from(kc::class.java)
@@ -36,7 +36,7 @@ fun JTC(kp: KProperty<*>?): JdbcTypeCode = if( kp == null ) JdbcTypeCode.Null el
 //fun uuidToBytes(uuid: UUID): ByteArray {}
 //fun uuidFromBytes(bytes: ByteArray): UUID {}
 
-
+/** run `close()` on [c], ignoring any errors. It is safe to pass `null` to the function */
 fun closeIfCan(c: AutoCloseable?) {
     if (c != null)
         try {

@@ -14,13 +14,15 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * One of the core library classes defining supported types and bind/read transaltions.
+ * One of the core library classes defining supported types and bind/read translations.
  */
 public enum JdbcTypeCode {
-      /** Only used for values, Property types can not be Null. */
+      /**
+       * Only used for values, Property types can not be Null.
+       */
       Null,
 
-      /** {@link java.lang.String}. Maps to/from CAHAR, VARCHAR, TEXT, etc. */
+      /** {@link java.lang.String}. Maps to/from CHAR, VARCHAR, TEXT, etc. */
       String,
 
       /** date + time + fraction. See Java doc for {@link java.sql.Timestamp} */
@@ -35,7 +37,7 @@ public enum JdbcTypeCode {
       /**
        * {@link java.util.UUID}
        *
-       * Currently, the lirbrary is only supporting raw database types such as {@code raw(16)},
+       * Currently, the library is only supporting raw database types such as {@code raw(16)},
        * {@code binary(16)}, {@code bytea}, and similar.
        */
       UUID,
@@ -135,39 +137,6 @@ public enum JdbcTypeCode {
     static BindSetter getBinder(JdbcTypeCode jtc) { return meta.get(jtc).binder; }
     static RsReader   getReader(JdbcTypeCode jtc) { return meta.get(jtc).rsReader; }
     static StrParser  getParser(JdbcTypeCode jtc) { return meta.get(jtc).strParser; }
-
-
-
-    /*@Deprecated
-    private static ImmutableBiMap<JdbcTypeCode, Type> jtcTypeMap = new ImmutableBiMap.Builder<JdbcTypeCode, Type>()
-            .put(JdbcTypeCode.String,     java.lang.String.class)
-            .put(JdbcTypeCode.Short,      java.lang.Short.class)
-            .put(JdbcTypeCode.Integer,    java.lang.Integer.class)
-            .put(JdbcTypeCode.Long,       java.lang.Long.class)
-            .put(JdbcTypeCode.Float,      java.lang.Float.class)
-            .put(JdbcTypeCode.Double,     java.lang.Double.class)
-            .put(JdbcTypeCode.Boolean,    java.lang.Boolean.class)
-            .put(JdbcTypeCode.Byte,       java.lang.Byte.class)
-            .put(JdbcTypeCode.ByteArray,  java.lang.Byte[].class)
-            .put(JdbcTypeCode.Enum,       java.lang.Enum.class)
-
-            .put(JdbcTypeCode.Date,       java.sql.Date.class)
-            .put(JdbcTypeCode.Time,       java.sql.Time.class)
-            .put(JdbcTypeCode.Timestamp,  java.sql.Timestamp.class)
-            .put(JdbcTypeCode.Array,      java.sql.Array.class)
-            .put(JdbcTypeCode.Blob,       java.sql.Blob.class)
-            .put(JdbcTypeCode.Clob,       java.sql.Clob.class)
-            .put(JdbcTypeCode.NClob,      java.sql.NClob.class)
-            .put(JdbcTypeCode.Ref,        java.sql.Ref.class)
-            .put(JdbcTypeCode.Rowid,      java.sql.RowId.class)
-            .put(JdbcTypeCode.SQLXML,     java.sql.SQLXML.class)
-
-            .put(JdbcTypeCode.UUID,       java.util.UUID.class)
-            .put(JdbcTypeCode.BigDecimal, java.math.BigDecimal.class)
-            .put(JdbcTypeCode.URL,        java.net.URL.class)
-            .put(JdbcTypeCode.Reader,     java.io.Reader.class)
-        .build()
-    ;*/
 
     static JdbcTypeCode from(Type cz) {
         return cz == null           ? JdbcTypeCode.Null

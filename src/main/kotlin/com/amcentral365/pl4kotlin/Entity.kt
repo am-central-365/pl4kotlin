@@ -57,7 +57,7 @@ abstract class Entity protected constructor() {
      * @property columnName The database table's column name. Checked for uniqueness.
      * @property restParamName Used to instantiate objects from REST data
      * @property pkPos Column position withing the table's Primary Key. Sequential, must start with 1.
-     * @property onInsert Defines handling of hthe database column when a record is added to the database table.
+     * @property onInsert Defines handling of the database column when a record is added to the database table.
      * @property isOptLock Defines the column as Optimistic Lock. Only one column of type Number or Timestamp
      *                     can be marked as OptLock.
      */

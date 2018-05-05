@@ -1,6 +1,5 @@
 package com.amcentral365.pl4kotlin
 
-import com.google.common.annotations.VisibleForTesting
 import mu.KLogging
 import java.sql.Connection
 
@@ -8,8 +7,8 @@ import java.sql.Connection
 open class InsertStatement(entityDef: Entity, getGoodConnection: () -> Connection? = { null }): BaseStatement(entityDef, getGoodConnection) {
     companion object: KLogging()
 
-    @VisibleForTesting internal val fetchDescr:  MutableList<Descr>         = mutableListOf()
-    @VisibleForTesting internal val bindColDefs: MutableList<Entity.ColDef> = mutableListOf()
+    /*@VisibleForTesting*/ internal val fetchDescr:  MutableList<Descr>         = mutableListOf()
+    /*@VisibleForTesting*/ internal val bindColDefs: MutableList<Entity.ColDef> = mutableListOf()
 
     override fun run(conn: Connection): Int = this.runDML(conn, this.bindColDefs, this.fetchDescr)
 

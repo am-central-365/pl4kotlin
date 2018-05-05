@@ -1,7 +1,7 @@
 package com.amcentral365.pl4kotlin
 
 /**
- * Annotation, denoting the class as a Persistince Layer object
+ * Annotation, denoting the class as a Persistence Layer object
  *
  * @param tableName The database table name. It is emitted to all generated SQL statements.
  *                  Can't be empty.

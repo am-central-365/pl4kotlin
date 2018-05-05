@@ -16,6 +16,9 @@
 
         <skipTests>false</skipTests>
         <skip.surefire.tests>${skipTests}</skip.surefire.tests>  <!-- otherwise surefire ignores skipTests -->
+
+        <!-- mvn site give: [ERROR] Unable to determine if resource X exists in http://download.java.net/maven/2/ -->
+        <dependency.locations.enabled>false</dependency.locations.enabled>
     </properties>
 
     <dependencies>
@@ -40,17 +43,10 @@
         <scope>test</scope>
       </dependency>
 
-      <!-- Libraries -->
-      <dependency>  <!-- Google Guava -->
-        <groupId>com.google.guava</groupId>
-        <artifactId>guava</artifactId>
-        <version>24.0-jre</version>
-      </dependency>
-
       <dependency>  <!-- Logging. https://github.com/MicroUtils/kotlin-logging -->
         <groupId>io.github.microutils</groupId>
         <artifactId>kotlin-logging</artifactId>
-        <version>1.4.9</version>
+        <version>1.5.4</version>
       </dependency>
 
       <dependency>  <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-jdk14 -->
@@ -162,8 +158,8 @@
               <phase>pre-site</phase>
               <goals>
                 <goal>dokka</goal>
-                <!--goal>javadoc</goal>
-                <goal>javadocJar</goal-->
+                <goal>javadoc</goal>
+                <goal>javadocJar</goal>
               </goals>
             </execution>
           </executions>
@@ -252,6 +248,19 @@
               <goals>
                 <goal>integration-test</goal>
                 <goal>verify</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-source-plugin</artifactId>
+          <executions>
+            <execution>
+              <phase>verify</phase>
+              <goals>
+                <goal>jar-no-fork</goal>
               </goals>
             </execution>
           </executions>
