@@ -37,7 +37,7 @@ abstract class Entity protected constructor() {
 
     // ------------------------------------------------------------- Housekeeping
     private val tblDefKey: String = this.javaClass.name
-    companion object {
+    private companion object {
         private val tblDefsMap = ConcurrentHashMap<String, TableDef>()
     }
 

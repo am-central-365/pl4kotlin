@@ -24,7 +24,7 @@ import kotlin.reflect.jvm.jvmName
  *   always provide the [Connection] object to [run] explicitly, there is no need to pass the argument.
  */
 abstract class BaseStatement(val entityDef: Entity, private val getGoodConnection: () -> Connection?) {
-    companion object: KLogging()
+    private companion object: KLogging()  /** @suppress */
 
     /**
      * Creates SQL statement text. The method is specific to the statement and must be overridden.
@@ -192,22 +192,22 @@ abstract class BaseStatement(val entityDef: Entity, private val getGoodConnectio
         this.entityDef.colDefs.firstOrNull(predicate)
                 ?: throw IllegalArgumentException("${this.entityDef::class.jvmName}(${this.entityDef.tableName}): $errmsg")
 
-    /** Find [ColDef] corresponding to [colName], and add its descriptor to the [list]. Throw [IllegalArgumentException] if [colName] isn't found. */
+    /** Find [ColDef] corresponding to [colName], and add its descriptor to the [list]. Throw [java.lang.IllegalArgumentException] if [colName] isn't found. */
     protected fun addColName(list: MutableList<Descr>, colName: String?, expr: String? = null, asc: Boolean, vararg binds: Any?) {
         val colDef = if (colName == null) null else this.getColDefOrDie({ c -> c.columnName == colName }, "unknown @Column with colName '$colName'")
         list.add(Descr(colDef, expr, asc, Arrays.asList(*binds)))
     }
 
-    /** Find [ColDef] corresponding to [prop], and add its descriptor to the [list]. Throw [IllegalArgumentException] if [prop] isn't a class property. */
+    /** Find [ColDef] corresponding to [prop], and add its descriptor to the [list]. Throw [java.lang.IllegalArgumentException] if [prop] isn't a class property. */
     protected fun addProperty(list: MutableList<Descr>, prop: KProperty<Any?>, expr: String? = null, asc: Boolean, vararg binds: Any?) {
         val colDef = this.getColDefOrDie({ it.prop.name == prop.name }, "property ${prop.name} doesn't have attribute @Column")
         list.add(Descr(colDef, expr, asc, Arrays.asList(*binds)))
     }
 
     // asc - less versions, defaulting asc to true
-    /** Find [ColDef] corresponding to [colName], and add its descriptor to the [list]. Throw [IllegalArgumentException] if [colName] isn't found. */    protected fun addColName(list: MutableList<Descr>, colName: String?, expr: String? = null, vararg binds: Any?) =
+    /** Find [ColDef] corresponding to [colName], and add its descriptor to the [list]. Throw [java.lang.IllegalArgumentException] if [colName] isn't found. */    protected fun addColName(list: MutableList<Descr>, colName: String?, expr: String? = null, vararg binds: Any?) =
             this.addColName(list, colName, expr, true, *binds)
-    /** Find [ColDef] corresponding to [prop], and add its descriptor to the [list]. Throw [IllegalArgumentException] if [prop] isn't a class property. */
+    /** Find [ColDef] corresponding to [prop], and add its descriptor to the [list]. Throw [java.lang.IllegalArgumentException] if [prop] isn't a class property. */
     protected fun addProperty(list: MutableList<Descr>, prop: KProperty<Any?>, expr: String? = null, vararg binds: Any?) =
             this.addProperty(list, prop, expr, true, *binds)
 

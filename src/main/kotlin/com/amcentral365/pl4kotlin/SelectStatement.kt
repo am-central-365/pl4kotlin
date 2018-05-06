@@ -9,7 +9,7 @@ import kotlin.reflect.jvm.jvmName
 
 /** Run SQL `SELECT` statement for the given [entityDef]. See [BaseStatement] constructor for parameters description. */
 open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connection? = { null }): BaseStatement(entityDef, getGoodConnection) {
-    companion object: KLogging()
+    private companion object: KLogging()  /** @suppress */
 
     /*@VisibleForTesting*/ internal val selectDescrs: MutableList<BaseStatement.Descr> = mutableListOf()
     /*@VisibleForTesting*/ internal val whereDescrs:  MutableList<BaseStatement.Descr> = mutableListOf()

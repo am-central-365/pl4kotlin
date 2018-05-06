@@ -168,14 +168,11 @@
             <cacheRoot>.dokka-cache</cacheRoot>
             <jdkVersion>${jdk.version}</jdkVersion>
 
-            <sources>
-              <source>${project.basedir}/src/main/kotlin</source>
-              <source>${project.basedir}/src/main/java</source>
-            </sources>
+            <sourceDirectories>
+              <dir>${project.basedir}/src/main/kotlin</dir>
+              <dir>${project.basedir}/src/main/java</dir>
+            </sourceDirectories>
 
-            <includes>
-              <include>Module.md</include>
-            </includes>
             <sourceLinks>
               <link>
                 <dir>${project.basedir}</dir>
@@ -183,7 +180,25 @@
                 <urlSuffix>#L</urlSuffix>
               </link>
             </sourceLinks>
+
+            <noStdlibLink>true</noStdlibLink>
+
           </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>3.0.0</version>
+          <executions>
+            <execution>
+              <phase>compile</phase>
+              <goals>
+                <goal>javadoc</goal>
+                <goal>jar</goal>
+              </goals>
+            </execution>
+          </executions>
         </plugin>
 
         <plugin>

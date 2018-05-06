@@ -6,7 +6,7 @@ import kotlin.reflect.KProperty
 
 /** Run SQL `DELETE` statement for the given [entityDef]. See [BaseStatement] constructor for parameters description. */
 open class DeleteStatement(entityDef: Entity, getGoodConnection: () -> Connection? = { null }): BaseStatement(entityDef, getGoodConnection) {
-    companion object: KLogging()
+    private companion object: KLogging()  /** @suppress */
 
     /*@VisibleForTesting*/ internal val whereDescrs:  MutableList<BaseStatement.Descr> = mutableListOf()
     private  val bindVals:     MutableList<Any?> = mutableListOf()

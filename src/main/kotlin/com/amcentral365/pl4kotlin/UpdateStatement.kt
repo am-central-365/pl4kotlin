@@ -6,7 +6,7 @@ import kotlin.reflect.KProperty
 
 /** Run SQL `UPDATE` statement for the given [entityDef]. See [BaseStatement] constructor for parameters description. */
 open class UpdateStatement(entityDef: Entity, getGoodConnection: () -> Connection? = { null }): BaseStatement(entityDef, getGoodConnection) {
-    companion object: KLogging()
+    private companion object: KLogging()  /** @suppress */
 
     /*@VisibleForTesting*/ internal val updateDescrs:    MutableList<BaseStatement.Descr> = mutableListOf()
     /*@VisibleForTesting*/ internal val whereDescrs:     MutableList<BaseStatement.Descr> = mutableListOf()
