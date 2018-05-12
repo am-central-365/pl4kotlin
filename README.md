@@ -27,17 +27,33 @@ chance to confirm that. The library avoids any non-ANSI SQL (like
 Oracle ```returning``` clause).
 
 ## Building the library
-To build the library JAR, use Maven:
+The library comes with Unit and Integration tests. The latter require
+access to a real RDBMS. At the bare minimum, use SQLite. For client/server
+RDBMS, we recommend using Docker for setting up a local instance.
+
+File [src/test/kotlin/com/amcentral365/pl4kotlin/integrationTests/README.md]
+contains more details.
+
+### Maven
+
+#### Building and installing
+To build the library JAR, use Maven's ```package``` goal:
 ```
 mvn package
 ```
-The resulting jar is located in ```target``` subdirectory.
+The resulting jar is located in the ```target``` subdirectory.
 
-Other standard Maven variations are ```mvn clean install```,
-```mvn test```, and so on. Check out [Apache Maven](https://maven.apache.org/)
+To install the library into your repository on your local machine, run
+```
+mvn install
+```
+Note: this runs integration tests
+
+Other standard Maven variations are ```mvn test```,
+```mvn deploy```, and so on. Check out [Apache Maven](https://maven.apache.org/)
 docs for details.
 
-## Maven dependency
+#### Maven dependency
 
 ```XML
     <dependency>
@@ -47,7 +63,40 @@ docs for details.
     </dependency>
 ```
 
-## Quick Start
+
+### Gradle
+
+#### Unit tests
+The library is using JUnit 5. Unit tests can be executed with
+```
+gradle test
+```
+The pass status is printed to the console.
+
+#### Integration tests
+They require a real database to run on, but SQLite would do.
+```
+gradle check
+```
+
+#### Building
+To create the library jar, run:
+```
+gradle build
+```
+The result is placed into ```build/lib``` directory. Both Unit and Integraton
+tests are ran.
+
+#### Installing
+```
+gradle install
+```
+builds the jar and deploys it to your local Maven repository. The tests
+are skipped.
+
+
+
+## Using the library, a quick start
 
 Consider Oracle's [SCOTT schema](http://www.orafaq.com/wiki/SCOTT#Original_SCOTT.27s_tables_since_Oracle_4).
 We can define its DAO as follows:

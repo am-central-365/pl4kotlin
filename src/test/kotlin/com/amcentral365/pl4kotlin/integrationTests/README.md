@@ -1,6 +1,6 @@
 ## Running Integration tests
 
-
+##### Maven notes
 Maven 3x allows to define integraton tests.
 They are not ran as part of standard ```mvn package``` command, but
 invoked automatically at ```verify```, ```install```, or ```deploy```
@@ -11,11 +11,24 @@ page
 Test case file names must be prefixed or suffixed with "IT" ot "ITCase":
 ITCaseBlah, ITBlah, BlahIT, and BlahITCase are examples of integration test Blah.
 
-### Invocation
+##### Gradle notes
+```build.gradle``` defines integration tests a part of the ```check``` task.
+This task is executed on ```gradle check``` which is part of ```gradle build```.
 
+
+### Invocation
+Maven and Gradle call phases differently:
+
+##### Maven
 ```
 mvn -DdbConfig=file-name verify
 ```
+
+##### Gradle
+```
+gradle -DdbConfig=file-name check
+```
+
 
 ### The config file
 It is a standard Java properties file. Required properties are:

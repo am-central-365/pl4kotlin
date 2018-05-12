@@ -222,16 +222,16 @@ abstract class Entity protected constructor() {
 
 
     // ------------------------------------------------------------- Exposed variables
-    internal val tableName = Entity.tblDefsMap[this.tblDefKey]!!.tableName
-    internal val colDefs   = Entity.tblDefsMap[this.tblDefKey]!!.colDefs.map { this.ColDef(it) }
+    val tableName = Entity.tblDefsMap[this.tblDefKey]!!.tableName
+    val colDefs   = Entity.tblDefsMap[this.tblDefKey]!!.colDefs.map { this.ColDef(it) }
 
-    internal val pkCols                 = Entity.tblDefsMap[this.tblDefKey]!!.pkCols.map { this.ColDef(it) }
-    internal val pkAndOptLockCols       = Entity.tblDefsMap[this.tblDefKey]!!.pkAndOptLockCols.map { this.ColDef(it) }
-    internal val allColsButPk           = Entity.tblDefsMap[this.tblDefKey]?.allColsButPk?.map { this.ColDef(it) }
-    internal val allColsButPkAndOptLock = Entity.tblDefsMap[this.tblDefKey]?.allColsButPkAndOptLock?.map { this.ColDef(it) }
-    internal val optLockCol             =
-            if( Entity.tblDefsMap[this.tblDefKey]?.optLockCol == null ) null
-            else ColDef(Entity.tblDefsMap[this.tblDefKey]?.optLockCol!!)
+    val pkCols                 = Entity.tblDefsMap[this.tblDefKey]!!.pkCols.map { this.ColDef(it) }
+    val pkAndOptLockCols       = Entity.tblDefsMap[this.tblDefKey]!!.pkAndOptLockCols.map { this.ColDef(it) }
+    val allColsButPk           = Entity.tblDefsMap[this.tblDefKey]?.allColsButPk?.map { this.ColDef(it) }
+    val allColsButPkAndOptLock = Entity.tblDefsMap[this.tblDefKey]?.allColsButPkAndOptLock?.map { this.ColDef(it) }
+    val optLockCol             =
+        if( Entity.tblDefsMap[this.tblDefKey]?.optLockCol == null ) null
+        else ColDef(Entity.tblDefsMap[this.tblDefKey]?.optLockCol!!)
 
     // ------------------------------------------------------------- Methods
     private fun constructFromAnnotations() {
