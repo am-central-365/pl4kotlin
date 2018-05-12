@@ -31,7 +31,7 @@ The library comes with Unit and Integration tests. The latter require
 access to a real RDBMS. At the bare minimum, use SQLite. For client/server
 RDBMS, we recommend using Docker for setting up a local instance.
 
-File [src/test/kotlin/com/amcentral365/pl4kotlin/integrationTests/README.md]
+File [src/test/kotlin/com/amcentral365/pl4kotlin/integrationTests/README.md](src/test/kotlin/com/amcentral365/pl4kotlin/integrationTests/README.md)
 contains more details.
 
 ### Maven
