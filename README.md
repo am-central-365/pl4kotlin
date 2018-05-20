@@ -87,6 +87,12 @@ gradle build
 The result is placed into ```build/lib``` directory. Both Unit and Integraton
 tests are ran.
 
+#### Documentation
+```
+gradle dokka
+```
+The main documentation file is ```build/javadoc/index.html```
+
 #### Installing
 ```
 gradle install

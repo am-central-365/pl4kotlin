@@ -4,18 +4,21 @@ buildscript {
     ext.kotlin_version = '1.2.41'
     repositories {
         mavenCentral()
+        jcenter()
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jetbrains.dokka:dokka-gradle-plugin:0.9.16"
     }
 }
 
 apply plugin: "kotlin"
 apply plugin: 'java'
-apply plugin: 'maven'
+apply plugin: 'maven'   // enables gradle install
+apply plugin: 'org.jetbrains.dokka'
 
 group = 'com.amcentral365'
-version = '0.0.1-SNAPSHOT'
+version = '0.1.0'
 
 description = "Database Persistence Layer For Kotlin"
 
@@ -39,14 +42,17 @@ sourceSets {
     }
 }
 
+dokka {
+    outputFormat = 'javadoc'
+    outputDirectory = "$buildDir/javadoc"
+}
+
+
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
     kotlinOptions {
         jvmTarget = "$targetCompatibility"
     }
 }
-
-
-
 
 task integrationTest(type: Test) {
     description = 'Runs the integration tests.'
@@ -68,8 +74,6 @@ task integrationTest(type: Test) {
 }
 
 check.dependsOn integrationTest   // "gradle check" runs integration test
-
-
 
 
 test {

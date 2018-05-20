@@ -1,15 +1,15 @@
 package com.amcentral365.pl4kotlin.integrationTests
 
 import mu.KotlinLogging
-import org.junit.FixMethodOrder
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.runners.MethodSorters
 import java.math.BigDecimal
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+//import org.junit.FixMethodOrder
+//import org.junit.runners.MethodSorters
 
 import com.amcentral365.pl4kotlin.InsertStatement
 import com.amcentral365.pl4kotlin.SelectStatement
@@ -33,7 +33,7 @@ private val logger = KotlinLogging.logger {}
  *   - specifying updated fields via class or entity instance reference (the result is the same)
  *   - fetching back values after update
  */
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+//@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 class StatementsIT {
 
     private val numOfRecordsToTest = 11
@@ -44,7 +44,18 @@ class StatementsIT {
         private  var isSqLite: Boolean = false
     }
 
-    @Test fun m00Setup() {
+    @Test
+    fun testAll() {
+        m00Setup()
+        m10InsertStatement()
+        m20testSelectStatement()
+        m30testUpdateStatement()
+        m40testDeleteStatement()
+        m99TearDown()
+    }
+
+
+    /*@Test*/ fun m00Setup() {
         logger.info { "IT init" }
         initSql()
         runSqlSetup()
@@ -54,7 +65,7 @@ class StatementsIT {
         StatementsIT.isSqLite = connInfo!!.dbVendor == "sqlite"
     }
 
-    @Test fun m99TearDown() {
+    /*@Test*/ fun m99TearDown() {
         logger.info { "IT cleanup" }
         if( this.runTearDown ) {
             runSqlTeardown()
@@ -62,7 +73,7 @@ class StatementsIT {
         StatementsIT.conn.close()
     }
 
-    @Test fun m10InsertStatement() {
+    /*@Test*/ fun m10InsertStatement() {
         logger.info { "running InsertStatement test" }
         val tto1 = TestTbl()
 
@@ -96,7 +107,7 @@ class StatementsIT {
         ensureEq(tto1, tto2!!)
     }
 
-    @Test fun m20testSelectStatement() {
+    /*@Test*/ fun m20testSelectStatement() {
         insertRecords(this.numOfRecordsToTest)
 
         logger.info { "running testSelectStatement(${this.numOfRecordsToTest})" }
@@ -113,7 +124,7 @@ class StatementsIT {
         }
     }
 
-    @Test fun m30testUpdateStatement() {
+    /*@Test*/ fun m30testUpdateStatement() {
         logger.info { "running testUpdateStatement" }
 
         // the test used to sometimes fail when modified_ts was declared with second precision,
@@ -165,7 +176,7 @@ class StatementsIT {
         StatementsIT.conn.rollback()
     }
 
-    @Test fun m40testDeleteStatement() {
+    /*@Test*/ fun m40testDeleteStatement() {
         logger.info { "running testDeleteStatement($numOfRecordsToTest)" }
 
         for(k in (1..this.numOfRecordsToTest).shuffled()) {
