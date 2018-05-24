@@ -1,19 +1,20 @@
 package com.amcentral365.pl4kotlin
 
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.assertIterableEquals
 import org.junit.jupiter.api.assertThrows
 import java.util.Arrays
-import kotlin.test.assertTrue
 
 internal class EntityTest {
 
     companion object {
         fun checkColDefs(c1: Entity.ColDef?, c2: Entity.ColDef?) {
             if( c1 == null )
-                Assertions.assertNull(c2)
+                assertNull(c2)
             else {
                 assertNotNull(c2)
                 assertEquals(0, c1.compareTo(c2!!))
@@ -25,7 +26,7 @@ internal class EntityTest {
             checkColDefs(colDef, descr.colDef)
             assertEquals(expr,   descr.expr)
             assertEquals(asc,    descr.asc)
-            Assertions.assertIterableEquals(Arrays.asList(*binds), descr.binds)
+            assertIterableEquals(Arrays.asList(*binds), descr.binds)
         }
     }
 

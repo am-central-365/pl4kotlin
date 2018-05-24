@@ -32,6 +32,27 @@ repositories {
      maven { url "http://repo.maven.apache.org/maven2" }
 }
 
+dokka {
+    outputFormat = 'javadoc'
+    outputDirectory = javadoc.destinationDir
+}
+
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: dokka) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
 sourceSets {
     deploy
     integrationTest {
@@ -41,12 +62,6 @@ sourceSets {
         runtimeClasspath += output + compileClasspath
     }
 }
-
-dokka {
-    outputFormat = 'javadoc'
-    outputDirectory = "$buildDir/javadoc"
-}
-
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
     kotlinOptions {
@@ -91,7 +106,6 @@ dependencies {
     compile group: 'io.github.microutils', name: 'kotlin-logging',     version: '1.5.4'
     compile group: 'org.slf4j',            name: 'slf4j-log4j12',      version: '1.7.25'
 
-    testCompile group: 'org.jetbrains.kotlin', name: 'kotlin-test-junit'
     testCompile group: 'org.junit.jupiter',    name: 'junit-jupiter-engine', version: junit5Version
     testCompile group: 'org.junit.jupiter',    name: 'junit-jupiter-api',    version: junit5Version
     testCompile group: 'mysql',                name: 'mysql-connector-java', version: '5.1.46'

@@ -3,11 +3,11 @@ package com.amcentral365.pl4kotlin.integrationTests
 import mu.KotlinLogging
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotEquals
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import java.math.BigDecimal
-import kotlin.test.assertNotEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 //import org.junit.FixMethodOrder
 //import org.junit.runners.MethodSorters
 
