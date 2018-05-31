@@ -2,6 +2,7 @@ package com.amcentral365.pl4kotlin
 
 import mu.KLogging
 import java.sql.Connection
+import java.sql.PreparedStatement
 import java.sql.SQLException
 import java.sql.ResultSet
 import kotlin.reflect.KProperty
@@ -89,11 +90,63 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
         { this.addColName(this.orderDescrs, null, expr, *binds);  return this }
 
 
+    /**
+     * Used to iterate over rows, fetched by the query.
+     *
+     * The iterator is very primitive: [hasNext] fetches the next row from the database,
+     * and [next] copies its data to the DAO's member variables. Therefore, it is mandatory
+     * to call [hasNext] to iterate over the rows. When no more rows are fetched, JDBC
+     * resources are closed.
+     */
+    inner class RowsIterator(private val rs: ResultSet): Iterator<Boolean> {
+
+        /** Fetches next record from the DB, returns true is succeeded */
+        override fun hasNext(): Boolean {
+            val hasData = this.rs.next()
+            if( !hasData ) {
+                closeIfCan(this.rs)
+                closeIfCan(this.rs.statement)
+            }
+            return hasData
+        }
+
+        /** Copies DB values to the class fields. Always returns true. */
+        override fun next(): Boolean {
+            if( !rs.isClosed )
+            this@SelectStatement.selectDescrs.forEachIndexed { k, v -> v.colDef!!.read(rs, k + 1) }
+            return !rs.isClosed
+        }
+    }
+
+    /** Get [Iterator] to go over rows, returned by the query */
+    fun iterate(conn: Connection): Iterator<Boolean> {
+        val rs = this.open_statement(conn)
+        return RowsIterator(rs)
+    }
+
     /** Build and run `SELECT` using the provided [conn]. The connection is not closed. */
     override fun run(conn: Connection): Int {
         var rowCount = 0
-        var rs: ResultSet? = null
+        this.open_statement(conn).use { rs ->
+            try {
+                if( rs.next() ) {
+                    this.selectDescrs.forEachIndexed { k, v -> v.colDef!!.read(rs, k + 1) }
+                    rowCount++
+                }
+            } catch(e: SQLException) {
+                logger.error {
+                    "SelectStatement on ${this.entityDef::class.jvmName}: ${e::class.jvmName} ${e.message}; " +
+                            "SQL: ${this.formatSqlWithParams(kotlin.collections.emptyList())}"  // FIXME: must be bindVals
+                }
+                throw e
+            }
+        }
 
+       return rowCount
+    }
+
+    /** Build the statement text, prepare the statement, bind values, and return the opened [ResultSet] */
+    private fun open_statement(conn: Connection): ResultSet {
         val bindVals: MutableList<Any?> = mutableListOf()
         this.selectDescrs.forEach { bindVals.addAll(it.binds) }
         listOf(this.whereDescrs, this.orderDescrs).forEach {
@@ -106,27 +159,20 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
         val sql = this.build()
         //logger.debug { "running ${this.formatSqlWithParams(bindVals)}" }
 
+        var stmt: PreparedStatement? = null
         try {
-            conn.prepareStatement(sql).use {
-                stmt ->
-                    this.bind(stmt, bindVals)
-                    rs = stmt.executeQuery()
-                    if( rs!!.next() ) {
-                        this.selectDescrs.forEachIndexed { k, v -> v.colDef!!.read(rs!!, k+1)}
-                        rowCount++
-                    }
-            }
+            stmt = conn.prepareStatement(sql)
+            this.bind(stmt, bindVals)
+            return stmt.executeQuery()
+
         } catch(e: SQLException) {
             logger.error {
                 "SelectStatement on ${this.entityDef::class.jvmName}: ${e::class.jvmName} ${e.message}; " +
                 "SQL: ${this.formatSqlWithParams(bindVals)}"
             }
+            closeIfCan(stmt)
             throw e
-        } finally {
-            closeIfCan(rs)
         }
-
-        return rowCount
     }
 
     /** Build text of the `SELECT` statement and return it. */
