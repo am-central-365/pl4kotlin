@@ -134,7 +134,6 @@ class StatementsIT {
     fun m25testSelectMultiple() {
         logger.info { "running testSelectMultiple" }
         val tto1 = TestTbl()
-        val tto2 = TestTbl()
 
         val selStmt = SelectStatement(tto1).select(tto1.allCols)
                 .by(tto1::pk1)
@@ -143,6 +142,7 @@ class StatementsIT {
 
         for((k, v) in selStmt.iterate(StatementsIT.conn).withIndex()) {
             assertTrue(v)
+            val tto2 = TestTbl()
             this.tweakForK(tto2, k+1)
             ensureEq(tto1, tto2, withGenerated = false)
         }
@@ -246,7 +246,7 @@ class StatementsIT {
         assertEquals(tto1.charVal?.trimEnd(), tto2.charVal?.trimEnd())
 
         // BigDecimal should use their own Compare
-        val bestPrecision = 14  // Max SqlLite precision is 14, other RDBMS work w/o reducing precision
+        val bestPrecision = 12  // Max SqlLite precision is 14, other RDBMS work w/o reducing it
         assertTrue(0 ==
             tto1.numVal?.setScale(bestPrecision, RoundingMode.HALF_UP)?.compareTo(
             tto2.numVal?.setScale(bestPrecision, RoundingMode.HALF_UP))

@@ -81,11 +81,11 @@ task integrationTest(type: Test) {
         showStandardStreams = true
     }
 
-    configure {
+    /*configure {
         // Assign all Java system properties from the command line to the JavaExec task:
         //    gradle -DdbConfig=sqlite.properties check
         systemProperties System.properties as Map<String, ?>
-    }
+    }*/
 }
 
 check.dependsOn integrationTest   // "gradle check" runs integration test
@@ -97,6 +97,10 @@ test {
         events "passed", "skipped", "failed"
         showStandardStreams = true
     }
+
+    // Assign all Java system properties from the command line to the JavaExec task:
+    //    gradle -DdbConfig=sqlite.properties check
+    systemProperties System.properties as Map<String, ?>
 }
 
 

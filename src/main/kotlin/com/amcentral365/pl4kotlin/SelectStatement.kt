@@ -104,8 +104,9 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
         override fun hasNext(): Boolean {
             val hasData = this.rs.next()
             if( !hasData ) {
+                val stmt = this.rs.statement
                 closeIfCan(this.rs)
-                closeIfCan(this.rs.statement)
+                closeIfCan(stmt)
             }
             return hasData
         }
