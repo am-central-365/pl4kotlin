@@ -165,12 +165,6 @@ abstract class BaseStatement(val entityDef: Entity, private val getGoodConnectio
     protected fun emitWhereList(whereDescrs: List<Descr>): String =
         this.emitList(whereDescrs, " AND ") { descr -> "${descr.colDef!!.columnName} = ?" }
 
-    /** Generate and return `ORDER BY` portion of a SQL statement, emitting `DESC` if needed. */
-    protected fun emitOrderByList(orderByDescrs: List<Descr>): String =
-        this.emitList(orderByDescrs, ", ") {
-            descr -> descr.colDef!!.columnName + if( descr.asc == null || descr.asc ) "" else " DESC"
-        }
-
 
     /** Format SQL for printing, substituting bind placeholders with their values from the [bindVals] list. */
     protected fun formatSqlWithParams(bindVals: List<Any?>): String {

@@ -78,7 +78,7 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
     // The expression version is free form, with optional binds.
 
     /** Add text `colName \`[DESC`\]` to the statement's `ORDER BY` clause. `colName` is figured from the passed [prop] */
-    fun orderBy(prop:    KProperty<Any?>, asc: Boolean=true): SelectStatement
+    fun orderBy(prop: KProperty<Any?>, asc: Boolean=true): SelectStatement
         { this.addProperty(this.orderDescrs, prop, null, asc);     return this }
 
     /** Add text `colName = ?` to the statement's `ORDER BY` clause. [colName] must be defined in the [Column] annotation. */
@@ -87,7 +87,7 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
 
     /** Add [expr] text to the statement's `ORDER BY` clause. The expression may use bind variable placeholders, the values are passed in [binds] */
     fun orderBy(expr: String, vararg binds: Any?): SelectStatement
-        { this.addColName(this.orderDescrs, null, expr, *binds);  return this }
+        { this.addColName(this.orderDescrs, null, expr, *binds);   return this }
 
 
     /**
@@ -149,12 +149,11 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
     private fun open_statement(conn: Connection): ResultSet {
         val bindVals: MutableList<Any?> = mutableListOf()
         this.selectDescrs.forEach { bindVals.addAll(it.binds) }
-        listOf(this.whereDescrs, this.orderDescrs).forEach {
-            it.forEach {
-                if( it.expr == null ) bindVals.add(it.colDef)
-                else                  bindVals.addAll(it.binds)
-            }
+        this.whereDescrs.forEach {
+            if( it.expr == null ) bindVals.add(it.colDef)
+            else                  bindVals.addAll(it.binds)
         }
+        this.orderDescrs.forEach { bindVals.addAll(it.binds) }
 
         val sql = this.build()
         //logger.debug { "running ${this.formatSqlWithParams(bindVals)}" }
@@ -191,7 +190,9 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
 
         if( orderDescrs.isNotEmpty() ) {
             sb.append(" ORDER BY ")
-            sb.append(emitOrderByList(this.orderDescrs))
+            sb.append(this.emitList(this.orderDescrs, ", ") { descr ->
+                descr.colDef!!.columnName + if( descr.asc == null || descr.asc ) "" else " DESC"
+            })
         }
 
         return sb.toString()

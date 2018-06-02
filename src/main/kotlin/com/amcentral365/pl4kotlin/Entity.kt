@@ -227,6 +227,7 @@ abstract class Entity protected constructor() {
 
     val pkCols                 = Entity.tblDefsMap[this.tblDefKey]!!.pkCols.map { this.ColDef(it) }
     val pkAndOptLockCols       = Entity.tblDefsMap[this.tblDefKey]!!.pkAndOptLockCols.map { this.ColDef(it) }
+    val allCols                = this.colDefs
     val allColsButPk           = Entity.tblDefsMap[this.tblDefKey]?.allColsButPk?.map { this.ColDef(it) }
     val allColsButPkAndOptLock = Entity.tblDefsMap[this.tblDefKey]?.allColsButPkAndOptLock?.map { this.ColDef(it) }
     val optLockCol             =

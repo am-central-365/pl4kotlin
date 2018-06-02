@@ -49,13 +49,15 @@ class StatementsIT {
         m00Setup()
         m10InsertStatement()
         m20testSelectStatement()
+        m25testSelectMultiple()
         m30testUpdateStatement()
         m40testDeleteStatement()
         m99TearDown()
     }
 
 
-    /*@Test*/ fun m00Setup() {
+    /*@Test*/
+    fun m00Setup() {
         logger.info { "IT init" }
         initSql()
         runSqlSetup()
@@ -63,9 +65,11 @@ class StatementsIT {
 
         StatementsIT.conn = getConnection()
         StatementsIT.isSqLite = connInfo!!.dbVendor == "sqlite"
+        jdbcDeleteTestTblRecs()
     }
 
-    /*@Test*/ fun m99TearDown() {
+    /*@Test*/
+    fun m99TearDown() {
         logger.info { "IT cleanup" }
         if( this.runTearDown ) {
             runSqlTeardown()
@@ -73,7 +77,8 @@ class StatementsIT {
         StatementsIT.conn.close()
     }
 
-    /*@Test*/ fun m10InsertStatement() {
+    /*@Test*/
+    fun m10InsertStatement() {
         logger.info { "running InsertStatement test" }
         val tto1 = TestTbl()
 
@@ -102,29 +107,49 @@ class StatementsIT {
         assertEquals(TestTbl.GreekLetters.Epsilon, tto1.enumVal)
         assertNull(tto1.nullVal)
 
-        val tto2 = this.jdbcreadTestTblRec(tto1.pk1, tto1.pk2!!)
+        val tto2 = this.jdbcReadTestTblRec(tto1.pk1, tto1.pk2!!)
         assertNotNull(tto2)
         ensureEq(tto1, tto2!!)
     }
 
-    /*@Test*/ fun m20testSelectStatement() {
+    /*@Test*/
+    fun m20testSelectStatement() {
+        logger.info { "running testSelectStatement(${this.numOfRecordsToTest})" }
         insertRecords(this.numOfRecordsToTest)
 
-        logger.info { "running testSelectStatement(${this.numOfRecordsToTest})" }
         for(k in (1..this.numOfRecordsToTest).shuffled()) {
             val tto1 = TestTbl(k)
             logger.debug { "  $k: running SelectStatement for pk(${tto1.pk1}, ${tto1.pk2})" }
             val selCnt = SelectStatement(tto1).select(tto1.allColsButPk!!).byPk().run(StatementsIT.conn)
             assertEquals(1, selCnt)
 
-            val tto2 = this.jdbcreadTestTblRec(tto1.pk1, k.toShort())
+            val tto2 = this.jdbcReadTestTblRec(tto1.pk1, k.toShort())
             assertNotNull(tto2)
 
             ensureEq(tto1, tto2!!)
         }
     }
 
-    /*@Test*/ fun m30testUpdateStatement() {
+    /*@Test*/
+    fun m25testSelectMultiple() {
+        logger.info { "running testSelectMultiple" }
+        val tto1 = TestTbl()
+        val tto2 = TestTbl()
+
+        val selStmt = SelectStatement(tto1).select(tto1.allCols)
+                .by(tto1::pk1)
+                .by("pk2 between 1 and ?-1", TestTbl.KNOWN_PK2)
+                .orderBy(tto1::pk2)
+
+        for((k, v) in selStmt.iterate(StatementsIT.conn).withIndex()) {
+            assertTrue(v)
+            this.tweakForK(tto2, k+1)
+            ensureEq(tto1, tto2, withGenerated = false)
+        }
+    }
+
+    /*@Test*/
+    fun m30testUpdateStatement() {
         logger.info { "running testUpdateStatement" }
 
         // the test used to sometimes fail when modified_ts was declared with second precision,
@@ -169,14 +194,15 @@ class StatementsIT {
         assertEquals(oldCreated,     tto1.created)      // should have stayed the same
         assertNotEquals(oldModified, tto1.modified)     // should have changed to current timestamp
 
-        val selRec = jdbcreadTestTblRec(tto1.pk1, tto1.pk2!!)
+        val selRec = jdbcReadTestTblRec(tto1.pk1, tto1.pk2!!)
         assertNotNull(selRec)
         ensureEq(tto1, selRec!!)
 
         StatementsIT.conn.rollback()
     }
 
-    /*@Test*/ fun m40testDeleteStatement() {
+    /*@Test*/
+    fun m40testDeleteStatement() {
         logger.info { "running testDeleteStatement($numOfRecordsToTest)" }
 
         for(k in (1..this.numOfRecordsToTest).shuffled()) {
@@ -187,7 +213,7 @@ class StatementsIT {
             assertEquals(1, delCnt)
             assertEquals(k.toShort(), tto.pk2)
 
-            val selRec = jdbcreadTestTblRec(tto.pk1, k.toShort())
+            val selRec = jdbcReadTestTblRec(tto.pk1, k.toShort())
             assertNull(selRec)
         }
     }
@@ -195,22 +221,25 @@ class StatementsIT {
 
     // ------------------------------------------------------- helper functions
 
-    private fun ensureEq(tto1: TestTbl, tto2: TestTbl) {
+    private fun ensureEq(tto1: TestTbl, tto2: TestTbl, withGenerated: Boolean = true) {
         assertEquals(tto1.pk1,       tto2.pk1)
         assertEquals(tto1.pk2,       tto2.pk2)
-        assertEquals(tto1.uuid1,     tto2.uuid1)
-        assertEquals(tto1.uuid2,     tto2.uuid2)
         assertEquals(tto1.vcVal,     tto2.vcVal)
-        assertEquals(tto1.dateVal,   tto2.dateVal)
-        assertEquals(tto1.timeVal,   tto2.timeVal)
         assertEquals(tto1.floatVal,  tto2.floatVal)
         assertEquals(tto1.doubleVal, tto2.doubleVal)
         assertEquals(tto1.bit17Val,  tto2.bit17Val)
         assertEquals(tto1.boolVal,   tto2.boolVal)
         assertEquals(tto1.enumVal,   tto2.enumVal)
         assertEquals(tto1.nullVal,   tto2.nullVal)
-        assertEquals(tto1.created,   tto2.created)
-        assertEquals(tto1.modified,  tto2.modified)
+
+        if( withGenerated ) {
+            assertEquals(tto1.uuid1,     tto2.uuid1)
+            assertEquals(tto1.uuid2,     tto2.uuid2)
+            assertEquals(tto1.created,   tto2.created)
+            assertEquals(tto1.modified,  tto2.modified)
+            assertEquals(tto1.dateVal,   tto2.dateVal)
+            assertEquals(tto1.timeVal,   tto2.timeVal)
+        }
 
         // MySQL right-trims CHAR unless PAD_CHAR_TO_FULL_LENGTH is enabled
         // Oracle doesn't truncate it.
@@ -249,8 +278,15 @@ class StatementsIT {
         StatementsIT.conn.commit()
     }
 
+    private fun jdbcDeleteTestTblRecs() {
+        logger.info { "deleting all records from test_tbl" }
+        StatementsIT.conn.createStatement().use { stmt ->
+            stmt.executeUpdate("delete from test_tbl")
+        }
+        StatementsIT.conn.commit()
+    }
 
-    private fun jdbcreadTestTblRec(ppk1: Int, ppk2: Short): TestTbl? {
+    private fun jdbcReadTestTblRec(ppk1: Int, ppk2: Short): TestTbl? {
         val sql = "select bit17_val, bool_col, char_col, created_ts, date_col, double_col, " +
                          "enum_col, float_col, modified_ts, num_col, time_col, uuid1, " +
                          "uuid2, vc_col, null_col " +
