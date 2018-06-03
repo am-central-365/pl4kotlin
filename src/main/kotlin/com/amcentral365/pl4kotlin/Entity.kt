@@ -4,7 +4,6 @@ import mu.KotlinLogging
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Timestamp
-import java.util.TreeMap
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KMutableProperty1
@@ -48,6 +47,9 @@ abstract class Entity protected constructor() {
             this.constructFromAnnotations()
         }
     }
+
+    /** Assign instance values from REST parameters map. See [assignFrom] */
+    constructor(restParams: Map<String, String>): this() { this.assignFrom(restParams) }
 
     /**
      * Defines an Entity field (or variable, or property, in Kotlin terms) associated with a database column.
@@ -117,7 +119,7 @@ abstract class Entity protected constructor() {
             this(kProp.name
                 , JTC(kProp)
                 , colAnnotation.columnName
-                , if( colAnnotation.restParamName.isNotEmpty() ) colAnnotation.restParamName else kProp.name
+                , if( colAnnotation.restParamName.isNotEmpty() ) colAnnotation.restParamName else colAnnotation.columnName
                 , colAnnotation.pkPos
                 , colAnnotation.onInsert
                 , colAnnotation.isOptimisticLock
@@ -308,12 +310,13 @@ abstract class Entity protected constructor() {
      *
      * Keys of [restParams] are mapped to [ColDef.restParamName] of each
      * object's property. The value is parsed to the appropriate type from String.
-     * Note: not all types have parsers,
+     * Note1: not all types have parsers,
+     * Note2: [ColDef.restParamName] defaults to the database column name and isn't case sensitive
      *
      * @throws UnsupportedOperationException when the value has no string parser
      * @throws Exception on other errors
      */
-    fun assignFrom(restParams: TreeMap<String, String>) {
+    fun assignFrom(restParams: Map<String, String>) {
         for(colDef in this.colDefs) {
             var strVal = "~not-set~"
             try {

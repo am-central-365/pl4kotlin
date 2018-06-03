@@ -109,6 +109,6 @@ internal class SelectStatementTest {
         EntityTest.checkDescr(stmt.orderDescrs[2], this.pk1ColDef)
         EntityTest.checkDescr(stmt.orderDescrs[3], null, "random(?)", true, -18)
         EntityTest.checkDescr(stmt.orderDescrs[4], null, "concat(?,?) desc", true, 'a', "strB")
-
     }
+
 }

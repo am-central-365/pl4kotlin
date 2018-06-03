@@ -7,7 +7,14 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assertions.assertIterableEquals
 import org.junit.jupiter.api.assertThrows
+import java.math.BigDecimal
+import java.sql.Date
+import java.sql.Time
+import java.sql.Timestamp
 import java.util.Arrays
+import java.util.UUID
+import java.util.TreeMap
+
 
 internal class EntityTest {
 
@@ -267,6 +274,83 @@ internal class EntityTest {
 
         val x = assertThrows<IllegalArgumentException>("should have failed on missing pkPos") { Tx() }
         assertTrue(x.message!!.contains("duplicate fields with pkPos 1"), "wrong error message: ${x.message}")
+    }
+
+    enum class GreekLetters { Alpha, Beta, Gamma, Delta, Epsilon }
+
+    @Test
+    fun `assign from REST params Map`() {
+        @Table("tx")
+        class Tx(rest: Map<String, String>): Entity(rest) {
+            @Column("int_col",   pkPos = 1) var intVal: Int?   = null
+            @Column("short_col", restParamName = "short_p") var shortVal: Short? = null
+            @Column("uuid_col")   var uuidVal:   UUID?         = null
+            @Column("ts_col")     var tsVal:     Timestamp?    = null
+            @Column("vc_col")     var vcVal:     String?       = null
+            @Column("char_col")   var charVal:   String?       = null
+            @Column("date_col")   var dateVal:   Date?         = null
+            @Column("time_col")   var timeVal:   Time?         = null
+            @Column("num_col")    var numVal:    BigDecimal?   = null
+            @Column("float_col")  var floatVal:  Float?        = null
+            @Column("double_col") var doubleVal: Double?       = null
+            @Column("bit17_col")  var bit17Val:  Long?         = null
+            @Column("bool_col")   var boolVal:   Boolean?      = null
+            @Column("enum_col")   var enumVal:   GreekLetters? = null
+            @Column("null_col")   var nullVal:   String?       = null
+        }
+
+        val INT_VAL = 2253462
+        val SHORT_VAL: Short = -456
+        val UUID_STR = "80f30906-e089-4623-835c-83255e4f3c69"
+        val TS_STR = "1941-06-22 04:13:03.45673"
+        val VC_STR = "Dark + Light beer is The Best"
+        val CH_STR = "TL;DR "
+        val DATE_STR = "1945-05-09"
+        val TIME_STR = "12:34:56"
+        val NUM_STR = "7932098450457092.565424434934089534653453453454352342348768681"
+        val FLOAT_VAL = 235346.675878f
+        val DBL_VAL = 3232634.7457045572
+        val BIT_VAL: Long = 0b10100011100111100
+
+        val restParams = TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER)
+        restParams.putAll(mapOf(
+              "int_col"  to INT_VAL.toString()
+            , "short_p"  to SHORT_VAL.toString()
+            , "uuid_col" to UUID_STR
+            , "ts_col"   to TS_STR
+            , "vc_col"   to VC_STR
+            , "char_col" to CH_STR
+            , "date_col" to DATE_STR
+            , "time_col" to TIME_STR
+            , "num_col"  to NUM_STR
+            , "float_col"  to FLOAT_VAL.toString()
+            , "double_col" to DBL_VAL.toString()
+            , "bit17_col"  to BIT_VAL.toString()
+            , "bool_col"   to "true"
+            , "enum_col"   to "Delta"
+        ))
+
+
+        val tx = Tx(restParams)
+
+        assertEquals(INT_VAL, tx.intVal)
+        assertEquals(SHORT_VAL, tx.shortVal)
+        assertEquals(UUID.fromString(UUID_STR), tx.uuidVal)
+        assertEquals(Timestamp.valueOf(TS_STR), tx.tsVal)
+        assertEquals(VC_STR, tx.vcVal)
+        assertEquals(CH_STR, tx.charVal)
+        assertEquals(Date.valueOf(DATE_STR), tx.dateVal)
+        assertEquals(Time.valueOf(TIME_STR), tx.timeVal)
+        assertEquals(BigDecimal(NUM_STR), tx.numVal)
+        assertEquals(FLOAT_VAL, tx.floatVal)
+        assertEquals(DBL_VAL, tx.doubleVal)
+        assertEquals(BIT_VAL, tx.bit17Val)
+        assertEquals(GreekLetters.Delta, tx.enumVal)
+
+        assertNull(tx.nullVal)
+
+        assertNotNull(tx.boolVal)
+        assertTrue(tx.boolVal!!)
     }
 
 }
