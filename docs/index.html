@@ -448,9 +448,6 @@
         <tr><td><span class="name">optLockCol</span></td><td>The Optimistic Lock column if it was defined, otherwise null</td><td></td></tr>
     </table>
 
-    <p>
-
-    </p>
 <h2><a name="InsertStatement">InsertStatement</a></h2>
     <p>
         InsertStatement is the simplest of all, but with a couple of peculiarities. The generated SQL is:
@@ -522,6 +519,19 @@
 
     <p>
         More than one <code>by()</code> may be used, resulting in multiple condition joined by <code>AND</code>.
+    </p>
+
+    <h5><a name="selectByPresentValues">byPresentValues()</a></h5>
+    <p>
+      The method inspects entity object's properties for non-null and non-empty
+      (defined as <code>obj.toString().isNotBlank()</code>) values. Such
+      property columns are added to the <code>WHERE</code> clause of the <code>SELECT</code>
+      statement.
+    </p>
+
+    <p>
+      <code>byPresentValues()</code> method is useful when the properties are set from
+      external source, such as a REST call, and we want to retrieve the matching rows.
     </p>
 
     <h4><a name="selectOrderByMethods">orderBy() methods</a></h4>

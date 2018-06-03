@@ -1,6 +1,7 @@
 package com.amcentral365.pl4kotlin
 
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.assertThrows
@@ -111,4 +112,19 @@ internal class SelectStatementTest {
         EntityTest.checkDescr(stmt.orderDescrs[4], null, "concat(?,?) desc", true, 'a', "strB")
     }
 
+    @Test
+    fun `by present values`() {
+        @Table("tx")
+        class Tx: Entity() {
+            @Column("pk",  pkPos = 1) var pkField1: Int = 0
+            @Column("c1")   var v1:   String? = null
+            @Column("c2")   var v2:   Float?  = null
+        }
+
+        val tx = Tx()
+        tx.v2 = 0.12f
+
+        val sql = SelectStatement(tx).select(tx::v1).byPresentValues().build()
+        assertEquals("SELECT c1 FROM tx WHERE pk = ? AND c2 = ?", sql)
+    }
 }

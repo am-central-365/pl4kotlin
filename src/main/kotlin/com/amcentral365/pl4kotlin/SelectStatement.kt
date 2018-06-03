@@ -48,13 +48,23 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
 
     // --- Auxiliary, frequently used conditions
 
-    /** Add Primary Key columns to `WHERE` clause of the SELECT statement */
+    /** Add Primary Key columns to the `WHERE` clause of the SELECT statement */
     fun byPk(): SelectStatement
         { this.whereDescrs.addAll(this.entityDef.pkCols.map { Descr(it) });  return this }
 
     /** Add Primary Key and, if defined, the Optimistic Lock column to `WHERE` clause of the `SELECT` statement */
-    fun byPkAndOptLock():  SelectStatement
+    fun byPkAndOptLock(): SelectStatement
         { this.whereDescrs.addAll(this.entityDef.pkAndOptLockCols.map { Descr(it) });  return this }
+
+    /** Add columns with non-null and non-black fields to the 'WHERE' clause of the SELECT statement */
+    fun byPresentValues(): SelectStatement {
+        this.whereDescrs.addAll(
+            this.entityDef.colDefs
+                .filter { val v = it.getValue();  v != null && v.toString().isNotBlank() }
+                .map { Descr(it) }
+        )
+        return this
+    }
 
     // --- Individual column conditions
 
