@@ -4,13 +4,14 @@ import mu.KotlinLogging
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Timestamp
+import java.util.TreeMap
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KMutableProperty1
 import kotlin.reflect.KProperty
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.jvm.javaType
-import java.util.UUID
 import kotlin.reflect.jvm.jvmName
 
 
@@ -279,6 +280,7 @@ abstract class Entity protected constructor() {
         Entity.tblDefsMap.putIfAbsent(this.tblDefKey, TableDef(tableName, cdefs))
     }
 
+
     private fun validatePkPositions(cdefs: List<ColDef>): String? {
         val cdefsByPkPos = cdefs.filter { it.pkPos != 0 }.groupBy { it.pkPos }
 
@@ -301,4 +303,31 @@ abstract class Entity protected constructor() {
         return null
     }
 
+    /**
+     * Assign instance values from REST parameters map
+     *
+     * Keys of [restParams] are mapped to [ColDef.restParamName] of each
+     * object's property. The value is parsed to the appropriate type from String.
+     * Note: not all types have parsers,
+     *
+     * @throws UnsupportedOperationException when the value has no string parser
+     * @throws Exception on other errors
+     */
+    fun assignFrom(restParams: TreeMap<String, String>) {
+        for(colDef in this.colDefs) {
+            var strVal = "~not-set~"
+            try {
+                if( restParams.contains(colDef.restParamName) ) {
+                    strVal = restParams.getValue(colDef.restParamName)
+                    colDef.parse(strVal)
+                }
+            } catch (x: Exception) {
+                throw Exception(
+                        "while trying to parse property ${colDef.fieldName} "+
+                                "from rest param ${colDef.restParamName}, value '$strVal'"
+                        , x
+                )
+            }
+        }
+    }
 }
