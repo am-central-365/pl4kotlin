@@ -4,4 +4,7 @@ target
 build
 it.db
 \.dokka-cache
+dokka-fatjar\.jar
+gen-docs
+out
 
