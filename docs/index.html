@@ -417,7 +417,7 @@
 
     <table>
         <tr><th>Group</th><th>Description</th><th>Comments</th></tr>
-        <tr><td><span class="name">colDefs</span></td><td>All defined columns</td><td></td></tr>
+        <tr><td><span class="name">colDefs</span></td><td>All defined columns</td><td>May be hidden in the future, use allCols instead</td></tr>
         <tr>
             <td><span class="name">pkCols</span></td>
             <td>Primary Key columns</td>
@@ -428,6 +428,7 @@
             <td>Primary Key columns and, if defined, the Optimistic Lock column</td>
             <td>Useful in <span class="name">by()</span> method of UPDATE statements</td>
         </tr>
+        <tr><td><span class="name">allCols</span></td><td>All defined columns</td><td>Synonym to colDefs</td></tr>
         <tr>
             <td><span class="name">allColsButPk</span></td>
             <td>All columns except the ones being part of the primary key</td>
@@ -525,8 +526,7 @@
 
     <h4><a name="selectOrderByMethods">orderBy() methods</a></h4>
     <p class="note">
-        These methods currently do not make sense since only single record selection is supported.
-        They'll come handy when the library start supporting multi-row selects.
+        These methods comes handy when multiple records are selected with <code>iterate</code> method
     </p>
 
     <p>
@@ -550,6 +550,50 @@
     Code: SelectStatement(...) ... <b>orderBy(Emp::hireDate, false).orderBy(colName = "ename")</b>.build()
     SQL:  SELECT ... FROM emp WHERE ... ORDER BY <b>hiredate DESC, ename</b>
     </pre>
+
+    <h4><a name="selectIterateMethods">iterate() method</a></h4>
+    <p>
+        The method returns a Kotlin
+        <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-iterator/index.html">Iterator</a>.
+        Each time the iterator's <code>next()</code> method is called and returned <code>true</code>,
+        properties of the object supplied to the <code>SelectStatement</code> constructor are populated
+        with the next row data.
+    </p>
+
+    <p>
+        Unlike one might assume, rather than creating a new object for every row, the library
+        reuses the object passed to the statement's constructor.
+    </p>
+
+    <p class="note">
+        Only properties specified via <code>select()</code> methods are populated. A common mistake
+        is to <code>select(obj.allColsButPk)</code>, leaving PK properties unchanged.
+        In general cases it is recommended to use <code>allCols</code> column selector.
+    </p>
+
+    <p class="note">
+        The returned iterator is somewhat backwards and counter-intuitive. Calling <code>hasNext()</code>
+        fetches the next row from the ResultSet, and calling <code>next()</code> copies current
+        row's data to the object's properties. Therefore, calling <code>next()</code> without
+        calling <code>hasNext()</code> first just re-populates the properties with the same data.
+        Also, calling <code>hasNext()</code> multiple times skips rows.
+        This behavior will likely change in the future.
+    </p>
+
+    <p>Example:</p>
+    <pre>
+    val emp = Emp(deptno=20)
+    val selStmt = SelectStatement(emp).select(emp.allCols).by(emp::deptno).orderBy(emp::hireDate)
+
+    for(unused in selStmt.iterate(conn)) {
+        // the row data is in 'emp'
+    }
+    </pre>
+
+    <p>
+        Note that the Boolean value returned by the iterator is pretty much useless: the row
+        data is in emp's properties.
+    </p>
 
 <h2><a name="UpdateStatement">UpdateStatement</a></h2>
     <p>
@@ -855,6 +899,7 @@
                         <li><a href="#selectSelectMethods">select() methods</a></li>
                         <li><a href="#selectByMethods">by() methods</a></li>
                         <li><a href="#selectOrderByMethods">orderBy() methods</a></li>
+                        <li><a href="#selectIterateMethods">iterate() methods</a></li>
                     </ul>
                 </li>
                 <li>

@@ -100,7 +100,7 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
      */
     inner class RowsIterator(private val rs: ResultSet): Iterator<Boolean> {
 
-        /** Fetches next record from the DB, returns true is succeeded */
+        /** Fetches next record from the DB, returns success indicator. Closes resources upon fetching the last row. */
         override fun hasNext(): Boolean {
             val hasData = this.rs.next()
             if( !hasData ) {
@@ -111,7 +111,7 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
             return hasData
         }
 
-        /** Copies DB values to the class fields. Always returns true. */
+        /** Copies row values to the object properties. Returns true if the data was available. */
         override fun next(): Boolean {
             if( !rs.isClosed )
             this@SelectStatement.selectDescrs.forEachIndexed { k, v -> v.colDef!!.read(rs, k + 1) }
