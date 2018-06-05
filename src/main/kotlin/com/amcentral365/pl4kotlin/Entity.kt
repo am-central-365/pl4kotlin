@@ -51,6 +51,14 @@ abstract class Entity protected constructor() {
     /** Assign instance values from REST parameters map. See [assignFrom] */
     constructor(restParams: Map<String, String>): this() { this.assignFrom(restParams) }
 
+    /** Assign instance values from another Entity object */
+    constructor(other: Entity): this() {
+        require(this::class == other::class)
+        for(k in 0..this.colDefs.size) {
+            this.colDefs[k].setValue(other.colDefs[k].getValue())
+        }
+    }
+
     /**
      * Defines an Entity field (or variable, or property, in Kotlin terms) associated with a database column.
      *

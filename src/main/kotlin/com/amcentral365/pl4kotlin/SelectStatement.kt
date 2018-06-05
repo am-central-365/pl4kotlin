@@ -6,6 +6,7 @@ import java.sql.PreparedStatement
 import java.sql.SQLException
 import java.sql.ResultSet
 import kotlin.reflect.KProperty
+import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.jvmName
 
 /** Run SQL `SELECT` statement for the given [entityDef]. See [BaseStatement] constructor for parameters description. */
@@ -105,11 +106,10 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
      *
      * The iterator is very primitive: [hasNext] fetches the next row from the database,
      * and [next] copies its data to the DAO's member variables. Therefore, it is mandatory
-     * to call [hasNext] to iterate over the rows. When no more rows are fetched, JDBC
+     * to call [hasNext] to iterate over the rows. When no more rows are fetched, the JDBC
      * resources are closed.
      */
-    inner class RowsIterator(private val rs: ResultSet): Iterator<Boolean> {
-
+    class RowIterator<T>(private val rs: ResultSet, val nextBody: () -> T): Iterator<T> {
         /** Fetches next record from the DB, returns success indicator. Closes resources upon fetching the last row. */
         override fun hasNext(): Boolean {
             val hasData = this.rs.next()
@@ -121,19 +121,42 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
             return hasData
         }
 
-        /** Copies row values to the object properties. Returns true if the data was available. */
-        override fun next(): Boolean {
-            if( !rs.isClosed )
+        /** Copies row values to the object properties. Returns the object or, for [iterateInPlace], true */
+        override fun next(): T = nextBody()
+    }
+
+    /**
+     * Get [Iterator] to go over rows, returned by the query
+     *
+     * The next row values are fetched into the object supplied to the [SelectStatement] constructor.
+     * Note that only properties requested by [select] are populated, the other properties are left unchanged.
+     * In general, the safest option is to use [allCols] column selector.
+     */
+    fun iterateInPlace(conn: Connection): RowIterator<Boolean> {
+        val rs = this.open_statement(conn)
+        return RowIterator<Boolean>(rs) {
             this@SelectStatement.selectDescrs.forEachIndexed { k, v -> v.colDef!!.read(rs, k + 1) }
-            return !rs.isClosed
+            true
         }
     }
 
-    /** Get [Iterator] to go over rows, returned by the query */
-    fun iterate(conn: Connection): Iterator<Boolean> {
+    /**
+     * Get [Iterator] to go over rows, returned by the query
+     *
+     * A new Entity instance is created for each row.
+     * Note that only properties requested by [select] are populated, the other properties are left unchanged.
+     * In general, the safest option is to use [allCols] column selector.
+     */
+    fun iterate(conn: Connection): RowIterator<Entity> {
+        val defaultConstructor = entityDef::class.primaryConstructor!!
         val rs = this.open_statement(conn)
-        return RowsIterator(rs)
+        return RowIterator<Entity>(rs) {
+            val entityInstance = defaultConstructor.call()
+            entityInstance.colDefs.forEachIndexed { k, v -> v.read(rs, k + 1) }
+            entityInstance
+        }
     }
+
 
     /** Build and run `SELECT` using the provided [conn]. The connection is not closed. */
     override fun run(conn: Connection): Int {

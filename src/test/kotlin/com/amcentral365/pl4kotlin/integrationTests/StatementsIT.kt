@@ -47,11 +47,12 @@ class StatementsIT {
     @Test
     fun testAll() {
         m00Setup()
-        m10InsertStatement()
-        m20testSelectStatement()
-        m25testSelectMultiple()
-        m30testUpdateStatement()
-        m40testDeleteStatement()
+            m10InsertStatement()
+            m20testSelectStatement()
+                m24testSelectMultipleInPlace()
+                m25testSelectMultiple()
+            m30testUpdateStatement()
+            m40testDeleteStatement()
         m99TearDown()
     }
 
@@ -131,6 +132,25 @@ class StatementsIT {
     }
 
     /*@Test*/
+    fun m24testSelectMultipleInPlace() {
+        logger.info { "running m24testSelectMultipleInPlace" }
+        val tto1 = TestTbl()
+
+        val selStmt = SelectStatement(tto1).select(tto1.allCols)
+                .by(tto1::pk1)
+                .by("pk2 between 1 and ?-1", TestTbl.KNOWN_PK2)
+                .orderBy(tto1::pk2)
+
+        for((k, v) in selStmt.iterateInPlace(StatementsIT.conn).withIndex()) {
+            assertTrue(v)
+            val tto2 = TestTbl()
+            this.tweakForK(tto2, k+1)
+            ensureEq(tto2, tto1, withGenerated = false)
+        }
+    }
+
+
+    /*@Test*/
     fun m25testSelectMultiple() {
         logger.info { "running testSelectMultiple" }
         val tto1 = TestTbl()
@@ -141,12 +161,18 @@ class StatementsIT {
                 .orderBy(tto1::pk2)
 
         for((k, v) in selStmt.iterate(StatementsIT.conn).withIndex()) {
-            assertTrue(v)
+            assertNotNull(v)
+            assertTrue(v is TestTbl)
             val tto2 = TestTbl()
             this.tweakForK(tto2, k+1)
-            ensureEq(tto1, tto2, withGenerated = false)
+            ensureEq(tto2, v as TestTbl, withGenerated = false)
         }
+
+        // ensure the original object, tto1, hasn't changed
+        val tto3 = TestTbl()
+        ensureEq(tto3, tto1, withGenerated = false)
     }
+
 
     /*@Test*/
     fun m30testUpdateStatement() {

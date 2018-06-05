@@ -13,8 +13,10 @@ import java.time.LocalTime
 import java.util.UUID
 
 @Table("test_tbl")
-class TestTbl(pk2: Int? = null): Entity() {
+class TestTbl(): Entity() {
     enum class GreekLetters { Alpha, Beta, Gamma, Delta, Epsilon }
+
+    constructor(pk2: Int): this() { this.pk2 = pk2.toShort() }
 
     companion object {
         const val KNOWN_PK1: Int   = -451247
@@ -55,9 +57,4 @@ class TestTbl(pk2: Int? = null): Entity() {
 
     var transVal1 = 25
     var transVal2 = "twenty five"
-
-    init {
-        if( pk2 != null )
-            this.pk2 = pk2.toShort()
-    }
 }
