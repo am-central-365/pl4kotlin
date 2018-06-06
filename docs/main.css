@@ -1,9 +1,9 @@
 body { font-family: Helvetica Verdana Sans-serif; font-size: 14pt; }
 
-h1 { font-size: 20pt; margin-top: 1.5em; }
-h2 { font-size: 18pt; }
-h3 { font-size: 16pt; }
-h4 { font-size: 14pt; }
+h1 { font-size: 20pt; margin-top: 2.1em; }
+h2 { font-size: 18pt; margin-top: 1.8em; }
+h3 { font-size: 16pt; margin-top: 1.5em; }
+h4 { font-size: 14pt; margin-top: 1.3em; }
 
 p    { margin-top: 1em; }
 pre  { overflow: auto;  background-color: whitesmoke;  font-size: smaller; }

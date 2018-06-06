@@ -216,17 +216,19 @@
 
 <h3><a name="columnName">columnName</a></h3>
     <p>
-        Defined the database table column name. The name is used in generated SQL statements.
+        Defined the database table column name. The name is used in the generated SQL statements.
     </p>
 
 <h3><a name="restParamName">restParamName</a></h3>
     <p>
         One of the ways to use the library is to simplify mapping REST API to database table
-        operations. The value specifies name if the GET/POST/PUT/... parameter. It is used
+        operations. The value specifies name of the GET/POST/PUT/... parameter. It is used
         when parsing form values.
     </p>
 
-    <p class="wip">Not yet implemented</p>
+    <p>
+        When omitted, the value defaults to the column name.
+    </p>
 
 <h3><a name="pkPos">pkPos</a></h3>
     <p>
@@ -561,33 +563,49 @@
     SQL:  SELECT ... FROM emp WHERE ... ORDER BY <b>hiredate DESC, ename</b>
     </pre>
 
-    <h4><a name="selectIterateMethods">iterate() method</a></h4>
+    <h4><a name="selectIterateMethods">iterate() and iterateInPlace() methods</a></h4>
     <p>
-        The method returns a Kotlin
-        <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-iterator/index.html">Iterator</a>.
-        Each time the iterator's <code>next()</code> method is called and returned <code>true</code>,
-        properties of the object supplied to the <code>SelectStatement</code> constructor are populated
-        with the next row data.
-    </p>
-
-    <p>
-        Unlike one might assume, rather than creating a new object for every row, the library
-        reuses the object passed to the statement's constructor.
+        The methods returns a Kotlin
+        <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-iterator/index.html">Iterator</a>
+        which can be used to traverse the <code>ResultSet</code>.
     </p>
 
     <p class="note">
-        Only properties specified via <code>select()</code> methods are populated. A common mistake
-        is to <code>select(obj.allColsButPk)</code>, leaving PK properties unchanged.
+        The iterator is somewhat backwards and counter-intuitive. Calling <code>hasNext()</code>
+        fetches the next row from the ResultSet, and calling <code>next()</code> copies current
+        row's data to the object's properties. Therefore, calling <code>next()</code> without
+        calling <code>hasNext()</code> first returns the same data. Also, calling <code>hasNext()</code>
+        multiple times skips rows. This behavior will likely change in the future.
+    </p>
+
+    <p class="note">
+        Only properties mentioned in <code>select()</code> method(s) are populated. A common
+        mistake is to <code>select(obj.allColsButPk)</code>, leaving PK properties unchanged.
         In general cases it is recommended to use <code>allCols</code> column selector.
     </p>
 
-    <p class="note">
-        The returned iterator is somewhat backwards and counter-intuitive. Calling <code>hasNext()</code>
-        fetches the next row from the ResultSet, and calling <code>next()</code> copies current
-        row's data to the object's properties. Therefore, calling <code>next()</code> without
-        calling <code>hasNext()</code> first just re-populates the properties with the same data.
-        Also, calling <code>hasNext()</code> multiple times skips rows.
-        This behavior will likely change in the future.
+
+    <h5><a name="selectIterateMethod">iterate()</a></h5>
+    <p>
+        Each time <code>next()</code> is called, a new object is created and populated with
+        the row data. The method is useful when operating on lists of rows.
+    </p>
+
+    <p>Example:</p>
+    <pre>
+    val emp = Emp(deptno=20)
+    val selStmt = SelectStatement(emp).select(emp.allCols).by(emp::deptno).orderBy(emp::hireDate)
+
+    for(deptEmp in selStmt.iterate(conn)) {
+        // the row data is in 'deptEmp'
+    }
+    </pre>
+
+    <h5><a name="selectIterateInPlaceMethod">iterateInPlace()</a></h5>
+    <p>
+        Rather than creating a new object for every row, the library reuses the object passed to the
+        <code>SelectStatement</code> constructor. This is more efficient on the GC when iterating over
+        large collections, because no new object is created and destroyed after processing.
     </p>
 
     <p>Example:</p>
