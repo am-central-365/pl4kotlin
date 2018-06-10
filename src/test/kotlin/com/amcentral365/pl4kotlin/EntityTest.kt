@@ -353,4 +353,45 @@ internal class EntityTest {
         assertTrue(tx.boolVal!!)
     }
 
+
+    @Test
+    fun `identityStr for 1-col pk`() {
+        @Table("tx")
+        class Tx: Entity() {
+            @Column("pkA", pkPos = 1) var pk1: Int = 135
+        }
+
+        val tx = Tx()
+        assertEquals("""{"pk": ["pkA": "135"]}""", tx.getIdentityAsJsonStr())
+    }
+
+
+    @Test
+    fun `identityStr for 3-col pk`() {
+        @Table("tx")
+        class Tx: Entity() {
+            @Column("pkA", pkPos = 1) var pk1: Int = 135
+            @Column("pkB", pkPos = 2) var pk2: String = "Dom Perignon"
+            @Column("pkC", pkPos = 3) var pk3: Boolean = true
+        }
+
+        val tx = Tx()
+        assertEquals("""{"pk": ["pkA": "135", "pkB": "Dom Perignon", "pkC": "true"]}""", tx.getIdentityAsJsonStr())
+    }
+
+
+    @Test
+    fun `identityStr for pk and optLock`() {
+        val TS_STR = "1961-04-12 09:07:17.943"
+
+        @Table("tx")
+        class Tx: Entity() {
+            @Column("pkA", pkPos = 1) var pk1: Int = 531
+            @Column("pkB", pkPos = 2) var pk2: Boolean = false
+            @Column("olc", isOptimisticLock = true) var modifyTs: Timestamp = Timestamp.valueOf(TS_STR)
+        }
+
+        val tx = Tx()
+        assertEquals("""{"pk": ["pkA": "531", "pkB": "false"], "optLock": {"olc": "$TS_STR"}}""", tx.getIdentityAsJsonStr())
+    }
 }

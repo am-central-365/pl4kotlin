@@ -341,4 +341,22 @@ abstract class Entity protected constructor() {
             }
         }
     }
+
+    /**
+     * Get JSON string representing the object identity: PK and, if present, optLock
+     *
+     * The string format is {pk: [ col: val, ...], optLock: val}
+     * All identifiers and values are double-quoted.
+     * The optLock portion is only returned if the OptLock column was defined,
+     */
+    fun getIdentityAsJsonStr(): String {
+        val pkStr = this.pkCols.joinToString(", ", prefix = "\"pk\": [", postfix = "]")
+                                            { "\"${it.columnName}\": \"${it.getValue()}\"" }
+
+        if( this.optLockCol == null )
+            return "{$pkStr}"
+
+        val optLockStr = "\"optLock\": {\"${this.optLockCol.columnName}\": \"${this.optLockCol.getValue()}\"}"
+        return "{$pkStr, $optLockStr}"
+    }
 }
