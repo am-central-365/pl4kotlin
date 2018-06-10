@@ -350,7 +350,7 @@ abstract class Entity protected constructor() {
      * The optLock portion is only returned if the OptLock column was defined,
      */
     fun getIdentityAsJsonStr(): String {
-        val pkStr = this.pkCols.joinToString(", ", prefix = "\"pk\": [", postfix = "]")
+        val pkStr = this.pkCols.joinToString(", ", prefix = "\"pk\": {", postfix = "}")
                                             { "\"${it.columnName}\": \"${it.getValue()}\"" }
 
         if( this.optLockCol == null )

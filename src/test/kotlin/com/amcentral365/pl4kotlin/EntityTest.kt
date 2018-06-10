@@ -362,7 +362,7 @@ internal class EntityTest {
         }
 
         val tx = Tx()
-        assertEquals("""{"pk": ["pkA": "135"]}""", tx.getIdentityAsJsonStr())
+        assertEquals("""{"pk": {"pkA": "135"}}""", tx.getIdentityAsJsonStr())
     }
 
 
@@ -376,7 +376,7 @@ internal class EntityTest {
         }
 
         val tx = Tx()
-        assertEquals("""{"pk": ["pkA": "135", "pkB": "Dom Perignon", "pkC": "true"]}""", tx.getIdentityAsJsonStr())
+        assertEquals("""{"pk": {"pkA": "135", "pkB": "Dom Perignon", "pkC": "true"}}""", tx.getIdentityAsJsonStr())
     }
 
 
@@ -392,6 +392,6 @@ internal class EntityTest {
         }
 
         val tx = Tx()
-        assertEquals("""{"pk": ["pkA": "531", "pkB": "false"], "optLock": {"olc": "$TS_STR"}}""", tx.getIdentityAsJsonStr())
+        assertEquals("""{"pk": {"pkA": "531", "pkB": "false"}, "optLock": {"olc": "$TS_STR"}}""", tx.getIdentityAsJsonStr())
     }
 }
