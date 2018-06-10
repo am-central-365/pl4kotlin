@@ -96,6 +96,26 @@ open class UpdateStatement(entityDef: Entity, getGoodConnection: () -> Connectio
     fun fetchBack(colName: String, expr: String? = null, vararg binds: Any?): UpdateStatement
         { this.addColName (this.fetchbackDescrs, colName, expr, *binds);  return this }
 
+
+    /**
+     * After update, read back the column [colDef] value into its corresponding property
+     *
+     * If fetchback column(s) were requested and `UPDATE` affected one or more rows,
+     * `run` fetches value of the column associated with the property. The `SELECT` statement
+     * runs in the same transaction. See [SelectStatement.select] for the role of [expr] and [binds].
+     *
+     * Fetchbacks are used to read values, computed on the database side.
+     */
+    fun fetchBack(colDef: Entity.ColDef): UpdateStatement
+        { this.fetchbackDescrs.add(Descr(colDef));  return this }
+
+
+    /**
+     * Get text of the SQL statement, update internal variables
+     *
+     * SQL of the UPDATE statement is returned. Internal descriptors
+     * are re-computed.
+     */
     public override fun build(): String {
         require(this.updateDescrs.isNotEmpty()) { "${this::class.java.name}(${this.entityDef.tableName}): no columns to update" }
         this.bindVals.clear()
