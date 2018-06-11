@@ -155,4 +155,24 @@ internal class UpdateStatementTest {
         val x = assertThrows<IllegalArgumentException>("shouldn't allow empty update list") {  stmt.build() }
         assertTrue(x.message!!.contains("no columns to update"))
     }
+
+
+    @Test
+    fun `update OptLock without OptLock column`() {
+        @Table("tx1")
+        class Tx1: Entity() {
+            @Column("pkCol",  pkPos = 1) var pkField:   Int = 0
+            @Column("valCol")            var valField:  Float = 0f
+        }
+
+        val sql = UpdateStatement(Tx1()).update(Tx1::valField).withOptLock().byPk().build()
+        assertEquals("UPDATE tx1 SET valCol = ? WHERE pkCol = ?", sql)
+    }
+
+
+    @Test
+    fun `update OptLock with OptLock column`() {
+        val sql = UpdateStatement(txInst).update(Tx::val1Field).withOptLock().by(Tx::pkField1).build()
+        assertEquals("UPDATE tx SET val1Col = ?, optLockCol = default WHERE pkCol1 = ?", sql)
+    }
 }

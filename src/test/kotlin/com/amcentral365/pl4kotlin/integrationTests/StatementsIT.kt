@@ -52,6 +52,7 @@ class StatementsIT {
                 m24testSelectMultipleInPlace()
                 m25testSelectMultiple()
             m30testUpdateStatement()
+                m35testUpdateWithOptLock()
             m40testDeleteStatement()
         m99TearDown()
     }
@@ -226,6 +227,31 @@ class StatementsIT {
 
         StatementsIT.conn.rollback()
     }
+
+
+    /*@Test*/
+    fun m35testUpdateWithOptLock() {
+        if( StatementsIT.isSqLite ) {
+            logger.info { "skipping testUpdateWithOptLock because SqlLite does not support DEFAULT keyword" }
+            return
+        }
+
+        logger.info { "running testUpdateWithOptLock" }
+
+        val r = this.tweakForK(TestTbl(), 5)
+        val selCnt = SelectStatement(r).select(r::modified).byPk().run(StatementsIT.conn)
+        assertEquals(1, selCnt)
+        assertNotNull(r.modified)
+        val oldModifyTs = r.modified!!
+
+        Thread.sleep(200)
+        val updCnt = UpdateStatement(r).withOptLock().byPkAndOptLock().run(StatementsIT.conn)
+        StatementsIT.conn.rollback()
+        assertEquals(1, updCnt)
+
+        assertTrue(oldModifyTs.before(r.modified))
+    }
+
 
     /*@Test*/
     fun m40testDeleteStatement() {

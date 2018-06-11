@@ -38,7 +38,6 @@ open class UpdateStatement(entityDef: Entity, getGoodConnection: () -> Connectio
     /** Allows specifying Column Groups like `Entity.allColsButPk`. See documentation for details. */
     fun update(colDefs: List<Entity.ColDef>): UpdateStatement { this.updateDescrs.addAll(colDefs.map { Descr(it) });  return this }
 
-
     // ----- WHERE columns or expressions
     // Beside frequently used PK/OptLock expressions, there are two other forms:
     // 1) property or column: translates to "WHERE column = ?", and the bind value comes from the property
@@ -108,6 +107,16 @@ open class UpdateStatement(entityDef: Entity, getGoodConnection: () -> Connectio
      */
     fun fetchBack(colDef: Entity.ColDef): UpdateStatement
         { this.fetchbackDescrs.add(Descr(colDef));  return this }
+
+
+    /** If OptLock column is present, it is updated to `default` and fetched back */
+    fun withOptLock(): UpdateStatement {
+        if( this.entityDef.optLockCol != null ) {
+            this.updateDescrs.add(Descr(this.entityDef.optLockCol, "default", true, emptyList<Any?>()))
+            this.fetchbackDescrs.add(Descr(this.entityDef.optLockCol))
+        }
+        return this
+    }
 
 
     /**

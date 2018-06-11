@@ -673,6 +673,24 @@
         updated (affected row count was greater than zero). The values are written to the corresponding property.
     </p>
 
+    <h4><a name="updateWithOptLock">withOptLock() method</a></h4>
+    <p>
+        The methods adds the Optimistic Lock column to the update list and ensures it
+        is fetched back after statement is executed. The value is updated to SQL <code>default</code>
+        literal.
+    </p>
+
+    <p class="note">
+        It is stll needed to specify <code>byPkAndOptLock()</code> or otherwise include the OptLock column
+        to the <code>WHERE</code> clause.
+    </p>
+
+    <p>
+        When the DAO has OptLock column defined, the function has no effect, i.e. it is safe to
+        use it with and without OptLock column.
+    </p>
+
+
     <h4><a name="updateMultipleRows">Updating multiple rows</a></h4>
     <p>
         Nothing prevents us from specifying a relaxed <a href="#updateByMethods">by()</a> expression
@@ -936,6 +954,7 @@
                         <li><a href="#updateUpdateMethods">update() methods</a></li>
                         <li><a href="#updateByMethods">by() methods</a></li>
                         <li><a href="#updateFetchBackMethods">fetchBack() methods</a></li>
+                        <li><a href="#updateWithOptLock">withOptLock()</a></li>
                         <li><a href="#updateMultipleRows">Updating multiple rows</a></li>
                     </ul>
                 </li>
