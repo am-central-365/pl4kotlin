@@ -1,7 +1,7 @@
 //import org.junit.jupiter.api.Test
 
 buildscript {
-    ext.kotlin_version = '1.2.41'
+    ext.kotlin_version = '1.2.50'
     repositories {
         mavenCentral()
         jcenter()
@@ -18,7 +18,7 @@ apply plugin: 'maven'   // enables gradle install
 apply plugin: 'org.jetbrains.dokka'
 
 group = 'com.amcentral365'
-version = '0.3.7'
+version = '0.3.8'
 
 description = "Database Persistence Layer For Kotlin"
 

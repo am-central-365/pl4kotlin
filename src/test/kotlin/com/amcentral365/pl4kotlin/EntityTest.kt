@@ -362,7 +362,7 @@ internal class EntityTest {
         }
 
         val tx = Tx()
-        assertEquals("""{"pk": {"pkA": "135"}}""", tx.getIdentityAsJsonStr())
+        assertEquals("""{"pk": {"pkA": 135}}""", tx.getIdentityAsJsonStr())
     }
 
 
@@ -376,7 +376,7 @@ internal class EntityTest {
         }
 
         val tx = Tx()
-        assertEquals("""{"pk": {"pkA": "135", "pkB": "Dom Perignon", "pkC": "true"}}""", tx.getIdentityAsJsonStr())
+        assertEquals("""{"pk": {"pkA": 135, "pkB": "Dom Perignon", "pkC": true}}""", tx.getIdentityAsJsonStr())
     }
 
 
@@ -392,6 +392,44 @@ internal class EntityTest {
         }
 
         val tx = Tx()
-        assertEquals("""{"pk": {"pkA": "531", "pkB": "false"}, "optLock": {"olc": "$TS_STR"}}""", tx.getIdentityAsJsonStr())
+        assertEquals("""{"pk": {"pkA": 531, "pkB": false}, "optLock": {"olc": "$TS_STR"}}""", tx.getIdentityAsJsonStr())
+    }
+
+
+    @Test
+    fun `as JSON`() {
+        val tx = com.amcentral365.pl4kotlin.integrationTests.TestTbl()
+
+        val expectedPretty =
+            """
+            {
+              "bit17_val": 33540,
+              "bool_col": true,
+              "char_col": " a .b ",
+              "created_ts": null,
+              "date_col": "2018-06-22",
+              "double_col": 3.141592653589793,
+              "enum_col": "Epsilon",
+              "float_col": -342.74237,
+              "modified_ts": null,
+              "null_col": null,
+              "num_col": "2.718281828459045",
+              "pk1": -451247,
+              "pk2": 10221,
+              "time_col": "TIME_COL",
+              "uuid1": "UUID1",
+              "uuid2": "UUID2",
+              "vc_col": "Yea, from the table of my memory
+            I’ll wipe away all trivial, fond records,"
+            }"""
+            .trimIndent()
+            .replace("TIME_COL", tx.timeVal.toString())
+            .replace("UUID1",    tx.uuid1.toString())
+            .replace("UUID2",    tx.uuid2.toString())
+
+        assertEquals(expectedPretty, tx.asJsonStr(pretty = true))
+
+        val expectedFunctional = "{" + expectedPretty.replace("\n ", "").removePrefix("{ ").removeSuffix("\n}") + "}"
+        assertEquals(expectedFunctional, tx.asJsonStr(pretty = false))
     }
 }

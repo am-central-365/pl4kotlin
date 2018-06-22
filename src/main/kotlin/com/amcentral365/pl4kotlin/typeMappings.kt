@@ -20,6 +20,7 @@ private fun k2j(kc: KType): JdbcTypeCode {
         kotlin.Char::class      -> JdbcTypeCode.String
         kotlin.Byte::class      -> JdbcTypeCode.Byte
         kotlin.ByteArray::class -> JdbcTypeCode.ByteArray
+        kotlin.Boolean::class   -> JdbcTypeCode.Boolean
 
         else -> JdbcTypeCode.from(kc.javaType)
     }

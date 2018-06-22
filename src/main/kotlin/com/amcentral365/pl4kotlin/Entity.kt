@@ -229,6 +229,18 @@ abstract class Entity protected constructor() {
             logger.debug { "setting ${this@Entity.tableName}.${this.fieldName} to $value" }
             this.setValue(value)
         }
+
+        /**
+         * Get column value as a JSON <code>"name": value</code> string
+         *
+         * The value is unquoted for types whee it doesn't need to be, such as numeric and boolean
+         */
+        fun asJson(): String {
+            val converter = JdbcTypeCode.getToJsonConverter(this.fieldType)
+            val rval = this.getValue()
+            val sval = if( rval == null ) "null" else converter.convert(rval)
+            return "\"${this.restParamName}\": $sval"
+        }
     }
 
 
@@ -350,13 +362,28 @@ abstract class Entity protected constructor() {
      * The optLock portion is only returned if the OptLock column was defined,
      */
     fun getIdentityAsJsonStr(): String {
-        val pkStr = this.pkCols.joinToString(", ", prefix = "\"pk\": {", postfix = "}")
-                                            { "\"${it.columnName}\": \"${it.getValue()}\"" }
+        val pkStr = this.pkCols.joinToString(", ", prefix = "\"pk\": {", postfix = "}") { it.asJson() }
 
         if( this.optLockCol == null )
             return "{$pkStr}"
 
-        val optLockStr = "\"optLock\": {\"${this.optLockCol.columnName}\": \"${this.optLockCol.getValue()}\"}"
+        val optLockStr = """"optLock": {${this.optLockCol.asJson()}}"""
         return "{$pkStr, $optLockStr}"
     }
+
+    /**
+     * Get JSON string representing the object value.
+     *
+     * The output format is {rest-param1-name: value1, rest-param2-name: value2, ...}
+     * When [pretty] is set, each value appears on a separate line with 2 character indent.
+     * Null values are included. The values are sorted by their REST parameter name.
+     */
+    fun asJsonStr(pretty: Boolean = false): String {
+        val sep = if( pretty ) ",\n  " else ", "
+        val pre = if( pretty ) "{\n  " else "{"
+        val pst = if( pretty ) "\n}"   else "}"
+        return this.colDefs.sortedBy { it.restParamName }.joinToString(sep, prefix=pre, postfix=pst) { it.asJson() }
+    }
+
+
 }

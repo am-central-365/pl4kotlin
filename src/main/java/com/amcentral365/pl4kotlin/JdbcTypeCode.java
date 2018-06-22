@@ -53,6 +53,7 @@ public enum JdbcTypeCode {
     @FunctionalInterface interface BindSetter { void   bind(PreparedStatement ps, int idx, Object val) throws SQLException; }
     @FunctionalInterface interface StrParser  { Object parse(String val) throws SQLException; }
     @FunctionalInterface interface RsReader   { Object read(ResultSet rs, int idx) throws SQLException; }
+    @FunctionalInterface interface ToJsonConverter { String convert(Object val); }
 
     private static class Rec {
         final JdbcTypeCode jtc;
@@ -61,30 +62,38 @@ public enum JdbcTypeCode {
         final RsReader     rsReader;    // Reads ResultSet value as Any
         final StrParser    strParser;   // Parses value from string, Used when handling REST parameters,
                                         // May be NULL if parsing of the value is not supported.
+        final ToJsonConverter jsonValCvt;
 
-        Rec(JdbcTypeCode jtc, Type type, BindSetter binder, StrParser strParser, RsReader rsReader)
-          { this.jtc = jtc;  this.javaType = type;  this.binder = binder;  this.strParser = strParser;  this.rsReader = rsReader; }
+        Rec(JdbcTypeCode jtc, Type type, BindSetter binder, StrParser strParser, RsReader rsReader, ToJsonConverter jsonValCvt)
+          { this.jtc = jtc;  this.javaType = type;  this.binder = binder;
+            this.strParser = strParser;  this.rsReader = rsReader;  this.jsonValCvt = jsonValCvt; }
     }
 
     static final Map<JdbcTypeCode, Rec> meta = new HashMap<>();
     static Map<Type, Rec> typeRecMap = new HashMap<>();
 
+    private static String quotedJsonConverter(Object val) { return "\"" + val.toString() + "\""; }
+    private static String plainJsonConverter(Object val) { return val.toString(); }
 
-    private static void _ms(JdbcTypeCode jtc, Type type, BindSetter binder, RsReader rsReader, StrParser fromStrConverter) {
-        Rec rec = new Rec(jtc, type, binder, fromStrConverter, rsReader);
+    private static void _ms(JdbcTypeCode jtc, Type type, BindSetter binder, RsReader rsReader, StrParser fromStrConverter, ToJsonConverter jsonCvt) {
+        Rec rec = new Rec(jtc, type, binder, fromStrConverter, rsReader, jsonCvt);
         JdbcTypeCode.meta.put(jtc, rec);
         JdbcTypeCode.typeRecMap.put(type, rec);
+    }
+
+    private static void _ms(JdbcTypeCode jtc, Type type, BindSetter binder, RsReader rsReader, StrParser fromStrConverter) {
+        JdbcTypeCode._ms(jtc, type, binder, rsReader, fromStrConverter, JdbcTypeCode::quotedJsonConverter);
     }
 
     static {
         // java.lang types
         _ms(JdbcTypeCode.String,    java.lang.String.class,   (ps, idx, val) -> ps.setString (idx, (java.lang.String) val), ResultSet::getString, val -> val);
-        _ms(JdbcTypeCode.Short,     java.lang.Short.class,    (ps, idx, val) -> ps.setShort  (idx, (java.lang.Short)  val), ResultSet::getShort,    java.lang.Short::valueOf);
-        _ms(JdbcTypeCode.Integer,   java.lang.Integer.class,  (ps, idx, val) -> ps.setInt    (idx, (java.lang.Integer)val), ResultSet::getInt,      java.lang.Integer::valueOf);
-        _ms(JdbcTypeCode.Long,      java.lang.Long.class,     (ps, idx, val) -> ps.setLong   (idx, (java.lang.Long)   val), ResultSet::getLong,     java.lang.Long::valueOf);
-        _ms(JdbcTypeCode.Float,     java.lang.Float.class,    (ps, idx, val) -> ps.setFloat  (idx, (java.lang.Float)  val), ResultSet::getFloat,    java.lang.Float::valueOf);
-        _ms(JdbcTypeCode.Double,    java.lang.Double.class,   (ps, idx, val) -> ps.setDouble (idx, (java.lang.Double) val), ResultSet::getDouble,   java.lang.Double::valueOf);
-        _ms(JdbcTypeCode.Boolean,   java.lang.Boolean.class,  (ps, idx, val) -> ps.setBoolean(idx, (java.lang.Boolean)val), ResultSet::getBoolean,  java.lang.Boolean::valueOf);
+        _ms(JdbcTypeCode.Short,     java.lang.Short.class,    (ps, idx, val) -> ps.setShort  (idx, (java.lang.Short)  val), ResultSet::getShort,    java.lang.Short::valueOf,   JdbcTypeCode::plainJsonConverter);
+        _ms(JdbcTypeCode.Integer,   java.lang.Integer.class,  (ps, idx, val) -> ps.setInt    (idx, (java.lang.Integer)val), ResultSet::getInt,      java.lang.Integer::valueOf, JdbcTypeCode::plainJsonConverter);
+        _ms(JdbcTypeCode.Long,      java.lang.Long.class,     (ps, idx, val) -> ps.setLong   (idx, (java.lang.Long)   val), ResultSet::getLong,     java.lang.Long::valueOf,    JdbcTypeCode::plainJsonConverter);
+        _ms(JdbcTypeCode.Float,     java.lang.Float.class,    (ps, idx, val) -> ps.setFloat  (idx, (java.lang.Float)  val), ResultSet::getFloat,    java.lang.Float::valueOf,   JdbcTypeCode::plainJsonConverter);
+        _ms(JdbcTypeCode.Double,    java.lang.Double.class,   (ps, idx, val) -> ps.setDouble (idx, (java.lang.Double) val), ResultSet::getDouble,   java.lang.Double::valueOf,  JdbcTypeCode::plainJsonConverter);
+        _ms(JdbcTypeCode.Boolean,   java.lang.Boolean.class,  (ps, idx, val) -> ps.setBoolean(idx, (java.lang.Boolean)val), ResultSet::getBoolean,  java.lang.Boolean::valueOf, JdbcTypeCode::plainJsonConverter);
         _ms(JdbcTypeCode.Byte,      java.lang.Byte.class,     (ps, idx, val) -> ps.setByte   (idx, (java.lang.Byte)   val), ResultSet::getByte,     java.lang.Byte::valueOf);
         _ms(JdbcTypeCode.Enum,      java.lang.Enum.class,     (ps, idx, val) -> ps.setString (idx, val.toString()), null, null);  // read/parse are handled specially: conversion needs the real enum type
 
@@ -101,7 +110,7 @@ public enum JdbcTypeCode {
         _ms(JdbcTypeCode.SQLXML,     java.sql.SQLXML.class,     (ps, idx, val) -> ps.setSQLXML   (idx, (java.sql.SQLXML)   val), ResultSet::getSQLXML,     null);
 
         // misc types
-        _ms(JdbcTypeCode.Null,       null,                  (ps, idx, val) -> ps.setNull           (idx, Types.VARCHAR),  null,  null);  //  can't have Null var type
+        _ms(JdbcTypeCode.Null,       null,                  (ps, idx, val) -> ps.setNull           (idx, Types.VARCHAR),  null,  null, val -> "null");  //  can't have Null var type
         _ms(JdbcTypeCode.URL,        java.net.URL.class,    (ps, idx, val) -> ps.setURL            (idx, (java.net.URL)   val), ResultSet::getURL,              null);
         _ms(JdbcTypeCode.Reader,     java.io.Reader.class,  (ps, idx, val) -> ps.setCharacterStream(idx, (java.io.Reader) val), ResultSet::getCharacterStream,  null);
 
@@ -137,6 +146,7 @@ public enum JdbcTypeCode {
     static BindSetter getBinder(JdbcTypeCode jtc) { return meta.get(jtc).binder; }
     static RsReader   getReader(JdbcTypeCode jtc) { return meta.get(jtc).rsReader; }
     static StrParser  getParser(JdbcTypeCode jtc) { return meta.get(jtc).strParser; }
+    static ToJsonConverter getToJsonConverter(JdbcTypeCode jtc) { return meta.get(jtc).jsonValCvt; }
 
     static JdbcTypeCode from(Type cz) {
         return cz == null           ? JdbcTypeCode.Null
