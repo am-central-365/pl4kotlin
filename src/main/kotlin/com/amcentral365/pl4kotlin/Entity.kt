@@ -231,16 +231,22 @@ abstract class Entity protected constructor() {
         }
 
         /**
-         * Get column value as a JSON <code>"name": value</code> string
+         * Get column value in JSON format
          *
-         * The value is unquoted for types whee it doesn't need to be, such as numeric and boolean
+         * The value is unquoted for types where it doesn't need to be, such as numeric and boolean.
+         * Nulls values are returned as an unquoted string 'null'
          */
-        fun asJson(): String {
+        fun asJsonValue(): String {
             val converter = JdbcTypeCode.getToJsonConverter(this.fieldType)
             val rval = this.getValue()
             val sval = if( rval == null ) "null" else converter.convert(rval)
-            return "\"${this.restParamName}\": $sval"
+            return sval
         }
+
+        /**
+         * Get column as a JSON <code>"name": value</code> pair string
+         */
+        fun asJsonNameValue(): String = "\"${this.restParamName}\": ${this.asJsonValue()}"
     }
 
 
@@ -362,12 +368,12 @@ abstract class Entity protected constructor() {
      * The optLock portion is only returned if the OptLock column was defined,
      */
     fun getIdentityAsJsonStr(): String {
-        val pkStr = this.pkCols.joinToString(", ", prefix = "\"pk\": {", postfix = "}") { it.asJson() }
+        val pkStr = this.pkCols.joinToString(", ", prefix = "\"pk\": {", postfix = "}") { it.asJsonNameValue() }
 
         if( this.optLockCol == null )
             return "{$pkStr}"
 
-        val optLockStr = """"optLock": {${this.optLockCol.asJson()}}"""
+        val optLockStr = """"optLock": {${this.optLockCol.asJsonNameValue()}}"""
         return "{$pkStr, $optLockStr}"
     }
 
@@ -376,13 +382,17 @@ abstract class Entity protected constructor() {
      *
      * The output format is {rest-param1-name: value1, rest-param2-name: value2, ...}
      * When [pretty] is set, each value appears on a separate line with 2 character indent.
-     * Null values are included. The values are sorted by their REST parameter name.
+     * Null values are included when [withNulls] is true.
+     * The values are sorted by their [restParamName].
      */
-    fun asJsonStr(pretty: Boolean = false): String {
+    fun asJsonStr(pretty: Boolean = false, withNulls: Boolean = false): String {
         val sep = if( pretty ) ",\n  " else ", "
         val pre = if( pretty ) "{\n  " else "{"
         val pst = if( pretty ) "\n}"   else "}"
-        return this.colDefs.sortedBy { it.restParamName }.joinToString(sep, prefix=pre, postfix=pst) { it.asJson() }
+        return this.colDefs
+                .filter { withNulls || it.getValue() != null }
+                .sortedBy { it.restParamName }
+                .joinToString(sep, prefix=pre, postfix=pst) { it.asJsonNameValue() }
     }
 
 

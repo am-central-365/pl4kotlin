@@ -428,9 +428,21 @@ internal class EntityTest {
             .replace("UUID1",    tx.uuid1.toString())
             .replace("UUID2",    tx.uuid2.toString())
 
-        assertEquals(expectedPretty, tx.asJsonStr(pretty = true))
+        fun makeNonPretty(s: String) = "{" + s.replace("\n ", "").removePrefix("{ ").removeSuffix("\n}") + "}"
 
-        val expectedFunctional = "{" + expectedPretty.replace("\n ", "").removePrefix("{ ").removeSuffix("\n}") + "}"
-        assertEquals(expectedFunctional, tx.asJsonStr(pretty = false))
+        // Test with nulls ON
+        assertEquals(expectedPretty, tx.asJsonStr(pretty = true, withNulls = true))
+        val expectedFunctional = makeNonPretty(expectedPretty)
+        assertEquals(expectedFunctional, tx.asJsonStr(pretty = false, withNulls = true))
+
+        // Same tests with nulls OFF
+        val expectedPrettyNoNulls = expectedPretty
+                .replace("  \"created_ts\": null,\n", "")
+                .replace("  \"modified_ts\": null,\n", "")
+                .replace("  \"null_col\": null,\n", "")
+
+        assertEquals(expectedPrettyNoNulls, tx.asJsonStr(pretty = true, withNulls = false))
+        val expectedFunctionalNoNulls = makeNonPretty(expectedPrettyNoNulls)
+        assertEquals(expectedFunctionalNoNulls, tx.asJsonStr(pretty = false, withNulls = false))
     }
 }
