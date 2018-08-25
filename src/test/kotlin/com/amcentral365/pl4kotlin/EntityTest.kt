@@ -407,7 +407,7 @@ internal class EntityTest {
               "bool_col": true,
               "char_col": " a .b ",
               "created_ts": null,
-              "date_col": "2018-06-22",
+              "date_col": "DATE_COL",
               "double_col": 3.141592653589793,
               "enum_col": "Epsilon",
               "float_col": -342.74237,
@@ -423,6 +423,7 @@ internal class EntityTest {
             I’ll wipe away all trivial, fond records,"
             }"""
             .trimIndent()
+            .replace("DATE_COL", tx.dateVal.toString())
             .replace("TIME_COL", tx.timeVal.toString())
             .replace("UUID1",    tx.uuid1.toString())
             .replace("UUID2",    tx.uuid2.toString())

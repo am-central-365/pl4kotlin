@@ -51,6 +51,7 @@ class StatementsIT {
             m20testSelectStatement()
                 m24testSelectMultipleInPlace()
                 m25testSelectMultiple()
+                m26testSelectMultipleWithColSubset()
             m30testUpdateStatement()
                 m35testUpdateWithOptLock()
             m40testDeleteStatement()
@@ -174,6 +175,35 @@ class StatementsIT {
         ensureEq(tto3, tto1, withGenerated = false)
     }
 
+
+
+    /*@Test*/
+    fun m26testSelectMultipleWithColSubset() {
+        // There was a bug in SelectStatement::iterate with iterating while selecting only some columns
+        // It was fixed in 0.3.9
+        logger.info { "running testSelectMultiple with cols subset" }
+        val tto1 = TestTbl()
+
+        val selStmt = SelectStatement(tto1).select(tto1::timeVal).select(tto1::dateVal).select(tto1::floatVal)
+                .by(tto1::pk1)
+                .by("pk2 between 1 and ?-1", TestTbl.KNOWN_PK2)
+                .orderBy(tto1::pk2)
+
+        for((k, v) in selStmt.iterate(StatementsIT.conn).withIndex()) {
+            assertNotNull(v)
+            assertTrue(v is TestTbl)
+            val tto2 = TestTbl()
+            this.tweakForK(tto2, k+1)
+            val tto1a = v as TestTbl
+            assertEquals(tto1a.dateVal,  tto2.dateVal)
+            assertEquals(tto1a.timeVal,  tto2.timeVal)
+            assertEquals(tto1a.floatVal, tto2.floatVal)
+        }
+
+        // ensure the original object, tto1, hasn't changed
+        val tto3 = TestTbl()
+        ensureEq(tto3, tto1, withGenerated = false)
+    }
 
     /*@Test*/
     fun m30testUpdateStatement() {

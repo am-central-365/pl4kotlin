@@ -151,8 +151,13 @@ open class SelectStatement(entityDef: Entity, getGoodConnection: () -> Connectio
         val defaultConstructor = entityDef::class.primaryConstructor!!
         val rs = this.open_statement(conn)
         return RowIterator<Entity>(rs) {
+            // We iterate over the statement's selectDescrs, but set entityInstance's properties,
+            // matching them by field name
             val entityInstance = defaultConstructor.call()
-            entityInstance.colDefs.forEachIndexed { k, v -> v.read(rs, k + 1) }
+            this@SelectStatement.selectDescrs.forEachIndexed { k, v ->
+                entityInstance.colDefs.find { it.fieldName == v.colDef!!.fieldName }!!
+               .read(rs, k + 1)
+            }
             entityInstance
         }
     }
