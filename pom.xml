@@ -3,7 +3,7 @@
     <name>Database Persistence Layer For Kotlin</name>
     <groupId>com.amcentral365</groupId>
     <artifactId>pl4kotlin</artifactId>
-    <version>0.3.10</version>
+    <version>0.3.11</version>
 
     <properties>
         <kotlin.version>1.2.61</kotlin.version>

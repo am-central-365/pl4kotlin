@@ -8,7 +8,7 @@ buildscript {
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "org.jetbrains.dokka:dokka-gradle-plugin:0.9.16"
+        classpath "org.jetbrains.dokka:dokka-gradle-plugin:0.9.17"
     }
 }
 
@@ -18,7 +18,7 @@ apply plugin: 'maven'   // enables gradle install
 apply plugin: 'org.jetbrains.dokka'
 
 group = 'com.amcentral365'
-version = '0.3.10'
+version = '0.3.11'
 
 description = "Database Persistence Layer For Kotlin"
 

@@ -136,6 +136,13 @@ public enum JdbcTypeCode {
             java.util.UUID::fromString
         );
 
+        _ms(JdbcTypeCode.Object,
+            java.lang.Object.class,
+            (ps, idx, val) -> ps.setObject(idx, (java.lang.Object)val),
+            ResultSet::getObject,
+            null
+        );
+
     }
 
     @SuppressWarnings("unchecked")
