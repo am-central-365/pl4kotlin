@@ -244,6 +244,21 @@
       least one PK column.
     </p>
 
+<h3><a name="isJson">isJson</a></h3>
+    <p>
+        Marks database-side columns containing JSON values (<code>json</code> type in MySQL,
+        <code>is_json</code> constraint in Oracle, etc) and represented on the client as
+        <code>String</code>. When the property is <code>true</code>, the object type must be
+        <code>String</code> and all interactions with the database are the same as for the
+        <code>String</code> property type.
+    </p>
+
+    <p>
+        The setting makes <span class="name">asJson*()</span> methods (used to format API
+        responses) emit the value without enclosing it in double quotes. This makes it a proper
+        nested object instead of a literal resulting in more meaningful JSON structure.
+    </p>
+
 <h3><a name="isOptimisticLock">isOptimisticLock</a></h3>
     <p>
         Denotes that the column is used for
@@ -913,6 +928,7 @@
                         <li><a href="#columnName">columnName</a></li>
                         <li><a href="#restParamName">restParamName</a></li>
                         <li><a href="#pkPos">pkPos</a></li>
+                        <li><a href="#isJson">isJson</a></li>
                         <li><a href="#isOptimisticLock">isOptimisticLock</a></li>
                         <li><a href="#onInsert">onInsert</a></li>
                     </ul>

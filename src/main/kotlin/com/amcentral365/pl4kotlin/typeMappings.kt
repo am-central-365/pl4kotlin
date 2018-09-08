@@ -28,10 +28,13 @@ private fun k2j(kc: KType): JdbcTypeCode {
 
 /** Given a property [kp], determine its [JdbcTypeCode]. The function processes Kotlin and Java types. */
 @Contract("null -> null")
-fun JTC(kp: KProperty<*>?): JdbcTypeCode = if( kp == null ) JdbcTypeCode.Null else k2j(kp.returnType)
+//fun JTC(kp: KProperty<*>?): JdbcTypeCode = if( kp == null ) JdbcTypeCode.Null else k2j(kp.returnType)
 //fun JTC(kc: KClass<*>?):    JdbcTypeCode = if( kc == null ) JdbcTypeCode.Null else JdbcTypeCode.from(kc::class.java)
 
-
+fun JTC(kp: KProperty<*>?, isJson: Boolean=false):
+        JdbcTypeCode = if( kp == null ) JdbcTypeCode.Null
+                  else if( isJson )     JdbcTypeCode.JsonStr
+                  else                  k2j(kp.returnType)
 
 
 //fun uuidToBytes(uuid: UUID): ByteArray {}

@@ -35,6 +35,11 @@ enum class Generated {
  * @property onInsert Tells the library how to treat the column when inserting a new row.
  *  The column may be conditionally omitted from the statement making the database to evaluate its
  *  `DEFAULT` expression. It is also possible to ask the library to assign a value to it.
+ * @property isJson is used for database-side columns containing JSON ('json' type in MySQL, is_json
+ *   constraint in Oracle) and represented on the client as String. When the property is true, the object
+ *   type must be `String` and all interactions with the database are the same as for the `String` type.
+ *   The setting only affects how `asJson*` generate the value: them embed it without enclosing in double
+ *   quotes (unlike `String`) and not masking special characters inside it.
  */
 @Target(AnnotationTarget.PROPERTY)
 @Retention()
@@ -44,4 +49,5 @@ annotation class Column(
     , val pkPos: Int = 0
     , val isOptimisticLock: Boolean = false
     , val onInsert: Generated = Generated.Never
+    , val isJson: Boolean = false
 )

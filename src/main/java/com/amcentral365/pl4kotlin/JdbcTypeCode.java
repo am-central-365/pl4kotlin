@@ -47,6 +47,7 @@ public enum JdbcTypeCode {
 
     , BigDecimal, Boolean, Byte, ByteArray, Date, Double, Float, Short, Time // less common
     , Array, Blob, Clob, NClob, Ref, Rowid, SQLXML, Reader, URL              // even less common
+    , JsonStr          // custom type for database-side JSON represented on the client as String
     , Object;                                                                // the last resort
 
 
@@ -88,6 +89,7 @@ public enum JdbcTypeCode {
     static {
         // java.lang types
         _ms(JdbcTypeCode.String,    java.lang.String.class,   (ps, idx, val) -> ps.setString (idx, (java.lang.String) val), ResultSet::getString, val -> val);
+        _ms(JdbcTypeCode.JsonStr,   java.lang.String.class,   (ps, idx, val) -> ps.setString (idx, (java.lang.String) val), ResultSet::getString, val -> val, JdbcTypeCode::plainJsonConverter);
         _ms(JdbcTypeCode.Short,     java.lang.Short.class,    (ps, idx, val) -> ps.setShort  (idx, (java.lang.Short)  val), ResultSet::getShort,    java.lang.Short::valueOf,   JdbcTypeCode::plainJsonConverter);
         _ms(JdbcTypeCode.Integer,   java.lang.Integer.class,  (ps, idx, val) -> ps.setInt    (idx, (java.lang.Integer)val), ResultSet::getInt,      java.lang.Integer::valueOf, JdbcTypeCode::plainJsonConverter);
         _ms(JdbcTypeCode.Long,      java.lang.Long.class,     (ps, idx, val) -> ps.setLong   (idx, (java.lang.Long)   val), ResultSet::getLong,     java.lang.Long::valueOf,    JdbcTypeCode::plainJsonConverter);

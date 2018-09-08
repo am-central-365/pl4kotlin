@@ -445,4 +445,18 @@ internal class EntityTest {
         val expectedFunctionalNoNulls = makeNonPretty(expectedPrettyNoNulls)
         assertEquals(expectedFunctionalNoNulls, tx.asJsonStr(pretty = false, withNulls = false))
     }
+
+    @Test
+    fun `isJson for String type`() {
+        @Table("tx") class Tx: Entity() { @Column("c", pkPos = 1, isJson = true) var c: String? = null }
+        val tx = Tx()  // should throw no exceptions
+        //assertTrue(x.message!!.contains("PK is missing"), "wrong error message: ${x.message}")
+    }
+
+    @Test
+    fun `isJson for non-String type`() {
+        @Table("tx") class Tx: Entity() { @Column("c", pkPos = 1, isJson = true) var c: Int? = null }
+        val x = assertThrows<IllegalArgumentException>("should have failed on non-String isJson column") { Tx() }
+        assertTrue(x.message!!.contains("Json is only supported for client-side String type"), "wrong error message: ${x.message}")
+    }
 }

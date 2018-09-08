@@ -95,6 +95,10 @@ abstract class Entity protected constructor() {
                 "$msgPrefix: supported Optimistic Lock types are Timestamp and Number, got ${this.fieldType.name}"
             }
 
+            require( this.fieldType != JdbcTypeCode.JsonStr || javaType.typeName == "java.lang.String" ) {
+                "$msgPrefix: db-side Json is only supported for client-side String type. The poperty type is ${javaType.typeName}"
+            }
+
             require( this.pkPos == 0 || !this.isOptLock )
                 { "$msgPrefix: optimistic lock can't be part of the PK" }
 
@@ -125,7 +129,7 @@ abstract class Entity protected constructor() {
 
         internal constructor(kProp: KProperty<Any?>, colAnnotation: Column):
             this(kProp.name
-                , JTC(kProp)
+                , JTC(kProp, colAnnotation.isJson)
                 , colAnnotation.columnName
                 , if( colAnnotation.restParamName.isNotEmpty() ) colAnnotation.restParamName else colAnnotation.columnName
                 , colAnnotation.pkPos
