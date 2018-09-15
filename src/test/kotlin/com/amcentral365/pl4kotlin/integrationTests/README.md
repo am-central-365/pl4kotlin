@@ -8,8 +8,8 @@ phases. More detals can be found on
 [Maven Build Lifecycle](https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html)
 page
 
-Test case file names must be prefixed or suffixed with "IT" ot "ITCase":
-ITCaseBlah, ITBlah, BlahIT, and BlahITCase are examples of integration test Blah.
+Test case file names must be prefixed or suffixed with "IT" or "ITCase":
+ITCaseBlah, ITBlah, BlahIT, and BlahITCase are examples of an integration test Blah.
 
 ##### Gradle notes
 ```build.gradle``` defines integration tests a part of the ```check``` task.
@@ -54,7 +54,7 @@ The scripts assume the connecting user account and the database are
 exist and possess all necessary privileges.
 
 #### Script names
-Each script is composed from the JDBC vendor name and ```Setup``` or
+Each script is a combinaton of the JDBC vendor name and ```Setup``` or
 ```Teardown``` suffix. The file extension is ```.sql```.
 
 Database vendor is coming from the second element of jdbc URL:
@@ -72,18 +72,17 @@ the second element isn't always the vendor name. But it is still
 distinguishing enough for our purpose.
 
 ##### Examples
-* jdbc:oracle:thin:@Host:Port:SID -> oracleSetup.sql and oracleTeardown.sql
-* jdbc:mysql://Host:Port/DatabaseName -> mysqlSetup.sql and mysqlTeardown.sql
-* jdbc:weblogic:mssqlserver4:DatabaseName@Host:Port -> weblogicSetup.sql and weblogicTeardown.sql
- (yes, Microsfot ways are always special)
+* jdbc:**oracle**:thin:@Host:Port:SID -> **oracle**Setup.sql and **oracle**Teardown.sql
+* jdbc:**mysql**://Host:Port/DatabaseName -> **mysql**Setup.sql and **mysql**Teardown.sql
+* jdbc:**weblogic**:mssqlserver4:DatabaseName@Host:Port -> **weblogic**Setup.sql and **weblogic**Teardown.sql
+ (yes, Microsoft ways are always special)
 
 #### Script location
-The files is first searched in the current directory, and then among the
-canned scripts, packaged into the jar file. Ansence of the file leads to
-failure.
+The script files are first searched in the current directory, and then among the
+canned scripts, packaged into the jar file. File absence leads to a failure.
 
-This allows to override internal scripts with custom versions or
-supply scripts for non-canned database types.
+This allows overriding internal scripts with custom versions or
+supplying scripts for non-canned database types.
 
 #### Script format
 A script file contains regular SQL statements (as suported by the
@@ -97,11 +96,11 @@ Ignored lines between statements:
 * Lines starting with '#' 
 
 This allows to support complex stetements such as Oracle PL/SQL blocks,
-the only requirement is to avoid blank lines.
+the only requirement is to avoid blank lines (hine: use --)
 
 ## Installing test databases with Docker
-If you don't have RDBMS installed elsewhere, you can install locally
-with Docker. Examples below assume you already have Docker running.
+If you don't have an RDBMS installed elsewhere, you can install locally
+with Docker. References below assume you already have a running Docker.
 
 #### MySql
 https://hub.docker.com/_/mysql/
@@ -114,6 +113,6 @@ https://hub.docker.com/_/postgres/
 
 #### SQLite
 
-Since SQLite is embedded into your code, install its binaries:
+Since SQLite is embedded into the code, install its binaries:
 
 ```sudo apt-get install -y sqlite3 libsqlite3-dev```
