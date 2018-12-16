@@ -238,7 +238,7 @@ abstract class Entity protected constructor() {
          * Get column value in JSON format
          *
          * The value is unquoted for types where it doesn't need to be, such as numeric and boolean.
-         * Nulls values are returned as an unquoted string 'null'
+         * Nulls are returned as an unquoted string 'null'
          */
         fun asJsonValue(): String {
             val converter = JdbcTypeCode.getToJsonConverter(this.fieldType)

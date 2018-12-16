@@ -1,7 +1,7 @@
 //import org.junit.jupiter.api.Test
 
 buildscript {
-    ext.kotlin_version = '1.2.61'
+    ext.kotlin_version = '1.3.11'
     repositories {
         mavenCentral()
         jcenter()
